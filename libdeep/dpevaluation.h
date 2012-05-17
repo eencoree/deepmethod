@@ -1,0 +1,105 @@
+/***************************************************************************
+ *            dpevaluation.h
+ *
+ *  Fri Mar 23 15:42:14 2012
+ *  Copyright  2012  Konstantin Kozlov
+ *  <kozlov@spbcas.ru>
+ ****************************************************************************/
+
+/*
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Library General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
+ */
+ 
+#ifndef _DP_EVALUATION_H
+#define _DP_EVALUATION_H
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <glib.h>
+#include "dptarget.h"
+#include "dpindivid.h"
+#include "dppopulation.h"
+
+typedef enum DpEvaluationStrategy {
+	tanh_trans_flag,
+	sin_trans_flag,
+	alg_trans_flag,
+	rand_trans_flag
+} DpEvaluationStrategy;
+
+typedef struct DpEvaluationPoint {
+	double *param;
+	int index;
+	double upper;
+	double lower;
+	int limited;
+	double *grad;
+	double alpha;
+	double beta;
+	double gamma;
+	double scale;
+} DpEvaluationPoint;
+
+typedef struct DpEvaluation {
+	int size;
+	DpEvaluationPoint**points;
+} DpEvaluation;
+
+typedef struct DpEvaluationCtrl {
+	DpEvaluationStrategy eval_strategy;
+	int kount;
+	DpEvaluation*eval;
+	int seed;
+	int yoffset;
+	GRand*hrand;
+	double gamma_init;
+	double roundoff_error;
+	DpTarget*eval_target;
+} DpEvaluationCtrl;
+
+void dp_evaluation_prepare(DpEvaluationCtrl*hevalctrl, double*x);
+
+int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_data);
+
+void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
+
+void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
+
+DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy);
+
+DpEvaluationCtrl*dp_evaluation_ctrl_new();
+
+void dp_evaluation_copy_to_grad(DpEvaluationCtrl*hevalctrl, double*x);
+
+void dp_evaluation_individ_scramble(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, double eps);
+
+void dp_evaluation_individ_set(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
+
+void dp_evaluation_individ_set_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
+
+DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps);
+
+DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _DP_EVALUATION_H */
