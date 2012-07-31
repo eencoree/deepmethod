@@ -495,7 +495,7 @@ GString*xm_model_gemstat_contents(XmModel*xmmodel)
 	file_contents = g_string_new("");
 	for ( i = 0; i < xmmodel->num_parts; i++ ) {
 		g_string_append_printf(file_contents, "%s ", xmmodel->part[i].name);
-		for ( j = 0; j < xmmodel->part[i].num_parts; j++ ) {
+		for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
 			k = xmmodel->part[i].index[j];
 			g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
 		}
