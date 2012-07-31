@@ -85,10 +85,10 @@ int main(int argc, char **argv)
 		g_error("%s called with wrong options for target", argv[0]);
 	}
 	if ( output_file == NULL ) {
-		g_error("%s called with wrong options for target", argv[0]);
+		g_error("%s called with wrong options for output", argv[0]);
 	}
 	if ( operation == NULL ) {
-		g_error("%s called with wrong options for target", argv[0]);
+		g_error("%s called with wrong options for operation", argv[0]);
 	}
 	dp_settings_init(settings_file, settings_group, dpsettings, &gerror);
 	xmmodel = xm_model_new();

@@ -286,6 +286,8 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->convert = str;
 		if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_sdf;
+		} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
+			xmmodel->converter = xm_model_convert_parms_to_gemstat;
 		}
 	}
 	if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "parts", &length, &gerror) ) != NULL ) {
@@ -485,6 +487,24 @@ fprintf (stderr, "%s", file_contents->str);*/
 	return file_contents;
 }
 
+
+GString*xm_model_gemstat_contents(XmModel*xmmodel)
+{
+	GString*file_contents;
+	int i, j, k;
+	file_contents = g_string_new("");
+	for ( i = 0; i < xmmodel->num_parts; i++ ) {
+		g_string_append_printf(file_contents, "%s ", xmmodel->part[i].name);
+		for ( j = 0; j < xmmodel->part[i].num_parts; j++ ) {
+			k = xmmodel->part[i].index[j];
+			g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+		}
+		file_contents = g_string_append_c(file_contents, '\n');
+	}
+	return file_contents;
+}
+
+
 gchar *xm_model_convert_parms_to_sdf(gpointer *user_data, GError **err)
 {
 	XmModel*xmmodel = (XmModel*)user_data;
@@ -500,6 +520,34 @@ gchar *xm_model_convert_parms_to_sdf(gpointer *user_data, GError **err)
 	}
 	close(fhandle);
 	if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
+		g_unlink(name_used);
+		return NULL;
+	}
+	if ( !g_file_set_contents ((const gchar *)name_used, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+		g_string_free(file_contents, TRUE);
+		g_propagate_error (err, gerror);
+		g_unlink(name_used);
+		return NULL;
+	}
+	g_string_free(file_contents, TRUE);
+	return name_used;
+}
+
+gchar *xm_model_convert_parms_to_gemstat(gpointer *user_data, GError **err)
+{
+	XmModel*xmmodel = (XmModel*)user_data;
+	gint fhandle;
+	const gchar *tmpl = NULL;
+	gchar *name_used = NULL;
+	GError *gerror = NULL;
+	GString*file_contents;
+	g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+	if ( ( fhandle = g_file_open_tmp (tmpl, &name_used, &gerror) ) == -1 ) {
+		g_propagate_error (err, gerror);
+		return NULL;
+	}
+	close(fhandle);
+	if ( ( file_contents = xm_model_gemstat_contents(xmmodel) ) == NULL ) {
 		g_unlink(name_used);
 		return NULL;
 	}
@@ -562,8 +610,12 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 {
 	GString*file_contents;
 	GError*gerror = NULL;
-	if ( xmmodel->convert != NULL ) {
+	if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 		if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
+			g_error("Can't get contents");
+		}
+	} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
+		if ( ( file_contents = xm_model_gemstat_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get contents");
 		}
 	}
