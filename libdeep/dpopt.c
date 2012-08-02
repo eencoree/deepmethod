@@ -172,7 +172,7 @@ DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data)
 			case H_OPT_PROPORTIONAL_STOP:
 				delta = ( hopt->old_cost - hopt->cost );
 				if ( hopt->old_cost != 0 ) {
-				    delta /= hopt->old_cost;
+					delta /= hopt->old_cost;
 				}
 			break;
 			case H_OPT_ABSOLUTE_STOP:
