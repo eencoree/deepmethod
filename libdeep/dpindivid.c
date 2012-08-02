@@ -28,7 +28,7 @@
 #include <math.h>
 #include "dpindivid.h"
 
-DpIndivid*dp_individ_new(int size, int targets_size)
+DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 {
 	DpIndivid*individ;
 	individ = (DpIndivid*)malloc(sizeof(DpIndivid));
@@ -37,10 +37,14 @@ DpIndivid*dp_individ_new(int size, int targets_size)
 	individ->x = (double*)calloc(size, sizeof(double));
 	individ->y = (double*)calloc(size, sizeof(double));
 	individ->z = (double*)calloc(size, sizeof(double));
-	individ->penalty = 0;
 	individ->targets = (double*)calloc(targets_size, sizeof(double));
 	individ->ntargets = targets_size;
+	individ->precond = (double*)calloc(precond_size, sizeof(double));
+	individ->nprecond = precond_size;
+	individ->hrand = g_rand_new_with_seed ((guint32)seed);
 	individ->age = 0;
+	individ->user_data = NULL;
+//	g_mutex_init(individ->gmutex);
 	return individ;
 }
 
@@ -50,6 +54,8 @@ void dp_individ_delete(DpIndivid*individ)
 	free(individ->y);
 	free(individ->z);
 	free(individ->targets);
+	free(individ->precond);
+	g_rand_free(individ->hrand);
 	free(individ);
 }
 
@@ -57,7 +63,6 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 {
 	int i;
 	individ->cost = trial->cost;
-	individ->penalty = trial->penalty;
 	for ( i = 0; i < individ->size; i++ ) {
 		individ->x[i] = trial->x[i];
 		individ->y[i] = trial->y[i];
@@ -66,6 +71,11 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 	for ( i = 0; i < individ->ntargets && i < trial->ntargets; i++ ) {
 		individ->targets[i] = trial->targets[i];
 	}
+	for ( i = 0; i < individ->nprecond && i < trial->nprecond; i++ ) {
+		individ->precond[i] = trial->precond[i];
+	}
+	individ->user_data = trial->user_data;
+	individ->hrand = trial->hrand;
 }
 
 void dp_individ_pack(DpIndivid*individ, double**buffer2send, int*bufferDim)
@@ -79,7 +89,6 @@ void dp_individ_pack(DpIndivid*individ, double**buffer2send, int*bufferDim)
 		(*buffer2send)[i + ind_size + 1] = individ->y[i];
 	}
 	(*buffer2send)[ind_size] = individ->cost;
-	(*buffer2send)[ind_size + ind_size + 1] = individ->penalty;
 }
 
 void dp_individ_unpack(DpIndivid*individ, double*buffer2recv, int bufferDim)
@@ -91,7 +100,6 @@ void dp_individ_unpack(DpIndivid*individ, double*buffer2recv, int bufferDim)
 		individ->y[i] = buffer2recv[i + ind_size + 1];
 	}
 	individ->cost = buffer2recv[ ind_size ];
-	individ->penalty = buffer2recv[ ind_size + ind_size + 1];
 	individ->age = 0;
 }
 

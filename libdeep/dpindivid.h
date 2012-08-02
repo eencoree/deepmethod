@@ -30,20 +30,28 @@ extern "C"
 {
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <glib.h>
+
 typedef struct DpIndivid {
 	int size;
 	double cost;
-	double penalty;
 	int age;
 	double *x;
 	double *y;
 	double *z;
 	double *targets;
-	double ntargets;
+	int ntargets;
+	double *precond;
+	int nprecond;
+	GRand*hrand;
 	int invalid;
+	gpointer user_data;
+	GMutex*gmutex;
 } DpIndivid;
 
-DpIndivid*dp_individ_new(int size, int targets_size);
+DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed);
 
 void dp_individ_dump(DpIndivid*individ);
 

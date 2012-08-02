@@ -71,13 +71,12 @@ void xm_translate_score(DpTarget*htarget, XmModel *xmmodel)
 {
 	int i;
 	htarget->target->f = xm_translate_get_score_func_by_name(htarget->target->name);
-	htarget->target->user_data = (gpointer)(xmmodel);
+	htarget->user_data = (gpointer)(xmmodel);
+	htarget->copy_model = xm_model_copy_values;
 	for ( i = 0; i < htarget->size; i++ ) {
 		htarget->penalty[i]->f = xm_translate_get_score_func_by_name(htarget->penalty[i]->name);
-		htarget->penalty[i]->user_data = (gpointer)(xmmodel);
 	}
 	for ( i = 0; i < htarget->precond_size; i++ ) {
 		htarget->precond[i]->f = xm_translate_get_score_func_by_name(htarget->precond[i]->name);
-		htarget->precond[i]->user_data = (gpointer)(xmmodel);
 	}
 }

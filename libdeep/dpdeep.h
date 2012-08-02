@@ -44,10 +44,11 @@ typedef struct DpDeepInfo {
 	double recombination_gamma;
 	int es_lambda;
 	double noglobal_eps;
-	DpIndivid *trial;
+	DpPopulation*trial;
 	DpPopulation*population;
 	DpRecombinationControl *recombination_control;
 	DpEvaluationCtrl *hevalctrl;
+//	GThreadPool*gthresdpool;
 } DpDeepInfo;
 
 DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy, int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, double es_lambda, double noglobal_eps, DpRecombinationStrategy recomb_strategy);

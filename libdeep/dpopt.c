@@ -288,10 +288,10 @@ DpLoopExitCode dp_write_tst(DpLoop*hloop, gpointer user_data)
 	fprintf(fp, "wall clock time:%e\n", hloop->w_time);
 	fprintf(fp, "tau     counter:%d\n", hloop->tau_counter);
 	fprintf(fp, "final      cost:%e\n", hopt->cost);
-	fprintf(fp, "cost       runs:%d\n", hopt->htarget->target->kount);
+//	fprintf(fp, "cost       runs:%d\n", hopt->htarget->target->kount);
 	for ( i = 0; i < hopt->htarget->size; i++ ) {
-		fprintf(fp, "penalty[%d]cost:%e\n", i, hopt->htarget->penalty[i]->retval);
-		fprintf(fp, "penalty[%d]runs:%d\n", i, hopt->htarget->penalty[i]->kount);
+//		fprintf(fp, "penalty[%d]cost:%e\n", i, hopt->htarget->penalty[i]->retval);
+//		fprintf(fp, "penalty[%d]runs:%d\n", i, hopt->htarget->penalty[i]->kount);
 	}
 	fprintf(fp, "\n");
 	fclose(fp);

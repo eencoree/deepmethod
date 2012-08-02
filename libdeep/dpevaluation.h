@@ -68,13 +68,14 @@ typedef struct DpEvaluationCtrl {
 	DpEvaluation*eval;
 	int seed;
 	int yoffset;
-	GRand*hrand;
 	double gamma_init;
 	double roundoff_error;
 	DpTarget*eval_target;
 } DpEvaluationCtrl;
 
 void dp_evaluation_prepare(DpEvaluationCtrl*hevalctrl, double*x);
+
+void dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
 
 int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_data);
 

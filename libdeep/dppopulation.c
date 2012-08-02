@@ -33,7 +33,7 @@
 #include "dpindivid.h"
 #include "dppopulation.h"
 
-DpPopulation*dp_population_new(int size, int ind_size, int targets_size)
+DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size, int seed)
 {
 	int i;
 	DpPopulation*pop;
@@ -46,7 +46,7 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size)
 	pop->ages_descending = (int*)calloc(size, sizeof(int));
 	pop->ind_size = ind_size;
 	for ( i = 0; i < size; i++ ) {
-		pop->individ[i] = dp_individ_new(ind_size, targets_size);
+		pop->individ[i] = dp_individ_new(ind_size, targets_size, precond_size, seed + i);
 		pop->cost_ascending[i] = i;
 		pop->ages_descending[i] = i;
 	}
@@ -130,7 +130,6 @@ void dp_population_nbest_pack(DpPopulation*pop, int index, double**buffer2send, 
 			(*buffer2send)[j * Dim + i + ind_size + 1] = pop->individ[cost_ascending[j]]->y[i];
 		}
 		(*buffer2send)[j * Dim + ind_size] = pop->individ[cost_ascending[j]]->cost;
-		(*buffer2send)[j * Dim + ind_size + ind_size + 1] = pop->individ[cost_ascending[j]]->penalty;
 		for( i = 0; i < target_size; i++ ) {
 			(*buffer2send)[j * Dim + ind_size + 1 + ind_size + 1 + i] = pop->individ[cost_ascending[j]]->targets[i];
 		}
@@ -152,7 +151,6 @@ void dp_population_nbest_unpack(DpPopulation*pop, int index, double*buffer2recv,
 			pop->individ[ages_descending[j]]->y[i] = buffer2recv[j * Dim + i + ind_size + 1];
 		}
 		pop->individ[ages_descending[j]]->cost = buffer2recv[j * Dim + ind_size ];
-		pop->individ[ages_descending[j]]->penalty = buffer2recv[ j * Dim + ind_size + ind_size + 1];
 		for( i = 0; i < target_size; i++ ) {
 			pop->individ[ages_descending[j]]->targets[i] = buffer2recv[j * Dim + ind_size + 1 + ind_size + 1 + i];
 		}

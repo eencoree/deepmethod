@@ -73,81 +73,70 @@ void dp_target_insert_func (DpTarget*htarget, DpTargetFunc*func, void *user_data
 
 }
 
-int dp_target_eval (DpTarget*htarget)
+int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data)
 {
 	int max_value_flag = 0, i;
 	double value, f, retval, max_value = G_MAXDOUBLE;
 	for ( i = 0; i < htarget->precond_size; i++ ) {
-		f = htarget->precond[i]->f(htarget->precond[i]->user_data);
-		htarget->precond[i]->kount++;
+		f = htarget->precond[i]->f(user_data, x);
 		if ( f < max_value ) {
-			htarget->precond[i]->invalid = 0;
-			htarget->precond[i]->retval = f;
 			f *= htarget->precond[i]->weight;
-			htarget->precond[i]->value = f;
+			precond[i] = f;
 		} else {
 			max_value_flag = 1;
-			htarget->precond[i]->invalid = 1;
 			break;
 		}
 	}
 	if ( max_value_flag == 1 ) {
-		htarget->value = max_value;
-		htarget->invalid = 1;
+		(*cost) = max_value;
+		(*invalid) = 1;
 		return 1;
 	}
-	f = htarget->target->f(htarget->target->user_data);
-	htarget->target->kount++;
+	retval = max_value;
+	f = htarget->target->f(user_data, x);
 	if ( f < max_value ) {
-		htarget->target->invalid = 0;
-		htarget->target->retval = f;
 		f *= htarget->target->weight;
-		htarget->target->value = f;
 		retval = f;
 		value = 0;
 		for ( i = 0; i < htarget->size; i++ ) {
-			f = htarget->penalty[i]->f(htarget->penalty[i]->user_data);
-			htarget->penalty[i]->kount++;
+			f = htarget->penalty[i]->f(user_data, x);
 			if ( f < max_value ) {
-				htarget->penalty[i]->invalid = 0;
-				htarget->penalty[i]->retval = f;
 				f *= htarget->penalty[i]->weight;
-				htarget->penalty[i]->value = f;
+				penalty[i] = f;
 				value += f;
 			} else {
 				max_value_flag = 1;
-				htarget->penalty[i]->invalid = 1;
-				break;
+				penalty[i] = max_value;
 			}
 		}
 		retval += value;
 	} else {
-		htarget->target->invalid = 1;
 		max_value_flag = 1;
 	}
-	htarget->value = retval;
-	htarget->invalid = max_value_flag;
+	(*cost) = retval;
+	(*invalid) = max_value_flag;
 	return max_value_flag;
 }
 
-int dp_target_eval_precond (DpTarget*htarget)
+int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*precond, gpointer user_data)
 {
 	int max_value_flag = 0, i;
 	double value, f, retval, max_value = G_MAXDOUBLE;
 	for ( i = 0; i < htarget->precond_size; i++ ) {
-		f = htarget->precond[i]->f(htarget->precond[i]->user_data);
-		htarget->precond[i]->kount++;
+		f = htarget->precond[i]->f(user_data, x);
 		if ( f < max_value ) {
-			htarget->precond[i]->invalid = 0;
-			htarget->precond[i]->retval = f;
 			f *= htarget->precond[i]->weight;
-			htarget->precond[i]->value = f;
+			precond[i] = f;
 		} else {
 			max_value_flag = 1;
-			htarget->precond[i]->invalid = 1;
 			break;
 		}
 	}
-	htarget->invalid = max_value_flag;
+	(*invalid) = max_value_flag;
 	return max_value_flag;
+}
+
+gpointer dp_target_eval_get_user_data(DpTarget*htarget)
+{
+	return htarget->copy_model(htarget->user_data);
 }

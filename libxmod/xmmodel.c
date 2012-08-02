@@ -33,7 +33,7 @@ XmModel*xm_model_new()
 	XmModel *xmmodel = (XmModel*)g_malloc( sizeof(XmModel) );
 	xmmodel->size = 0;
 	xmmodel->tweak = NULL;
-	xmmodel->command;
+	xmmodel->command = NULL;
 	xmmodel->delimiters = NULL;
 	xmmodel->keys = NULL;
 	xmmodel->num_values = 0;
@@ -47,6 +47,72 @@ XmModel*xm_model_new()
 	xmmodel->hbound = NULL;
 	xmmodel->convert = NULL;
 	return xmmodel;
+}
+
+gpointer xm_model_copy_values(gpointer psrc)
+{
+	int j, k;
+	XmModel *src = (XmModel *)psrc;
+	XmModel *xmmodel = xm_model_new();
+	xmmodel->index_size = src->index_size;
+	xmmodel->index = g_new0 ( int, xmmodel->index_size );
+	xmmodel->tweak_index = g_new0 ( int, xmmodel->index_size );
+	for ( j = 0; j < xmmodel->index_size; j++ ) {
+		xmmodel->index[j] = src->index[j];
+		xmmodel->tweak_index[j] = src->tweak_index[j];
+	}
+	xmmodel->num_parts = src->num_parts;
+	xmmodel->part = g_new ( XmModelPart, xmmodel->num_parts );
+	for ( j = 0; j < xmmodel->num_parts; j++ ) {
+		xmmodel->part[j].name = g_strdup(src->part[j].name);
+		xmmodel->part[j].num_parms = src->part[j].num_parms;
+		xmmodel->part[j].index = g_new( int, xmmodel->part[j].num_parms );
+		for ( k = 0; k < xmmodel->part[j].num_parms; k++ ) {
+			xmmodel->part[j].index[k] = src->part[j].index[k];
+		}
+	}
+	xmmodel->converter = src->converter;
+	xmmodel->size = src->size;
+	xmmodel->parms = g_new0 ( int, xmmodel->size );
+	xmmodel->iparms = g_new0 ( int, xmmodel->size );
+	xmmodel->lookup = g_new0 ( int, xmmodel->size );
+	xmmodel->tweak = g_new0 ( int, xmmodel->size );
+	xmmodel->mask = g_new0 ( int, xmmodel->size );
+	xmmodel->dparms = g_new0 ( double, xmmodel->size );
+	xmmodel->lbound = g_new0 ( double, xmmodel->size );
+	xmmodel->hbound = g_new0 ( double, xmmodel->size );
+	for ( j = 0; j < xmmodel->size; j ++ ) {
+		xmmodel->parms[j] = src->parms[j];
+		xmmodel->iparms[j] = src->iparms[j];
+		xmmodel->lookup[j] = src->lookup[j];
+		xmmodel->mask[j] = src->mask[j];
+		xmmodel->tweak[j] = src->tweak[j];
+		xmmodel->dparms[j] = src->dparms[j];
+		xmmodel->lbound[j] = src->lbound[j];
+		xmmodel->hbound[j] = src->hbound[j];
+	}
+	xmmodel->command = g_strdup(src->command);
+	xmmodel->delimiters = g_strdup(src->delimiters);
+	xmmodel->num_values = src->num_values;
+	xmmodel->array = g_new0 ( double, xmmodel->num_values );
+	xmmodel->keys = g_new0 ( int, xmmodel->num_values );
+	xmmodel->mapping = g_new0 ( int, xmmodel->num_values );
+	for ( j = 0; j < xmmodel->num_values; j++ ) {
+		xmmodel->array[j] = src->array[j];
+		xmmodel->keys[j] = src->keys[j];
+		xmmodel->mapping[j] = src->mapping[j];
+	}
+	xmmodel->current_penalty_index = src->current_penalty_index;
+	xmmodel->convert = g_strdup(src->convert);
+	return xmmodel;
+}
+
+void xm_model_set_dparms(XmModel *xmmodel, double*x)
+{
+	int j;
+	for ( j = 0; j < xmmodel->size; j++) {
+		xmmodel->dparms[j] = x[j];
+	}
 }
 
 int xm_model_run(GString *params, XmModel *xmmodel)
@@ -121,11 +187,12 @@ int xm_model_parms_sort_index_ascending(gpointer p1, gpointer p2, gpointer user_
 	return 0;
 }
 
-double xm_model_parms_double_to_int(gpointer user_data)
+double xm_model_parms_double_to_int(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = -1;
 	int i, j;
+	xm_model_set_dparms(xmmodel, x);
 	for ( i = 0; i < xmmodel->index_size; i++ ) {
 		xmmodel->index[i] = i;
 	}
@@ -154,12 +221,13 @@ fprintf(stderr, "\n");*/
 	return val;
 }
 
-double xm_model_score_double(gpointer user_data)
+double xm_model_score_double(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;
 	GString *params = g_string_new("");
 	int i;
+	xm_model_set_dparms(xmmodel, x);
 	for ( i= 0; i < xmmodel->size; i++ ) {
 		g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
 	}
@@ -170,7 +238,7 @@ double xm_model_score_double(gpointer user_data)
 	return val;
 }
 
-double xm_model_score_int(gpointer user_data)
+double xm_model_score_int(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;
@@ -186,7 +254,7 @@ double xm_model_score_int(gpointer user_data)
 	return val;
 }
 
-double xm_model_read_penalty(gpointer user_data)
+double xm_model_read_penalty(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;

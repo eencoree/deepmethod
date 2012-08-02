@@ -32,23 +32,21 @@ extern "C"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <glib.h>
 
-typedef double (*DpFunc)(void *user_data);
+typedef double (*DpFunc)(void *user_data, double*x);
 
-typedef double (*DpFuncPrime)(void *user_data);
+typedef double (*DpFuncPrime)(void *user_data, double*x);
+
+typedef gpointer (*DpFuncCopyModel)(gpointer user_data);
 
 typedef struct DpTargetFunc {
 	char*name;
 	DpFunc f;
 	DpFuncPrime f_prime;
-	void *user_data;
-	int kount;
-	double value;
-	double retval;
 	double weight;
 	double rank;
 	int index;
-	int invalid;
 } DpTargetFunc;
 
 DpTargetFunc*dp_target_func_new(int index, double weight, double rank, char*sname);
@@ -59,8 +57,8 @@ typedef struct DpTarget {
 	DpTargetFunc*target;
 	int size;
 	DpTargetFunc**penalty;
-	int invalid;
-	double value;
+	gpointer user_data;
+	DpFuncCopyModel copy_model;
 } DpTarget;
 
 DpTarget*dp_target_new();
@@ -69,9 +67,11 @@ void dp_target_add_func (DpTarget*htarget, int index, double weight, double rank
 
 void dp_target_insert_func (DpTarget*htarget, DpTargetFunc*func, void *user_data);
 
-int dp_target_eval (DpTarget*htarget);
+int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data);
 
-int dp_target_eval_precond (DpTarget*htarget);
+int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*precond, gpointer user_data);
+
+gpointer dp_target_eval_get_user_data(DpTarget*htarget);
 
 #ifdef __cplusplus
 }

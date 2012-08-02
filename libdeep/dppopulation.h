@@ -48,10 +48,9 @@ typedef struct DpPopulation {
 	DpIndivid**individ;
 	int *ages_descending;
 	int *cost_ascending;
-	int n_accepted;
 } DpPopulation;
 
-DpPopulation*dp_population_new(int size, int ind_size, int targets_size);
+DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size, int seed);
 
 void dp_population_delete(DpPopulation*pop);
 
