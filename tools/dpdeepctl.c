@@ -91,15 +91,24 @@ int main(int argc, char **argv)
 		g_error("%s called with wrong options for operation", argv[0]);
 	}
 	dp_settings_init(settings_file, settings_group, dpsettings, &gerror);
+	if ( gerror != NULL ) {
+		g_error("Settings init:%s", gerror->message);
+	}
 	xmmodel = xm_model_new();
 	xm_model_init(model_file, model_group, xmmodel);
 	if ( !g_strcmp0 ( operation, "optimize" ) ) {
 		heval = xm_translate_parms(xmmodel);
 		htarget = dp_target_new();
 		dp_settings_target_init(target_file, target_group, htarget, &gerror);
+		if ( gerror != NULL ) {
+			g_error(gerror->message);
+		}
 		xm_translate_score(htarget, xmmodel);
 		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->tau, dpsettings->stop_count);
 		dp_settings_process_run(dpsettings, hopt, world_id, heval, htarget, &gerror);
+		if ( gerror != NULL ) {
+			g_error("Settings process init:%s", gerror->message);
+		}
 		dp_opt_run(hopt);
 	}
 	if ( hopt->hloop->stop_flag != DP_LOOP_EXIT_ERROR ) {

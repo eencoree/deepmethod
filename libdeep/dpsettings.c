@@ -203,6 +203,10 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 		}
 		g_free(str);
 	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "max_threads", &gerror) ) != NULL ) {
+		hopt->max_threads = g_strtod( str , NULL);
+		g_free(str);
+	}
 	g_key_file_free(gkf);
 	return retval;
 }
@@ -272,7 +276,7 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "deep") ) {
 			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy);
+			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep, tau_flag, opt_type, order, method_info);
 		}

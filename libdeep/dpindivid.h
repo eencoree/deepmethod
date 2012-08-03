@@ -33,6 +33,7 @@ extern "C"
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <glib/gthread.h>
 
 typedef struct DpIndivid {
 	int size;
@@ -48,7 +49,7 @@ typedef struct DpIndivid {
 	GRand*hrand;
 	int invalid;
 	gpointer user_data;
-	GMutex*gmutex;
+	GMutex *gmutex;
 } DpIndivid;
 
 DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed);

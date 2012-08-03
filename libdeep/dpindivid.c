@@ -44,7 +44,7 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 	individ->hrand = g_rand_new_with_seed ((guint32)seed);
 	individ->age = 0;
 	individ->user_data = NULL;
-//	g_mutex_init(individ->gmutex);
+	individ->gmutex = g_mutex_new();
 	return individ;
 }
 
@@ -56,6 +56,7 @@ void dp_individ_delete(DpIndivid*individ)
 	free(individ->targets);
 	free(individ->precond);
 	g_rand_free(individ->hrand);
+	g_mutex_free(individ->gmutex);
 	free(individ);
 }
 
