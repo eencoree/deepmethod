@@ -54,6 +54,7 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int pre
 	pop->dmin = -1;
 	pop->iage = 0;
 	pop->aage = 0;
+	pop->iter = 0;
 	return pop;
 }
 

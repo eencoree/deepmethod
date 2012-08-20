@@ -78,6 +78,45 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	} while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
 	start_index = g_rand_int_range (hrand, 0, population->ind_size);
 	end_index = population->ind_size;
+	dp_individ_copy_values(my_trial, my_individ);
+	my_trial->age = 0;
+	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial);
+	if ( my_id == population->imin ) {
+		if ( my_trial->cost >= my_individ->cost ) {
+			dp_individ_copy_values(my_trial, my_individ);
+			my_trial->age++;
+		}
+	} else if ( 1 != dp_evaluation_individ_compare((const void *)(&my_individ), (const void *)(&my_trial), (void*)(hdeepinfo->hevalctrl)) ) {
+		dp_individ_copy_values(my_trial, my_individ);
+		my_trial->age++;
+	}
+}
+
+void dp_conc_deep_step_func (gpointer data, gpointer user_data)
+{
+	int r1, r2, r3, r4;
+	int start_index, end_index;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
+	int my_id = GPOINTER_TO_INT(data) - 1;
+	DpPopulation*trial = hdeepinfo->trial;
+	DpIndivid*my_trial = trial->individ[my_id];
+	DpPopulation*population = hdeepinfo->population;
+	DpIndivid*my_individ = population->individ[my_id];
+	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+	GRand*hrand = my_individ->hrand;
+	r1 = population->imin;
+	do {
+		r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+	} while ( r2 == my_id || r2 == r1 );
+	do {
+		r3 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+	} while ( r3 == my_id || r3 == r1 || r3 == r2 );
+	do {
+		r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+	} while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
+	start_index = g_rand_int_range (hrand, 0, population->ind_size);
+	end_index = population->ind_size;
 	g_mutex_lock(my_individ->gmutex);
 	dp_individ_copy_values(my_trial, my_individ);
 	g_mutex_unlock(my_individ->gmutex);
@@ -111,10 +150,43 @@ void dp_deep_step(DpDeepInfo*hdeepinfo)
 	int individ_id;
 	gboolean immediate_stop = FALSE;
 	gboolean wait_finish = TRUE;
+	DpPopulation*pop_ptr;
 	DpPopulation*population = hdeepinfo->population;
+	DpPopulation*trial = hdeepinfo->trial;
 	GError *gerror = NULL;
 	if ( hdeepinfo->max_threads > 0 ) {
 		hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_step_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
+		if ( gerror != NULL ) {
+			g_error(gerror->message);
+		}
+		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+			g_thread_pool_push (hdeepinfo->gthreadpool, GINT_TO_POINTER(individ_id + 1), &gerror);
+			if ( gerror != NULL ) {
+				g_error(gerror->message);
+			}
+		}
+		g_thread_pool_free (hdeepinfo->gthreadpool, immediate_stop, wait_finish);
+	} else {
+		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+			dp_deep_step_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
+		}
+	}
+	dp_population_update(trial, 0, trial->size);
+	trial->iter = population->iter + 1;
+	pop_ptr = population;
+	hdeepinfo->population = trial;
+	hdeepinfo->trial = pop_ptr;
+}
+
+void dp_conc_deep_step(DpDeepInfo*hdeepinfo)
+{
+	int individ_id;
+	gboolean immediate_stop = FALSE;
+	gboolean wait_finish = TRUE;
+	DpPopulation*population = hdeepinfo->population;
+	GError *gerror = NULL;
+	if ( hdeepinfo->max_threads > 0 ) {
+		hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_conc_deep_step_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
 		if ( gerror != NULL ) {
 			g_error(gerror->message);
 		}
@@ -213,3 +285,4 @@ void dp_deep_update_step(DpDeepInfo*hdeepinfo)
 {
 	dp_recombination_control_update(hdeepinfo->recombination_control, hdeepinfo->population->individ[0]->hrand, hdeepinfo->population, 0, hdeepinfo->population->size);
 }
+

@@ -64,6 +64,7 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 {
 	int i;
 	individ->cost = trial->cost;
+	individ->age = trial->age;
 	for ( i = 0; i < individ->size; i++ ) {
 		individ->x[i] = trial->x[i];
 		individ->y[i] = trial->y[i];
@@ -113,3 +114,4 @@ void dp_individ_dump(DpIndivid*individ)
 		fprintf(stdout, "%%%d %e %e %e\n", i, individ->x[i], individ->y[i], individ->z[i]);
 	}
 }
+

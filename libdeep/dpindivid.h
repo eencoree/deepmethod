@@ -33,7 +33,7 @@ extern "C"
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
-#include <glib/gthread.h>
+//#include <glib/gthread.h>
 
 typedef struct DpIndivid {
 	int size;

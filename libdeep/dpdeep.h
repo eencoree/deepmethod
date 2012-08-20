@@ -65,6 +65,10 @@ void dp_deep_step_func (gpointer data, gpointer user_data);
 
 void dp_deep_step(DpDeepInfo*hdeepinfo);
 
+void dp_conc_deep_step_func (gpointer data, gpointer user_data);
+
+void dp_conc_deep_step(DpDeepInfo*hdeepinfo);
+
 void dp_deep_post(DpDeepInfo*hdeepinfo);
 
 void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo);

@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
-#include <glib/gthread.h>
+//#include <glib/gthread.h>
 #include <gio/gio.h>
 #include "dpdeep.h"
 #include "dprecombination.h"
