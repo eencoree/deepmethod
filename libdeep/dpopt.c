@@ -223,7 +223,6 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);
 	DpDeepInfo*hdeepinfo;
-/*	HOsdaInfo*hosdainfo;*/
 	FILE*fp;
 	int i;
 	fp = fopen(hopt->logname, "a");
@@ -231,7 +230,6 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 		hloop->exit_str = g_strdup_printf ( "dp_write_log: can't open %s", hopt->logname);
 		return DP_LOOP_EXIT_ERROR;
 	}
-/*	dp_opt_post(hloop, user_data);*/
 	fprintf(fp, "wtime:%e tau:%d cost:%f", hloop->w_time, hloop->tau_counter, hopt->cost);
 	for ( i = 0; i < heval->size; i++) {
 		fprintf(fp, " p[%d]:%f", heval->points[i]->index, *(heval->points[i]->param));

@@ -61,6 +61,7 @@ typedef struct XmModel {
 	int index_size;
 	int *tweak;
 	double *dparms;
+	double *bparms;
 	double *lbound;
 	double *hbound;
 	XmModelPart *part;
@@ -75,6 +76,7 @@ typedef struct XmModel {
 	double *array;
 	int *mapping;
 	int current_penalty_index;
+	double current_functional_value;
 } XmModel;
 
 XmModel*xm_model_new();
@@ -88,6 +90,8 @@ double xm_model_score_double(gpointer user_data, double*x);
 double xm_model_score_int(gpointer user_data, double*x);
 
 double xm_model_read_penalty(gpointer user_data, double*x);
+
+double xm_model_barrier_penalty(gpointer user_data, double*x);
 
 gchar *xm_model_convert_parms_to_sdf(gpointer *user_data, GError **err);
 
@@ -114,6 +118,8 @@ gint xm_model_sort_atoms (gconstpointer a, gconstpointer b);
 gpointer xm_model_copy_values(gpointer psrc);
 
 void xm_model_set_dparms(XmModel *xmmodel, double*x);
+
+void xm_model_update_values(gpointer psrc, double*x);
 
 #ifdef __cplusplus
 }

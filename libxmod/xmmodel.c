@@ -40,9 +40,11 @@ XmModel*xm_model_new()
 	xmmodel->array = NULL;
 	xmmodel->mapping = NULL;
 	xmmodel->current_penalty_index = 0;
+	xmmodel->current_functional_value = G_MAXDOUBLE;
 	xmmodel->parms = NULL;
 	xmmodel->index = NULL;
 	xmmodel->dparms = NULL;
+	xmmodel->bparms = NULL;
 	xmmodel->lbound = NULL;
 	xmmodel->hbound = NULL;
 	xmmodel->convert = NULL;
@@ -79,6 +81,7 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->tweak = g_new0 ( int, xmmodel->size );
 	xmmodel->mask = g_new0 ( int, xmmodel->size );
 	xmmodel->dparms = g_new0 ( double, xmmodel->size );
+	xmmodel->bparms = g_new0 ( double, xmmodel->size );
 	xmmodel->lbound = g_new0 ( double, xmmodel->size );
 	xmmodel->hbound = g_new0 ( double, xmmodel->size );
 	for ( j = 0; j < xmmodel->size; j ++ ) {
@@ -88,6 +91,7 @@ gpointer xm_model_copy_values(gpointer psrc)
 		xmmodel->mask[j] = src->mask[j];
 		xmmodel->tweak[j] = src->tweak[j];
 		xmmodel->dparms[j] = src->dparms[j];
+		xmmodel->bparms[j] = src->bparms[j];
 		xmmodel->lbound[j] = src->lbound[j];
 		xmmodel->hbound[j] = src->hbound[j];
 	}
@@ -103,15 +107,27 @@ gpointer xm_model_copy_values(gpointer psrc)
 		xmmodel->mapping[j] = src->mapping[j];
 	}
 	xmmodel->current_penalty_index = src->current_penalty_index;
+	xmmodel->current_functional_value = src->current_functional_value;
 	xmmodel->convert = g_strdup(src->convert);
 	return xmmodel;
 }
 
+void xm_model_update_values(gpointer psrc, double*x)
+{
+	XmModel *xmmodel = (XmModel *)psrc;
+	int i, index;
+	for ( i = 0; i < xmmodel->index_size; i++) {
+		index = xmmodel->tweak_index[i];
+		xmmodel->dparms[index] = x[i];
+	}
+}
+
 void xm_model_set_dparms(XmModel *xmmodel, double*x)
 {
-	int j;
-	for ( j = 0; j < xmmodel->size; j++) {
-		xmmodel->dparms[j] = x[j];
+	int i, index, j;
+	for ( i = 0; i < xmmodel->index_size; i++) {
+		index = xmmodel->tweak_index[i];
+		xmmodel->dparms[index] = x[i];
 	}
 }
 
@@ -235,6 +251,7 @@ double xm_model_score_double(gpointer user_data, double*x)
 	g_string_free(params, TRUE);
 	val = xmmodel->array[xmmodel->mapping[0]];
 	xmmodel->current_penalty_index = 1;
+	xmmodel->current_functional_value = val;
 	return val;
 }
 
@@ -251,6 +268,7 @@ double xm_model_score_int(gpointer user_data, double*x)
 	g_string_free(params, TRUE);
 	val = xmmodel->array[xmmodel->mapping[0]];
 	xmmodel->current_penalty_index = 1;
+	xmmodel->current_functional_value = val;
 	return val;
 }
 
@@ -260,6 +278,22 @@ double xm_model_read_penalty(gpointer user_data, double*x)
 	double val = G_MAXDOUBLE;
 	val = xmmodel->array[xmmodel->mapping[ xmmodel->current_penalty_index ]];
 	xmmodel->current_penalty_index++;
+	return val;
+}
+
+double xm_model_barrier_penalty(gpointer user_data, double*x)
+{
+	double sqr_dist, dist;
+	int i, index;
+	XmModel *xmmodel = (XmModel *)user_data;
+	double val = G_MAXDOUBLE;
+	sqr_dist = 0;
+	for ( i = 0; i < xmmodel->index_size; i++ ) {
+		index = xmmodel->tweak_index[i];
+		dist = xmmodel->bparms[index] - x[i];
+		sqr_dist += dist * dist;
+	}
+	val = ( sqr_dist > 0 ) ? xmmodel->current_functional_value / sqr_dist : val;
 	return val;
 }
 
@@ -327,6 +361,10 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	}
 	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "dparms", &length, &gerror) ) != NULL ) {
 		xmmodel->dparms = dlist;
+		xmmodel->bparms = g_new0 ( double, xmmodel->size );
+		for ( j = 0; j < xmmodel->size; j ++ ) {
+			xmmodel->bparms[j] = xmmodel->dparms[j];
+		}
 	}
 	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "lbound", &length, &gerror) ) != NULL ) {
 		xmmodel->lbound = dlist;

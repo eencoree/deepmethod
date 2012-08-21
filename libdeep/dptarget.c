@@ -140,3 +140,9 @@ gpointer dp_target_eval_get_user_data(DpTarget*htarget)
 {
 	return htarget->copy_model(htarget->user_data);
 }
+
+void dp_target_eval_update_user_data(DpTarget*htarget, gpointer user_data, double*buffer)
+{
+	htarget->update_model(user_data, buffer);
+}
+

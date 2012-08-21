@@ -73,21 +73,23 @@ typedef struct DpEvaluationCtrl {
 	DpTarget*eval_target;
 } DpEvaluationCtrl;
 
-void dp_evaluation_prepare(DpEvaluationCtrl*hevalctrl, double*x);
+void dp_evaluation_individ_copy(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu);
 
 void dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
 
 int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_data);
 
-void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
+void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu);
 
-void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
+void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu);
 
 DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy);
 
 DpEvaluationCtrl*dp_evaluation_ctrl_new();
 
 void dp_evaluation_copy_to_grad(DpEvaluationCtrl*hevalctrl, double*x);
+
+void dp_evaluation_copy_to_param(DpEvaluationCtrl*hevalctrl, double*x);
 
 void dp_evaluation_individ_scramble(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, double eps);
 

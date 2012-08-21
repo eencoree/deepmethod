@@ -64,6 +64,8 @@ DpFunc xm_translate_get_score_func_by_name ( char*name )
 		return (DpFunc)xm_model_score_double;
 	} else if ( !g_strcmp0(name, "readpenalty") ) {
 		return (DpFunc)xm_model_read_penalty;
+	} else if ( !g_strcmp0(name, "barrier") ) {
+		return (DpFunc)xm_model_barrier_penalty;
 	}
 }
 
@@ -73,6 +75,7 @@ void xm_translate_score(DpTarget*htarget, XmModel *xmmodel)
 	htarget->target->f = xm_translate_get_score_func_by_name(htarget->target->name);
 	htarget->user_data = (gpointer)(xmmodel);
 	htarget->copy_model = xm_model_copy_values;
+	htarget->update_model = xm_model_update_values;
 	for ( i = 0; i < htarget->size; i++ ) {
 		htarget->penalty[i]->f = xm_translate_get_score_func_by_name(htarget->penalty[i]->name);
 	}

@@ -40,6 +40,8 @@ typedef double (*DpFuncPrime)(void *user_data, double*x);
 
 typedef gpointer (*DpFuncCopyModel)(gpointer user_data);
 
+typedef void (*DpFuncUpdateModel)(gpointer user_data, double*buffer);
+
 typedef struct DpTargetFunc {
 	char*name;
 	DpFunc f;
@@ -59,6 +61,7 @@ typedef struct DpTarget {
 	DpTargetFunc**penalty;
 	gpointer user_data;
 	DpFuncCopyModel copy_model;
+	DpFuncUpdateModel update_model;
 } DpTarget;
 
 DpTarget*dp_target_new();
@@ -72,6 +75,8 @@ int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double
 int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*precond, gpointer user_data);
 
 gpointer dp_target_eval_get_user_data(DpTarget*htarget);
+
+void dp_target_eval_update_user_data(DpTarget*htarget, gpointer user_data, double*buffer);
 
 #ifdef __cplusplus
 }

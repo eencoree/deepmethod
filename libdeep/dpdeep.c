@@ -58,6 +58,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;
 	int start_index, end_index;
+	DpIndivid*my_tabu;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
 	int my_id = GPOINTER_TO_INT(data) - 1;
 	DpPopulation*trial = hdeepinfo->trial;
@@ -76,12 +77,13 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	do {
 		r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
 	} while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
+	my_tabu = population->individ[r1];
 	start_index = g_rand_int_range (hrand, 0, population->ind_size);
 	end_index = population->ind_size;
 	dp_individ_copy_values(my_trial, my_individ);
 	my_trial->age = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
-	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial);
+	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu);
 	if ( my_id == population->imin ) {
 		if ( my_trial->cost >= my_individ->cost ) {
 			dp_individ_copy_values(my_trial, my_individ);
@@ -93,64 +95,11 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	}
 }
 
-void dp_conc_deep_step_func (gpointer data, gpointer user_data)
-{
-	int r1, r2, r3, r4;
-	int start_index, end_index;
-	DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
-	int my_id = GPOINTER_TO_INT(data) - 1;
-	DpPopulation*trial = hdeepinfo->trial;
-	DpIndivid*my_trial = trial->individ[my_id];
-	DpPopulation*population = hdeepinfo->population;
-	DpIndivid*my_individ = population->individ[my_id];
-	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
-	GRand*hrand = my_individ->hrand;
-	r1 = population->imin;
-	do {
-		r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
-	} while ( r2 == my_id || r2 == r1 );
-	do {
-		r3 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
-	} while ( r3 == my_id || r3 == r1 || r3 == r2 );
-	do {
-		r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
-	} while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
-	start_index = g_rand_int_range (hrand, 0, population->ind_size);
-	end_index = population->ind_size;
-	g_mutex_lock(my_individ->gmutex);
-	dp_individ_copy_values(my_trial, my_individ);
-	g_mutex_unlock(my_individ->gmutex);
-	g_mutex_lock(population->individ[r1]->gmutex);
-	g_mutex_lock(population->individ[r2]->gmutex);
-	g_mutex_lock(population->individ[r3]->gmutex);
-	g_mutex_lock(population->individ[r4]->gmutex);
-	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
-	g_mutex_unlock(population->individ[r1]->gmutex);
-	g_mutex_unlock(population->individ[r2]->gmutex);
-	g_mutex_unlock(population->individ[r3]->gmutex);
-	g_mutex_unlock(population->individ[r4]->gmutex);
-	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial);
-	g_mutex_lock(my_individ->gmutex);
-	if ( my_id == population->imin ) {
-		if ( my_trial->cost < my_individ->cost ) {
-			dp_individ_copy_values(my_individ, my_trial);
-			my_individ->age = 0;
-		}
-	} else if ( 1 == dp_evaluation_individ_compare((const void *)(&my_individ), (const void *)(&my_trial), (void*)(hdeepinfo->hevalctrl)) ) {
-		dp_individ_copy_values(my_individ, my_trial);
-		my_individ->age = 0;
-	} else {
-		my_individ->age++;
-	}
-	g_mutex_unlock(my_individ->gmutex);
-}
-
 void dp_deep_step(DpDeepInfo*hdeepinfo)
 {
 	int individ_id;
 	gboolean immediate_stop = FALSE;
 	gboolean wait_finish = TRUE;
-	DpPopulation*pop_ptr;
 	DpPopulation*population = hdeepinfo->population;
 	DpPopulation*trial = hdeepinfo->trial;
 	GError *gerror = NULL;
@@ -173,94 +122,9 @@ void dp_deep_step(DpDeepInfo*hdeepinfo)
 	}
 	dp_population_update(trial, 0, trial->size);
 	trial->iter = population->iter + 1;
-	pop_ptr = population;
 	hdeepinfo->population = trial;
-	hdeepinfo->trial = pop_ptr;
+	hdeepinfo->trial = population;
 }
-
-void dp_conc_deep_step(DpDeepInfo*hdeepinfo)
-{
-	int individ_id;
-	gboolean immediate_stop = FALSE;
-	gboolean wait_finish = TRUE;
-	DpPopulation*population = hdeepinfo->population;
-	GError *gerror = NULL;
-	if ( hdeepinfo->max_threads > 0 ) {
-		hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_conc_deep_step_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
-		if ( gerror != NULL ) {
-			g_error(gerror->message);
-		}
-		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
-			g_thread_pool_push (hdeepinfo->gthreadpool, GINT_TO_POINTER(individ_id + 1), &gerror);
-			if ( gerror != NULL ) {
-				g_error(gerror->message);
-			}
-		}
-		g_thread_pool_free (hdeepinfo->gthreadpool, immediate_stop, wait_finish);
-	} else {
-		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
-			dp_deep_step_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
-		}
-	}
-	dp_population_update(population, 0, population->size);
-	population->iter++;
-}
-
-/*
-void dp_deep_step(DpDeepInfo*hdeepinfo)
-{
-	int i, r1, r2, r3, r4;
-	int start_index, end_index;
-	DpPopulation*trial = hdeepinfo->trial;
-	DpPopulation*population = hdeepinfo->population;
-	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
-	GRand*hrand;
-//	hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_step_func, (gpointer) hdeepinfo, gint max_threads, gboolean exclusive, GError **error);
-	for ( i = 0; i < population->size; i++ ) {
-//	if ( !g_thread_pool_push (hdeepinfo->gthreadpool, G_INT_TO_POINTER(i), GError **error) )
-		hrand = population->individ[i]->hrand;
-		r1 = population->imin;
-		do {
-			r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
-		} while ( r2 == i || r2 == r1 );
-		do {
-			r3 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
-		} while ( r3 == i || r3 == r1 || r3 == r2 );
-		do {
-			r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
-		} while ( r4 == i || r4 == r1 || r4 == r2 || r4 == r3 );
-		start_index = g_rand_int_range (hrand, 0, population->ind_size);
-		end_index = population->ind_size;
-//		g_mutex_lock(population->individ[i]->gmutex);
-		dp_individ_copy_values(trial->individ[i], population->individ[i]);
-//		g_mutex_lock(population->individ[r1]->gmutex);
-//		g_mutex_lock(population->individ[r2]->gmutex);
-//		g_mutex_lock(population->individ[r3]->gmutex);
-//		g_mutex_lock(population->individ[r4]->gmutex);
-		dp_individ_recombination(recombination_control, hrand, trial->individ[i], population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
-//		g_mutex_unlock(population->individ[r1]->gmutex);
-//		g_mutex_unlock(population->individ[r2]->gmutex);
-//		g_mutex_unlock(population->individ[r3]->gmutex);
-//		g_mutex_unlock(population->individ[r4]->gmutex);
-		dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, trial->individ[i]);
-		if ( i == population->imin ) {
-			if ( trial->individ[i]->cost < population->individ[i]->cost ) {
-				dp_individ_copy_values(population->individ[i], trial->individ[i]);
-				population->individ[i]->age = 0;
-			}
-		} else if ( 1 == dp_evaluation_individ_compare((const void *)(&(population->individ[i])), (const void *)(&(trial->individ[i])), (void*)(hdeepinfo->hevalctrl)) ) {
-			dp_individ_copy_values(population->individ[i], trial->individ[i]);
-			population->individ[i]->age = 0;
-		} else {
-			population->individ[i]->age++;
-		}
-//		g_mutex_unlock(population->individ[i]->gmutex);
-	}
-//	g_thread_pool_free (hdeepinfo->gthreadpool, gboolean immediate = FALSE, gboolean wait_ = TRUE);
-	dp_population_update(population, 0, population->size);
-	population->iter++;
-}
-*/
 
 void dp_deep_accept_step(DpDeepInfo*hdeepinfo, double*value)
 {
@@ -272,13 +136,13 @@ void dp_deep_post(DpDeepInfo*hdeepinfo)
 	DpPopulation*pop = hdeepinfo->population;
 	int imin = pop->imin;
 	double *x = pop->individ[imin]->x;
-	dp_evaluation_prepare(hdeepinfo->hevalctrl, x);
+	dp_evaluation_individ_copy(hdeepinfo->hevalctrl, pop->individ[pop->imin], pop->individ[pop->imin]);
 }
 
 void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo)
 {
 	DpPopulation*pop = hdeepinfo->population;
-	dp_evaluation_individ_evaluate_precond(hdeepinfo->hevalctrl, pop->individ[pop->imin]);
+	dp_evaluation_individ_evaluate_precond(hdeepinfo->hevalctrl, pop->individ[pop->imin], pop->individ[pop->imin]);
 }
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo)
