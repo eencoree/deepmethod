@@ -30,6 +30,7 @@
 #include "dploop.h"
 #include "dpopt.h"
 #include "dpdeep.h"
+#include "dposda.h"
 
 DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count)
 {
@@ -144,7 +145,7 @@ DpLoopExitCode dp_opt_init_stop(DpLoop*hloop, gpointer user_data)
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo;
-/*	HOsdaInfo*hosdainfo;*/
+	DpOsdaInfo*hosdainfo;
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
@@ -153,10 +154,10 @@ DpLoopExitCode dp_opt_init_stop(DpLoop*hloop, gpointer user_data)
 			hopt->stop_counter = 0;
 		break;
 		case H_OPT_OSDA:
-/*			hosdainfo = (HOsdaInfo*)(hopt->method_info);
+			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
 			dp_osda_accept_step(hosdainfo, &(hopt->cost));
 			hopt->old_cost = hopt->cost;
-			hopt->stop_counter = 0;*/
+			hopt->stop_counter = 0;
 		break;
 	}
 	return ret_val;
@@ -295,17 +296,16 @@ DpLoopExitCode dp_write_tst(DpLoop*hloop, gpointer user_data)
 	fclose(fp);
 	return ret_val;
 }
-/*
+
 DpLoopExitCode dp_opt_osda(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
-	HOsdaInfo*hosdainfo = (HOsdaInfo*)(hopt->method_info);
+	DpOsdaInfo*hosdainfo = (DpOsdaInfo*)(hopt->method_info);
 	double energy_start;
 	int iteration;
 	energy_start = hopt->cost;
 	for( iteration = 0; iteration < hopt->tau; iteration++ ) {
-		dp_osda_generate_step(hosdainfo);
 		dp_osda_step(hosdainfo);
 		dp_osda_accept_step(hosdainfo, &(hopt->cost));
 	}
@@ -313,23 +313,6 @@ DpLoopExitCode dp_opt_osda(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
-DpLoopExitCode dp_opt_es(DpLoop*hloop, gpointer user_data)
-{
-	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
-	DpOpt*hopt = (DpOpt*)user_data;
-	HEsInfo*hesinfo = (HEsInfo*)(hopt->method_info);
-	double energy_start;
-	int iteration;
-	energy_start = hopt->cost;
-	for( iteration = 0; iteration < hopt->tau; iteration++ ) {
-		dp_es_generate_step(hesinfo);
-		dp_es_step(hesinfo);
-		dp_es_accept_step(hesinfo, &(hopt->cost));
-	}
-	dp_es_update_step(hesinfo);
-	return ret_val;
-}
-*/
 DpLoopExitCode dp_opt_mpi_comm(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
@@ -354,15 +337,15 @@ DpLoopExitCode dp_opt_post(DpLoop*hloop, gpointer user_data)
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo;
-/*	HOsdaInfo*hosdainfo;*/
+	DpOsdaInfo*hosdainfo;
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 			dp_deep_post(hdeepinfo);
 		break;
 		case H_OPT_OSDA:
-/*			hosdainfo = (HOsdaInfo*)(hopt->method_info);
-			h_osda_post(hosdainfo);*/
+			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
+			dp_osda_post(hosdainfo);
 		break;
 	}
 	return ret_val;
@@ -373,16 +356,17 @@ DpLoopExitCode dp_opt_post_evaluate(DpLoop*hloop, gpointer user_data)
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo;
-/*	HOsdaInfo*hosdainfo;*/
+	DpOsdaInfo*hosdainfo;
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 			dp_deep_post_evaluate(hdeepinfo);
 		break;
 		case H_OPT_OSDA:
-/*			hosdainfo = (HOsdaInfo*)(hopt->method_info);
-			h_osda_post(hosdainfo);*/
+			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
+			dp_osda_post_evaluate(hosdainfo);
 		break;
 	}
 	return ret_val;
 }
+

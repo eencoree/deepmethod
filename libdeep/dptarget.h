@@ -66,7 +66,7 @@ DpTarget*dp_target_new();
 
 void dp_target_add_func (DpTarget*htarget, int index, double weight, double rank, char *sname);
 
-void dp_target_insert_func (DpTarget*htarget, DpTargetFunc*func, void *user_data);
+void dp_target_insert_prime_func (DpTarget*htarget, int index, double weight, double rank, char *sname);
 
 int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data, int index, double cost0);
 

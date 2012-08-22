@@ -45,9 +45,11 @@ DpTarget*dp_target_new()
 	DpTarget*htarget;
 	htarget = (DpTarget*)malloc(sizeof(DpTarget));
 	htarget->size = 0;
+	htarget->target = NULL;
 	htarget->penalty = NULL;
 	htarget->precond_size = 0;
 	htarget->precond = NULL;
+	htarget->prime = NULL;
 	return htarget;
 }
 
@@ -68,9 +70,11 @@ void dp_target_add_func (DpTarget*htarget, int index, double weight, double rank
 	}
 }
 
-void dp_target_insert_func (DpTarget*htarget, DpTargetFunc*func, void *user_data)
+void dp_target_insert_prime_func (DpTarget*htarget, int index, double weight, double rank, char *sname)
 {
-
+	DpTargetFunc*hprimefunc;
+	hprimefunc = dp_target_func_new(index, weight, rank, sname);
+	htarget->prime = hprimefunc;
 }
 
 int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data, int index, double cost0)

@@ -68,6 +68,7 @@ typedef struct XmModel {
 	int *lookup;
 	int num_parts;
 	gchar*command;
+	gchar*prime_command;
 	gchar*convert;
 	XmParmsConvert converter;
 	gchar*delimiters;
@@ -75,8 +76,15 @@ typedef struct XmModel {
 	int num_values;
 	double *array;
 	int *mapping;
+	gchar*prime_delimiters;
+	int *prime_keys;
+	int num_prime_values;
+	double *prime_array;
+	int *prime_mapping;
 	int current_penalty_index;
 	double current_functional_value;
+	double functional_value;
+	int prime_index;
 } XmModel;
 
 XmModel*xm_model_new();
@@ -119,7 +127,13 @@ gpointer xm_model_copy_values(gpointer psrc);
 
 void xm_model_set_dparms(XmModel *xmmodel, double*x);
 
-void xm_model_update_values(gpointer psrc, double*x);
+void xm_model_update_values(gpointer psrc, double*x, int prime_index, double functional_value);
+
+int xm_model_run_prime(GString *params, XmModel *xmmodel);
+
+double xm_model_prime_double(gpointer user_data, double*x);
+
+double xm_model_prime_int(gpointer user_data, double*x);
 
 #ifdef __cplusplus
 }

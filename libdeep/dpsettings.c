@@ -27,6 +27,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include "dpdeep.h"
+#include "dposda.h"
 #include "dprecombination.h"
 #include "dpopt.h"
 #include "dpsettings.h"
@@ -49,6 +50,10 @@ DpSettings*dp_settings_new()
 	opts->gamma_init = 50.0;
 	opts->roundoff_error = 1e-12;
 	opts->seed = 2064286;
+	opts->step_parameter = 0.2;
+	opts->step_decrement = 0.1;
+	opts->derivative_step = 0.1;
+	opts->number_of_trials = 1;
 	opts->run_before = g_new( gchar* , 3 );
 	opts->run_before[0] = g_strdup("initstop");
 	opts->run_before[1] = g_strdup("writelog");
@@ -165,6 +170,22 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 		hopt->seed = g_strtod( str , NULL);
 		g_free(str);
 	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "step_parameter", &gerror) ) != NULL ) {
+		hopt->step_parameter = g_strtod( str , NULL);
+		g_free(str);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "step_decrement", &gerror) ) != NULL ) {
+		hopt->step_decrement = g_strtod( str , NULL);
+		g_free(str);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "derivative_step", &gerror) ) != NULL ) {
+		hopt->derivative_step = g_strtod( str , NULL);
+		g_free(str);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "number_of_trials", &gerror) ) != NULL ) {
+		hopt->number_of_trials = g_strtod( str , NULL);
+		g_free(str);
+	}
 	if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "run_before", NULL, &gerror) ) != NULL ) {
 		g_strfreev(hopt->run_before);
 		hopt->run_before = strlist;
@@ -233,6 +254,7 @@ int dp_settings_init(gchar*filename, gchar*groupname, DpSettings *hopt, GError**
 int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, DpEvaluation*heval, DpTarget*htarget, GError**err)
 {
 	DpDeepInfo*hdeepinfo;
+	DpOsdaInfo*hosdainfo;
 	gpointer method_info;
 	int i, order, tau_flag;
 	gchar**list;
@@ -279,6 +301,11 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "osda") ) {
+			opt_type = H_OPT_OSDA;
+			hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);
+			method_info = (gpointer) hosdainfo;
+			dp_opt_add_func(hopt, dp_opt_osda, tau_flag, opt_type, order, method_info);
 		}
 	}
 	return 0;
@@ -306,6 +333,11 @@ int dp_settings_target_load(gchar*data, gsize size, gchar*groupname, DpTarget *h
 	for ( i = 0; i < (int)ksize; i++ ) {
 		if ( ( array = g_key_file_get_string_list(gkf, groupname, keys[i], &length, &gerror) ) != NULL ) {
 			if ( length == 3 ) {
+				index = g_strtod(array[0], NULL);
+				rank = g_strtod(array[1], NULL);
+				weight = g_strtod(array[2], NULL);
+				dp_target_add_func (htarget, index, weight, rank, keys[i]);
+			} else if ( length == 4 ) {
 				index = g_strtod(array[0], NULL);
 				rank = g_strtod(array[1], NULL);
 				weight = g_strtod(array[2], NULL);

@@ -54,6 +54,10 @@ typedef struct DpSettings {
 	double gamma_init;
 	double roundoff_error;
 	int seed;
+	double step_parameter;
+	double step_decrement;
+	double derivative_step;
+	int number_of_trials;
 	gchar**run_before;
 	gchar**run;
 	gchar**run_after;

@@ -41,9 +41,8 @@ typedef enum DpOptType {
 	H_OPT_FIRST,
 	H_OPT_NONE,
 	H_OPT_DEEP,
-	H_OPT_ES,
 	H_OPT_OSDA,
-	h_OPT_LAST
+	H_OPT_LAST
 } DpOptType;
 
 typedef enum DpOptStopType {
@@ -53,27 +52,6 @@ typedef enum DpOptStopType {
 	H_OPT_ABSOLUTE_TIME,
 	H_OPT_ABSOLUTE_ITER
 } DpOptStopType;
-
-typedef struct DpOptSettings {
-	DpOptStopType stop_type;
-	double criterion;
-	int stop_count;
-	int tau;
-	int population_size;
-	DpRecombinationStrategy recombination_strategy;
-	double recombination_weight;
-	double recombination_prob;
-	double recombination_gamma;
-	int es_lambda;
-	double noglobal_eps;
-	DpEvaluationStrategy eval_strategy;
-	double gamma_init;
-	double roundoff_error;
-	int seed;
-	gchar**run_before;
-	gchar**run;
-	gchar**run_after;
-} DpOptSettings;
 
 typedef struct DpOpt {
 	DpOptType opt_type;
@@ -98,7 +76,7 @@ typedef struct DpOpt {
 	int monitor;
 } DpOpt;
 
-DpOptSettings*dp_opt_settings_new();
+//DpOptSettings*dp_opt_settings_new();
 
 DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count);
 
@@ -119,6 +97,8 @@ DpLoopExitCode dp_write_tst(DpLoop*hloop, gpointer user_data);
 DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_deep(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_osda(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_mpi_comm(DpLoop*hloop, gpointer user_data);
 

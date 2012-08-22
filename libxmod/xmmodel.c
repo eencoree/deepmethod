@@ -34,6 +34,7 @@ XmModel*xm_model_new()
 	xmmodel->size = 0;
 	xmmodel->tweak = NULL;
 	xmmodel->command = NULL;
+	xmmodel->prime_command = NULL;
 	xmmodel->delimiters = NULL;
 	xmmodel->keys = NULL;
 	xmmodel->num_values = 0;
@@ -41,6 +42,8 @@ XmModel*xm_model_new()
 	xmmodel->mapping = NULL;
 	xmmodel->current_penalty_index = 0;
 	xmmodel->current_functional_value = G_MAXDOUBLE;
+	xmmodel->prime_index = 0;
+	xmmodel->functional_value = G_MAXDOUBLE;
 	xmmodel->parms = NULL;
 	xmmodel->index = NULL;
 	xmmodel->dparms = NULL;
@@ -96,6 +99,7 @@ gpointer xm_model_copy_values(gpointer psrc)
 		xmmodel->hbound[j] = src->hbound[j];
 	}
 	xmmodel->command = g_strdup(src->command);
+	xmmodel->prime_command = g_strdup(src->prime_command);
 	xmmodel->delimiters = g_strdup(src->delimiters);
 	xmmodel->num_values = src->num_values;
 	xmmodel->array = g_new0 ( double, xmmodel->num_values );
@@ -106,13 +110,25 @@ gpointer xm_model_copy_values(gpointer psrc)
 		xmmodel->keys[j] = src->keys[j];
 		xmmodel->mapping[j] = src->mapping[j];
 	}
+	xmmodel->prime_delimiters = g_strdup(src->prime_delimiters);
+	xmmodel->num_prime_values = src->num_prime_values;
+	xmmodel->prime_array = g_new0 ( double, xmmodel->num_prime_values );
+	xmmodel->prime_keys = g_new0 ( int, xmmodel->num_prime_values );
+	xmmodel->prime_mapping = g_new0 ( int, xmmodel->num_prime_values );
+	for ( j = 0; j < xmmodel->num_prime_values; j++ ) {
+		xmmodel->prime_array[j] = src->prime_array[j];
+		xmmodel->prime_keys[j] = src->prime_keys[j];
+		xmmodel->prime_mapping[j] = src->prime_mapping[j];
+	}
 	xmmodel->current_penalty_index = src->current_penalty_index;
 	xmmodel->current_functional_value = src->current_functional_value;
 	xmmodel->convert = g_strdup(src->convert);
+	xmmodel->prime_index = src->prime_index;
+	xmmodel->functional_value = src->functional_value;
 	return xmmodel;
 }
 
-void xm_model_update_values(gpointer psrc, double*x)
+void xm_model_update_values(gpointer psrc, double*x, int prime_index, double functional_value)
 {
 	XmModel *xmmodel = (XmModel *)psrc;
 	int i, index;
@@ -120,6 +136,8 @@ void xm_model_update_values(gpointer psrc, double*x)
 		index = xmmodel->tweak_index[i];
 		xmmodel->dparms[index] = x[i];
 	}
+	xmmodel->prime_index = prime_index;
+	xmmodel->functional_value = functional_value;
 }
 
 void xm_model_set_dparms(XmModel *xmmodel, double*x)
@@ -176,6 +194,62 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	for ( i = 0; i < xmmodel->num_values; i++ ) {
 		xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
+	}
+	g_strfreev(result);
+	g_free(standard_output);
+	g_free(standard_error);
+	if ( xmmodel->convert != NULL ) {
+		g_unlink(conversion);
+	}
+	return child_exit_status;
+}
+
+int xm_model_run_prime(GString *params, XmModel *xmmodel)
+{
+	gchar**result;
+	gchar**margv;
+	int argcp, i;
+	GString *command;
+	GError*gerror = NULL;
+	int flaggs, child_exit_status;
+	gchar *standard_output;
+	gchar *standard_error;
+	gchar*conversion;
+	command = g_string_new(xmmodel->prime_command);
+	if ( xmmodel->convert != NULL ) {
+		if ( ( conversion = xmmodel->converter((gpointer)xmmodel, &gerror) ) == NULL ) {
+			g_string_free(command, TRUE);
+			for ( i = 0; i < xmmodel->num_values; i++ ) {
+				xmmodel->array[i] = G_MAXDOUBLE;
+			}
+			return child_exit_status;
+		}
+		if ( gerror ) {
+			g_error("converter failed for %s", gerror->message);
+		}
+		g_string_append_printf(command, " %s", conversion);
+	} else {
+		g_string_append_printf(command, " '%s'", params->str);
+	}
+	g_string_append_printf(command, "%d", xmmodel->prime_index);
+	if ( !g_shell_parse_argv(command->str, &argcp, &margv, &gerror) ) {
+		if ( gerror ) {
+			g_error("g_shell_parse failed for %s\nwith %s", command->str, gerror->message);
+		}
+	}
+	g_string_free(command, TRUE);
+/*	flaggs = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL; */
+/*	flaggs |= G_SPAWN_STDERR_TO_DEV_NULL; */
+	flaggs = G_SPAWN_SEARCH_PATH;
+	if ( !g_spawn_sync (NULL, margv, NULL, (GSpawnFlags)flaggs, NULL, NULL, &standard_output, &standard_error, &child_exit_status, &gerror) ) {
+		if ( gerror ) {
+			g_error("g_spawn_sync failed for %s\nwith %s", margv[0], gerror->message);
+		}
+	}
+	g_strfreev(margv);
+	result = g_strsplit_set(standard_output, xmmodel->prime_delimiters, -1);
+	for ( i = 0; i < xmmodel->num_prime_values; i++ ) {
+		xmmodel->prime_array[i] = g_strtod(result[xmmodel->prime_keys[i]], NULL);
 	}
 	g_strfreev(result);
 	g_free(standard_output);
@@ -272,6 +346,37 @@ double xm_model_score_int(gpointer user_data, double*x)
 	return val;
 }
 
+double xm_model_prime_double(gpointer user_data, double*x)
+{
+	XmModel *xmmodel = (XmModel *)user_data;
+	double val = G_MAXDOUBLE;
+	GString *params = g_string_new("");
+	int i;
+	xm_model_set_dparms(xmmodel, x);
+	for ( i= 0; i < xmmodel->size; i++ ) {
+		g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
+	}
+	xm_model_run_prime(params, xmmodel);
+	g_string_free(params, TRUE);
+	val = xmmodel->prime_array[xmmodel->prime_mapping[0]];
+	return val;
+}
+
+double xm_model_prime_int(gpointer user_data, double*x)
+{
+	XmModel *xmmodel = (XmModel *)user_data;
+	double val = G_MAXDOUBLE;
+	GString *params = g_string_new("");
+	int i;
+	for ( i= 0; i < xmmodel->size; i++ ) {
+		g_string_append_printf(params, "%d ", xmmodel->parms[i]);
+	}
+	xm_model_run_prime(params, xmmodel);
+	g_string_free(params, TRUE);
+	val = xmmodel->prime_array[xmmodel->prime_mapping[0]];
+	return val;
+}
+
 double xm_model_read_penalty(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
@@ -293,7 +398,7 @@ double xm_model_barrier_penalty(gpointer user_data, double*x)
 		dist = xmmodel->bparms[index] - x[i];
 		sqr_dist += dist * dist;
 	}
-	val = ( sqr_dist > 0 ) ? xmmodel->current_functional_value / sqr_dist : val;
+	val = ( sqr_dist > 0 ) ? ( xmmodel->current_functional_value - xmmodel->functional_value ) / sqr_dist : val;
 	return val;
 }
 
@@ -387,6 +492,22 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "command", &gerror) ) != NULL ) {
 		xmmodel->command = str;
+	}
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "prime_keys", &length, &gerror) ) != NULL ) {
+		xmmodel->prime_keys = ilist;
+	}
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "prime_mapping", &length, &gerror) ) != NULL ) {
+		xmmodel->prime_mapping = ilist;
+	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_prime_values", &gerror) ) != 0 ) {
+		xmmodel->num_prime_values = ii;
+		xmmodel->prime_array = g_new0 ( double, ii );
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "prime_delimiters", &gerror) ) != NULL ) {
+		xmmodel->prime_delimiters = str;
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "prime_command", &gerror) ) != NULL ) {
+		xmmodel->prime_command = str;
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "convert", &gerror) ) != NULL ) {
 		xmmodel->convert = str;

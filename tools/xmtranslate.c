@@ -66,6 +66,10 @@ DpFunc xm_translate_get_score_func_by_name ( char*name )
 		return (DpFunc)xm_model_read_penalty;
 	} else if ( !g_strcmp0(name, "barrier") ) {
 		return (DpFunc)xm_model_barrier_penalty;
+	} else if ( !g_strcmp0(name, "primedouble") ) {
+		return (DpFunc)xm_model_prime_double;
+	} else if ( !g_strcmp0(name, "primeint") ) {
+		return (DpFunc)xm_model_prime_int;
 	}
 }
 
@@ -82,4 +86,8 @@ void xm_translate_score(DpTarget*htarget, XmModel *xmmodel)
 	for ( i = 0; i < htarget->precond_size; i++ ) {
 		htarget->precond[i]->f = xm_translate_get_score_func_by_name(htarget->precond[i]->name);
 	}
+	if ( htarget->prime != NULL ) {
+		htarget->prime->f = xm_translate_get_score_func_by_name(htarget->prime->name);
+	}
 }
+
