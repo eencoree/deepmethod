@@ -83,7 +83,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	dp_individ_copy_values(my_trial, my_individ);
 	my_trial->age = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
-	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu);
+	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu, my_id, my_tabu->cost);
 	if ( my_id == population->imin ) {
 		if ( my_trial->cost >= my_individ->cost ) {
 			dp_individ_copy_values(my_trial, my_individ);
@@ -134,15 +134,14 @@ void dp_deep_accept_step(DpDeepInfo*hdeepinfo, double*value)
 void dp_deep_post(DpDeepInfo*hdeepinfo)
 {
 	DpPopulation*pop = hdeepinfo->population;
-	int imin = pop->imin;
-	double *x = pop->individ[imin]->x;
-	dp_evaluation_individ_copy(hdeepinfo->hevalctrl, pop->individ[pop->imin], pop->individ[pop->imin]);
+	double *x = pop->individ[pop->imin]->x;
+	dp_evaluation_individ_copy(hdeepinfo->hevalctrl, pop->individ[pop->imin], pop->individ[pop->imin], pop->imin, pop->dmin);
 }
 
 void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo)
 {
 	DpPopulation*pop = hdeepinfo->population;
-	dp_evaluation_individ_evaluate_precond(hdeepinfo->hevalctrl, pop->individ[pop->imin], pop->individ[pop->imin]);
+	dp_evaluation_individ_evaluate_precond(hdeepinfo->hevalctrl, pop->individ[pop->imin], pop->individ[pop->imin], pop->imin, pop->dmin);
 }
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo)

@@ -36,16 +36,13 @@ extern "C"
 
 typedef double (*DpFunc)(void *user_data, double*x);
 
-typedef double (*DpFuncPrime)(void *user_data, double*x);
-
 typedef gpointer (*DpFuncCopyModel)(gpointer user_data);
 
-typedef void (*DpFuncUpdateModel)(gpointer user_data, double*buffer);
+typedef void (*DpFuncUpdateModel)(gpointer user_data, double*buffer, int index, double cost0);
 
 typedef struct DpTargetFunc {
 	char*name;
 	DpFunc f;
-	DpFuncPrime f_prime;
 	double weight;
 	double rank;
 	int index;
@@ -59,6 +56,7 @@ typedef struct DpTarget {
 	DpTargetFunc*target;
 	int size;
 	DpTargetFunc**penalty;
+	DpTargetFunc*prime;
 	gpointer user_data;
 	DpFuncCopyModel copy_model;
 	DpFuncUpdateModel update_model;
@@ -70,15 +68,15 @@ void dp_target_add_func (DpTarget*htarget, int index, double weight, double rank
 
 void dp_target_insert_func (DpTarget*htarget, DpTargetFunc*func, void *user_data);
 
-int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data);
+int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data, int index, double cost0);
 
-int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*precond, gpointer user_data);
+int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*precond, gpointer user_data, int index, double cost0);
 
 gpointer dp_target_eval_get_user_data(DpTarget*htarget);
 
-void dp_target_eval_update_user_data(DpTarget*htarget, gpointer user_data, double*buffer);
+void dp_target_eval_update_user_data(DpTarget*htarget, gpointer user_data, double*buffer, int index, double cost0);
 
-int dp_target_eval_prime (DpTarget*htarget, double*x, int*invalid, double*prime, gpointer user_data);
+int dp_target_eval_prime (DpTarget*htarget, double*x, int*invalid, double*prime, gpointer user_data, int index, double cost0);
 
 #ifdef __cplusplus
 }

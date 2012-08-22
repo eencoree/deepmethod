@@ -72,38 +72,38 @@ DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int wo
 	return hevalctrl;
 }
 
-void dp_evaluation_individ_evaluate_prime(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu)
+void dp_evaluation_individ_evaluate_prime(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
 {
 	int max_value_flag = 0;
 	individ->invalid = 1;
 	dp_evaluation_individ_prepare(hevalctrl, individ);
-	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z);
-	max_value_flag = dp_target_eval_prime (hevalctrl->eval_target, individ->z, &(individ->invalid), individ->y, individ->user_data);
+	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
+	max_value_flag = dp_target_eval_prime (hevalctrl->eval_target, individ->z, &(individ->invalid), individ->y, individ->user_data, index, cost);
 }
 
-void dp_evaluation_individ_copy(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu)
+void dp_evaluation_individ_copy(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
 {
 	dp_evaluation_individ_prepare(hevalctrl, individ);
-	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z);
+	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
 	dp_evaluation_copy_to_param(hevalctrl, individ->z);
 }
 
-void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu)
+void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
 {
 	int max_value_flag = 0;
 	individ->invalid = 1;
 	dp_evaluation_individ_prepare(hevalctrl, individ);
-	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z);
-	max_value_flag = dp_target_eval (hevalctrl->eval_target, individ->z, &(individ->invalid), &(individ->cost), individ->targets, individ->precond, individ->user_data);
+	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
+	max_value_flag = dp_target_eval (hevalctrl->eval_target, individ->z, &(individ->invalid), &(individ->cost), individ->targets, individ->precond, individ->user_data, index, cost);
 }
 
-void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu)
+void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
 {
 	int max_value_flag = 0;
 	individ->invalid = 1;
 	dp_evaluation_individ_prepare(hevalctrl, individ);
-	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z);
-	max_value_flag = dp_target_eval_precond (hevalctrl->eval_target, individ->z, &(individ->invalid), individ->precond, individ->user_data);
+	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
+	max_value_flag = dp_target_eval_precond (hevalctrl->eval_target, individ->z, &(individ->invalid), individ->precond, individ->user_data, index, cost);
 }
 
 int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_data)
@@ -295,12 +295,23 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
 	dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 	pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
-	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0]);
+	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, G_MAXDOUBLE);
 	for ( i = 1; i < size; i++) {
 		pop->individ[i]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
-		dp_evaluation_individ_evaluate(hevalctrl, pop->individ[i], pop->individ[i]);
+		dp_evaluation_individ_evaluate(hevalctrl, pop->individ[i], pop->individ[i], i, G_MAXDOUBLE);
 	}
 	dp_population_update(pop, 0, pop->size);
 	return pop;
 }
+
+DpIndivid*dp_evaluation_individ_init(DpEvaluationCtrl*hevalctrl)
+{
+	DpIndivid*individ;
+	individ = dp_individ_new(hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
+	dp_evaluation_individ_set(hevalctrl, individ);
+	individ->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
+	dp_evaluation_individ_evaluate(hevalctrl, individ, individ, 0, G_MAXDOUBLE);
+	return individ;
+}
+

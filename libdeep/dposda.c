@@ -32,8 +32,8 @@ DpOsdaInfo *dp_osda_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 {
 	DpOsdaInfo*hosdainfo = dp_osda_info_new(number_of_trials, step_parameter, step_decrement, derivative_step);
 	hosdainfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, seed, gamma_init, roundoff_error, eval_strategy);
-	hosdainfo->trial = dp_individ_new(hosdainfo->population_size, hosdainfo->hevalctrl->eval->size, hosdainfo->hevalctrl->eval_target->size, hosdainfo->hevalctrl->eval_target->precond_size, hosdainfo->hevalctrl->seed + hosdainfo->hevalctrl->yoffset);
-	hosdainfo->current = dp_evaluation_individ_init(hosdainfo->hevalctrl, hosdainfo->population_size, hosdainfo->noglobal_eps);
+	hosdainfo->trial = dp_evaluation_individ_init(hosdainfo->hevalctrl);
+	hosdainfo->current = dp_evaluation_individ_init(hosdainfo->hevalctrl);
 	return hosdainfo;
 }
 
@@ -66,17 +66,17 @@ void dp_osda_step_func (gpointer data, gpointer user_data)
 	DpIndivid*my_individ = hosdainfo->current;
 	double *pdelta = (double*)data;
 	int iter, index = hosdainfo->current_index;
-	double delta;
-	dp_evaluation_individ_evaluate_prime(hosdainfo->hevalctrl, my_trial, my_current);
+	double delta, cost = my_individ->cost;
+	dp_evaluation_individ_evaluate_prime(hosdainfo->hevalctrl, my_trial, my_individ, index, cost);
 	iter = 0;
 	delta = hosdainfo->step_parameter * my_individ->y[index];
-	individ->age++;
+	my_individ->age++;
 	do {
 		iter++;
 		dp_individ_copy_values(my_trial, my_individ);
 		my_trial->age = 0;
 		my_trial->x[hosdainfo->current_index] = my_individ->x[hosdainfo->current_index] - delta;
-		dp_evaluation_individ_evaluate(hosdainfo->hevalctrl, my_trial, my_current);
+		dp_evaluation_individ_evaluate(hosdainfo->hevalctrl, my_trial, my_individ, index, cost);
 		if ( my_trial->cost >= my_individ->cost ) {
 			dp_individ_copy_values(my_trial, my_individ);
 			my_trial->age++;
@@ -90,26 +90,27 @@ void dp_osda_step(DpOsdaInfo*hosdainfo)
 {
 	DpIndivid*trial = hosdainfo->trial;
 	DpIndivid*individ = hosdainfo->current;
+	int index = hosdainfo->current_index;
 	double delta;
 	dp_osda_step_func((gpointer) &delta, (gpointer) hosdainfo);
 	individ->z[index] = delta;
 	hosdainfo->current_index++;
-	if ( hosdainfo->current_index >= hosdainfo->individ->size ) {
+	if ( hosdainfo->current_index >= hosdainfo->current->size ) {
 		hosdainfo->current_index = 0;
 	}
 	hosdainfo->current = trial;
-	hsdainfo->trial = individ;
+	hosdainfo->trial = individ;
 }
 
 void dp_osda_post(DpOsdaInfo*hosdainfo)
 {
 	DpIndivid*current = hosdainfo->current;
-	dp_evaluation_individ_copy(hosdainfo->hevalctrl, current, current);
+	dp_evaluation_individ_copy(hosdainfo->hevalctrl, current, current, hosdainfo->current_index, current->cost);
 }
 
 void dp_osda_post_evaluate(DpOsdaInfo*hosdainfo)
 {
 	DpIndivid*current = hosdainfo->current;
-	dp_evaluation_individ_evaluate_precond(hosdainfo->hevalctrl, current, current);
+	dp_evaluation_individ_evaluate_precond(hosdainfo->hevalctrl, current, current, hosdainfo->current_index, current->cost);
 }
 

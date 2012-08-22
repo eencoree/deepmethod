@@ -73,7 +73,7 @@ void dp_target_insert_func (DpTarget*htarget, DpTargetFunc*func, void *user_data
 
 }
 
-int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data)
+int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data, int index, double cost0)
 {
 	int max_value_flag = 0, i;
 	double value, f, retval, max_value = G_MAXDOUBLE;
@@ -118,7 +118,7 @@ int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double
 	return max_value_flag;
 }
 
-int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*precond, gpointer user_data)
+int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*precond, gpointer user_data, int index, double cost0)
 {
 	int max_value_flag = 0, i;
 	double value, f, retval, max_value = G_MAXDOUBLE;
@@ -136,14 +136,14 @@ int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*prec
 	return max_value_flag;
 }
 
-int dp_target_eval_prime (DpTarget*htarget, double*x, int*invalid, double*prime, gpointer user_data)
+int dp_target_eval_prime (DpTarget*htarget, double*x, int*invalid, double*prime, gpointer user_data, int index, double cost0)
 {
 	int max_value_flag = 0;
 	double value, f, retval, max_value = G_MAXDOUBLE;
 	f = htarget->prime->f(user_data, x);
 	if ( f < max_value ) {
 		f *= htarget->prime->weight;
-		prime[i] = f;
+		prime[index] = f;
 	} else {
 		max_value_flag = 1;
 	}
@@ -156,8 +156,8 @@ gpointer dp_target_eval_get_user_data(DpTarget*htarget)
 	return htarget->copy_model(htarget->user_data);
 }
 
-void dp_target_eval_update_user_data(DpTarget*htarget, gpointer user_data, double*buffer)
+void dp_target_eval_update_user_data(DpTarget*htarget, gpointer user_data, double*buffer, int index, double cost0)
 {
-	htarget->update_model(user_data, buffer);
+	htarget->update_model(user_data, buffer, index, cost0);
 }
 

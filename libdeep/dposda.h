@@ -50,17 +50,17 @@ DpOsdaInfo *dp_osda_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 
 DpOsdaInfo *dp_osda_info_new (int number_of_trials, double step_parameter, double step_decrement, double derivative_step);
 
-void dp_osda_update_step(DpDeepInfo*hdeepinfo);
+void dp_osda_update_step(DpOsdaInfo*hosdainfo);
 
-void dp_osda_accept_step(DpDeepInfo*hdeepinfo, double*value);
+void dp_osda_accept_step(DpOsdaInfo*hosdainfo, double*value);
 
 void dp_osda_step_func (gpointer data, gpointer user_data);
 
-void dp_osda_step(DpDeepInfo*hdeepinfo);
+void dp_osda_step(DpOsdaInfo*hosdainfo);
 
-void dp_osda_post(DpDeepInfo*hdeepinfo);
+void dp_osda_post(DpOsdaInfo*hosdainfo);
 
-void dp_osda_post_evaluate(DpDeepInfo*hdeepinfo);
+void dp_osda_post_evaluate(DpOsdaInfo*hosdainfo);
 
 #ifdef __cplusplus
 }
