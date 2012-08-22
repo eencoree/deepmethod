@@ -22,7 +22,9 @@ libdeep_la_SOURCES = \
 	dploop.c \
 	dploop.h \
 	dpsettings.c \
-	dpsettings.h
+	dpsettings.h \
+	dposda.c \
+	dposda.h
 
 libdeep_la_LIBADD = \
 	$(DEEP_LIBS)

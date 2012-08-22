@@ -73,6 +73,8 @@ typedef struct DpEvaluationCtrl {
 	DpTarget*eval_target;
 } DpEvaluationCtrl;
 
+void dp_evaluation_individ_evaluate_prime(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu);
+
 void dp_evaluation_individ_copy(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu);
 
 void dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);

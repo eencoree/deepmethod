@@ -78,6 +78,8 @@ gpointer dp_target_eval_get_user_data(DpTarget*htarget);
 
 void dp_target_eval_update_user_data(DpTarget*htarget, gpointer user_data, double*buffer);
 
+int dp_target_eval_prime (DpTarget*htarget, double*x, int*invalid, double*prime, gpointer user_data);
+
 #ifdef __cplusplus
 }
 #endif

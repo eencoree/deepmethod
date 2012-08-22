@@ -72,6 +72,15 @@ DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int wo
 	return hevalctrl;
 }
 
+void dp_evaluation_individ_evaluate_prime(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu)
+{
+	int max_value_flag = 0;
+	individ->invalid = 1;
+	dp_evaluation_individ_prepare(hevalctrl, individ);
+	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z);
+	max_value_flag = dp_target_eval_prime (hevalctrl->eval_target, individ->z, &(individ->invalid), individ->y, individ->user_data);
+}
+
 void dp_evaluation_individ_copy(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu)
 {
 	dp_evaluation_individ_prepare(hevalctrl, individ);

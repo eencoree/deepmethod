@@ -136,6 +136,21 @@ int dp_target_eval_precond (DpTarget*htarget, double*x, int*invalid, double*prec
 	return max_value_flag;
 }
 
+int dp_target_eval_prime (DpTarget*htarget, double*x, int*invalid, double*prime, gpointer user_data)
+{
+	int max_value_flag = 0;
+	double value, f, retval, max_value = G_MAXDOUBLE;
+	f = htarget->prime->f(user_data, x);
+	if ( f < max_value ) {
+		f *= htarget->prime->weight;
+		prime[i] = f;
+	} else {
+		max_value_flag = 1;
+	}
+	(*invalid) = max_value_flag;
+	return max_value_flag;
+}
+
 gpointer dp_target_eval_get_user_data(DpTarget*htarget)
 {
 	return htarget->copy_model(htarget->user_data);
