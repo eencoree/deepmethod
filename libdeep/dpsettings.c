@@ -109,94 +109,168 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 		hopt->stop_type = H_OPT_PROPORTIONAL_STOP;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
+		if ( gerror != NULL ) {
+			g_warning ( gerror->message );
+			g_clear_error (&gerror);
+		}
 	} else if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_stop", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_ABSOLUTE_STOP;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
+		if ( gerror != NULL ) {
+			g_warning ( gerror->message );
+			g_clear_error (&gerror);
+		}
 	} else if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_score", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_ABSOLUTE_SCORE;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
+		if ( gerror != NULL ) {
+			g_warning ( gerror->message );
+			g_clear_error (&gerror);
+		}
 	} else if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_iter", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_ABSOLUTE_ITER;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
+		if ( gerror != NULL ) {
+			g_warning ( gerror->message );
+			g_clear_error (&gerror);
+		}
 	} else if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_time", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_ABSOLUTE_TIME;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
+		if ( gerror != NULL ) {
+			g_warning ( gerror->message );
+			g_clear_error (&gerror);
+		}		
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "stop_count", &gerror) ) != NULL ) {
 		hopt->stop_count = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "tau", &gerror) ) != NULL ) {
 		hopt->tau = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "population_size", &gerror) ) != NULL ) {
 		hopt->population_size = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "recombination_weight", &gerror) ) != NULL ) {
 		hopt->recombination_weight = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "recombination_prob", &gerror) ) != NULL ) {
 		hopt->recombination_prob = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "recombination_gamma", &gerror) ) != NULL ) {
 		hopt->recombination_gamma = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "es_lambda", &gerror) ) != NULL ) {
 		hopt->es_lambda = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "noglobal_eps", &gerror) ) != NULL ) {
 		hopt->noglobal_eps = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "gamma_init", &gerror) ) != NULL ) {
 		hopt->gamma_init = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "roundoff_error", &gerror) ) != NULL ) {
 		hopt->roundoff_error = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "seed", &gerror) ) != NULL ) {
 		hopt->seed = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "step_parameter", &gerror) ) != NULL ) {
 		hopt->step_parameter = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "step_decrement", &gerror) ) != NULL ) {
 		hopt->step_decrement = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "derivative_step", &gerror) ) != NULL ) {
 		hopt->derivative_step = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "number_of_trials", &gerror) ) != NULL ) {
 		hopt->number_of_trials = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "run_before", NULL, &gerror) ) != NULL ) {
 		g_strfreev(hopt->run_before);
 		hopt->run_before = strlist;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "run", NULL, &gerror) ) != NULL ) {
 		g_strfreev(hopt->run);
 		hopt->run = strlist;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "run_after", NULL, &gerror) ) != NULL ) {
 		g_strfreev(hopt->run_after);
 		hopt->run_after = strlist;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "recombination_strategy", &gerror) ) != NULL ) {
 		if ( !g_strcmp0(str, "simple") ) {
@@ -211,6 +285,9 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 			hopt->recombination_strategy = DE_3_bin_T;
 		}
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "transform", &gerror) ) != NULL ) {
 		if ( !g_strcmp0(str, "tanh") ) {
@@ -223,10 +300,16 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 			hopt->eval_strategy = rand_trans_flag;
 		}
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "max_threads", &gerror) ) != NULL ) {
 		hopt->max_threads = g_strtod( str , NULL);
 		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
 	}
 	g_key_file_free(gkf);
 	return retval;
@@ -341,7 +424,7 @@ int dp_settings_target_load(gchar*data, gsize size, gchar*groupname, DpTarget *h
 				index = g_strtod(array[0], NULL);
 				rank = g_strtod(array[1], NULL);
 				weight = g_strtod(array[2], NULL);
-				dp_target_add_func (htarget, index, weight, rank, keys[i]);
+				dp_target_insert_prime_func (htarget, index, weight, rank, keys[i]);
 			}
 			g_strfreev(array);
 		}

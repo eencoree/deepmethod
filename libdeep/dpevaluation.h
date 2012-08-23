@@ -99,6 +99,8 @@ void dp_evaluation_individ_set(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
 
 void dp_evaluation_individ_set_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
 
+void dp_evaluation_individ_transform_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, int index);
+
 DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps);
 
 DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy);

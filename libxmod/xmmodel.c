@@ -246,7 +246,7 @@ int xm_model_run_prime(GString *params, XmModel *xmmodel)
 	} else {
 		g_string_append_printf(command, " '%s'", params->str);
 	}
-	g_string_append_printf(command, "%d", xmmodel->prime_index);
+	g_string_append_printf(command, " %d", xmmodel->prime_index);
 	if ( !g_shell_parse_argv(command->str, &argcp, &margv, &gerror) ) {
 		if ( gerror ) {
 			g_error("g_shell_parse failed for %s\nwith %s", command->str, gerror->message);

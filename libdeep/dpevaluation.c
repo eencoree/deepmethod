@@ -79,6 +79,7 @@ void dp_evaluation_individ_evaluate_prime(DpEvaluationCtrl*hevalctrl, DpIndivid*
 	dp_evaluation_individ_prepare(hevalctrl, individ);
 	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
 	max_value_flag = dp_target_eval_prime (hevalctrl->eval_target, individ->z, &(individ->invalid), individ->y, individ->user_data, index, cost);
+	dp_evaluation_individ_transform_grad(hevalctrl, individ, index);
 }
 
 void dp_evaluation_individ_copy(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
@@ -285,6 +286,28 @@ void dp_evaluation_individ_set_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 		} else {
 			individ->y[i] = z;
 		}
+	}
+}
+
+void dp_evaluation_individ_transform_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, int index)
+{
+	double orig_grad = individ->y[index];
+	double y = individ->z[index] * hevalctrl->eval->points[index]->scale;
+	double z = orig_grad * hevalctrl->eval->points[index]->scale;
+	double w;
+	if ( hevalctrl->eval->points[index]->limited ) {
+		if ( hevalctrl->eval_strategy == sin_trans_flag ) {
+			individ->y[index] = z * hevalctrl->eval->points[index]->gamma * hevalctrl->eval->points[index]->beta * cos ( individ->x[index] * hevalctrl->eval->points[index]->gamma );
+		} else if ( hevalctrl->eval_strategy == tanh_trans_flag ) {
+			w = tanh( individ->x[index] * hevalctrl->eval->points[index]->gamma );
+			individ->y[index] = z * hevalctrl->eval->points[index]->gamma * hevalctrl->eval->points[index]->beta * ( 1 - w * w );
+		} else if ( hevalctrl->eval_strategy == alg_trans_flag ) {
+			individ->y[index] = z;
+		} else if ( hevalctrl->eval_strategy == rand_trans_flag ) {
+			individ->y[index] = z;
+		}
+	} else {
+		individ->y[index] = z;
 	}
 }
 
