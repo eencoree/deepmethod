@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 		g_error("Settings init:%s", gerror->message);
 	}
 	xmmodel = xm_model_new();
-	xm_model_init(model_file, model_group, xmmodel);
+	xm_model_init(model_file, model_group, xmmodel, &gerror);
 	if ( !g_strcmp0 ( operation, "optimize" ) ) {
 		heval = xm_translate_parms(xmmodel);
 		htarget = dp_target_new();

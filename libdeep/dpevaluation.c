@@ -295,11 +295,11 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
 	dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 	pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
-	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, G_MAXDOUBLE);
+	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, 0);
 	for ( i = 1; i < size; i++) {
 		pop->individ[i]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
-		dp_evaluation_individ_evaluate(hevalctrl, pop->individ[i], pop->individ[i], i, G_MAXDOUBLE);
+		dp_evaluation_individ_evaluate(hevalctrl, pop->individ[i], pop->individ[i], i, 0);
 	}
 	dp_population_update(pop, 0, pop->size);
 	return pop;
@@ -311,7 +311,7 @@ DpIndivid*dp_evaluation_individ_init(DpEvaluationCtrl*hevalctrl)
 	individ = dp_individ_new(hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
 	dp_evaluation_individ_set(hevalctrl, individ);
 	individ->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
-	dp_evaluation_individ_evaluate(hevalctrl, individ, individ, 0, G_MAXDOUBLE);
+	dp_evaluation_individ_evaluate(hevalctrl, individ, individ, 0, 0);
 	return individ;
 }
 
