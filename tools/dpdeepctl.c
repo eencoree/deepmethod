@@ -64,6 +64,7 @@ int main(int argc, char **argv)
 	DpEvaluation*heval;
 	DpTarget*htarget;
 	int world_id = 0, world_count = 1;
+	double dval;
 	GOptionContext *context;
 	GError *gerror = NULL;
 	g_thread_init (NULL);
@@ -112,6 +113,7 @@ int main(int argc, char **argv)
 		dp_opt_run(hopt);
 	}
 	if ( hopt->hloop->stop_flag != DP_LOOP_EXIT_ERROR ) {
+		dval = xm_model_parms_double_to_int((gpointer) xmmodel, xmmodel->dparms);
 		xm_model_save(xmmodel, output_file);
 	} else {
 		g_error("Loop finished with an unknown error.\nOutput not produced.");

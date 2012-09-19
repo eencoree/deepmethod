@@ -460,7 +460,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( length = g_key_file_get_integer(gkf, groupname, "numparms", &gerror) ) != 0 ) {
+	if ( ( length = g_key_file_get_integer(gkf, groupname, "numparms", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->size = length;
 		xmmodel->parms = g_new0 ( int, length );
 		xmmodel->iparms = g_new0 ( int, length );
@@ -479,7 +479,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( length = g_key_file_get_integer(gkf, groupname, "nummask", &gerror) ) != 0 ) {
+	if ( ( length = g_key_file_get_integer(gkf, groupname, "nummask", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->mask = g_new0 ( int, xmmodel->size );
 		for ( j = 0; j < length; j ++ ) {
 			xmmodel->mask[j] = 1;
@@ -513,7 +513,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( length = g_key_file_get_integer(gkf, groupname, "numtweak", &gerror) ) != 0 ) {
+	if ( ( length = g_key_file_get_integer(gkf, groupname, "numtweak", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->index_size = length;
 		xmmodel->tweak = g_new0 ( int, xmmodel->size );
 		xmmodel->index = g_new0 ( int, xmmodel->index_size );
@@ -564,7 +564,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( length = g_key_file_get_integer(gkf, groupname, "numdparms", &gerror) ) != 0 ) {
+	if ( ( length = g_key_file_get_integer(gkf, groupname, "numdparms", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->dparms = g_new0 ( double, xmmodel->size );
 		xmmodel->bparms = g_new0 ( double, xmmodel->size );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
@@ -581,7 +581,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( dval = g_key_file_get_double(gkf, groupname, "vallbound", &gerror) ) != 0 ) {
+	if ( ( dval = g_key_file_get_double(gkf, groupname, "vallbound", &gerror) ) != 0 || gerror == NULL ) {
 		xmmodel->lbound = g_new0 ( double, xmmodel->size );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->lbound[j] = dval;
@@ -596,7 +596,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( dval = g_key_file_get_double(gkf, groupname, "valhbound", &gerror) ) != 0 ) {
+	if ( ( dval = g_key_file_get_double(gkf, groupname, "valhbound", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->hbound = g_new0 ( double, xmmodel->size );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->hbound[j] = dval;
@@ -617,7 +617,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_values", &gerror) ) != 0 ) {
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_values", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->num_values = ii;
 		xmmodel->array = g_new0 ( double, ii );
 	} else {
@@ -648,7 +648,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_prime_values", &gerror) ) != 0 ) {
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_prime_values", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->num_prime_values = ii;
 		xmmodel->prime_array = g_new0 ( double, ii );
 	} else {
@@ -1054,6 +1054,10 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
 		if ( ( file_contents = xm_model_gemstat_contents(xmmodel) ) == NULL ) {
+			g_error("Can't get contents");
+		}
+	} else if ( !g_strcmp0 ( xmmodel->convert, "subset" ) ) {
+		if ( ( file_contents = xm_model_subset_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get contents");
 		}
 	}
