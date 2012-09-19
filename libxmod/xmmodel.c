@@ -780,7 +780,7 @@ fprintf(stderr, "\n");
 	file_contents_atoms = g_string_new("");
 	file_contents_bonds = g_string_new("");
 	gqueue = g_queue_new ();
-	g_queue_init(gqueue);
+/*	g_queue_init(gqueue);*/
 	for ( i = 0; i < xmmodel->size; i++ ) {
 		if ( xmmodel->mask[i] == 1 ) {
 			int index_of_part, index_of_part_conn;
