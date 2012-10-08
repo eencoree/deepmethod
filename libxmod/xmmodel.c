@@ -921,7 +921,8 @@ GString*xm_model_subsubset_contents(XmModel*xmmodel)
 {
 	GString*file_contents;
 	int i, j, k;
-	k = xmmodel->parms[xmmodel->size - 1];
+/*	k = xmmodel->parms[xmmodel->size - 1];*/
+	k = xmmodel->parms[0];
 	for ( i = 0; i < k; i++ ) {
 		xmmodel->mask[i] = 1;
 	}
