@@ -675,6 +675,8 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->converter = xm_model_convert_parms_to_gemstat;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "subset" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_subset;
+		} else if ( !g_strcmp0 ( xmmodel->convert, "subsubset" ) ) {
+			xmmodel->converter = xm_model_convert_parms_to_subsubset;
 		}
 	} else {
 		g_warning ( gerror->message );
@@ -915,6 +917,32 @@ GString*xm_model_subset_contents(XmModel*xmmodel)
 	return file_contents;
 }
 
+GString*xm_model_subsubset_contents(XmModel*xmmodel)
+{
+	GString*file_contents;
+	int i, j, k;
+	k = xmmodel->parms[xmmodel->size - 1];
+	for ( i = 0; i < k; i++ ) {
+		xmmodel->mask[i] = 1;
+	}
+	for ( i = k; i < xmmodel->size; i++ ) {
+		xmmodel->mask[i] = 0;
+	}
+	file_contents = g_string_new("");
+	k = 0;
+	for ( i = 0; i < xmmodel->size; i++ ) {
+		if ( xmmodel->tweak[i] == 1 ) {
+			if ( xmmodel->mask[k] == 1 ) {
+				g_string_append_printf(file_contents, "%d\n", xmmodel->parms[i]);
+				k++;
+			}
+		} else {
+			g_string_append_printf(file_contents, "%d\n", xmmodel->parms[i]);
+		}
+	}
+	return file_contents;
+}
+
 gchar *xm_model_convert_parms_to_sdf(gpointer *user_data, GError **err)
 {
 	XmModel*xmmodel = (XmModel*)user_data;
@@ -999,6 +1027,34 @@ gchar *xm_model_convert_parms_to_subset(gpointer *user_data, GError **err)
 	return name_used;
 }
 
+gchar *xm_model_convert_parms_to_subsubset(gpointer *user_data, GError **err)
+{
+	XmModel*xmmodel = (XmModel*)user_data;
+	gint fhandle;
+	const gchar *tmpl = NULL;
+	gchar *name_used = NULL;
+	GError *gerror = NULL;
+	GString*file_contents;
+	g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+	if ( ( fhandle = g_file_open_tmp (tmpl, &name_used, &gerror) ) == -1 ) {
+		g_propagate_error (err, gerror);
+		return NULL;
+	}
+	close(fhandle);
+	if ( ( file_contents = xm_model_subsubset_contents(xmmodel) ) == NULL ) {
+		g_unlink(name_used);
+		return NULL;
+	}
+	if ( !g_file_set_contents ((const gchar *)name_used, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+		g_string_free(file_contents, TRUE);
+		g_propagate_error (err, gerror);
+		g_unlink(name_used);
+		return NULL;
+	}
+	g_string_free(file_contents, TRUE);
+	return name_used;
+}
+
 XmModelConn*xm_model_conn_new(int source, int source_conn, int dest, int dest_conn, int rank)
 {
 	XmModelConn*conn;
@@ -1050,15 +1106,19 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 	GError*gerror = NULL;
 	if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 		if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
-			g_error("Can't get contents");
+			g_error("Can't get sdf contents");
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
 		if ( ( file_contents = xm_model_gemstat_contents(xmmodel) ) == NULL ) {
-			g_error("Can't get contents");
+			g_error("Can't get gemstat contents");
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "subset" ) ) {
 		if ( ( file_contents = xm_model_subset_contents(xmmodel) ) == NULL ) {
-			g_error("Can't get contents");
+			g_error("Can't get subset contents");
+		}
+	} else if ( !g_strcmp0 ( xmmodel->convert, "subsubset" ) ) {
+		if ( ( file_contents = xm_model_subsubset_contents(xmmodel) ) == NULL ) {
+			g_error("Can't get subsubset contents");
 		}
 	}
 	if ( !g_file_set_contents ((const gchar *)filename, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {

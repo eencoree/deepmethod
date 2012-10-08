@@ -1,0 +1,39 @@
+== Description ==
+
+Novel software framework to solve the inverse problem of mathematical modelling.
+
+== License ==
+
+The code is licensed under GNU General Public License version 3.
+
+== How to cite in publications ==
+
+@article{Kozlov11,
+ author = {Konstantin Kozlov and Alexander Samsonov},
+ title = {DEEP -- Differential Evolution Entirely
+ Parallel Method for Gene Regulatory Networks},
+ journal = {Journal of Supercomputing},
+ year = {2011},
+ volume = {57},
+ pages = {172-178}
+}
+
+== Get the sources: ==
+
+git clone git://urchin.spbcas.ru:9148/deep
+
+To update the source tree to the latest you'll need to:
+
+cd deep
+git pull
+
+== Build: ==
+
+cd deep
+autoreconf -fi
+./configure --prefix=/usr/local
+make
+su -c 'make install'
+
+kkozlov@prostack.ru
+
