@@ -33,10 +33,7 @@
 #include "xmmodel.h"
 
 #ifdef GIO_STANDALONE_SOURCE
-int g_strcmp0(char*str1, char*str2)
-{
-	return (int)strcmp(str1, str2);
-}
+#define g_strcmp0(str1, str2) strcmp(str1, str2)
 #endif
 
 XmModel*xm_model_new()
