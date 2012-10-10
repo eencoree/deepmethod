@@ -25,8 +25,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
-//#include <glib/gthread.h>
+#ifdef GIO_STANDALONE_SOURCE
+#include <gio/gfile.h>
+#else
 #include <gio/gio.h>
+#endif
 #include "dpdeep.h"
 #include "dprecombination.h"
 #include "dpopt.h"
@@ -55,6 +58,13 @@ static GOptionEntry entries[] =
 	{ "operation", 0, 0, G_OPTION_ARG_STRING, &operation, "What to do", "Operation" },
 	{ NULL }
 };
+
+#ifdef GIO_STANDALONE_SOURCE
+int g_strcmp0(char*str1, char*str2)
+{
+	return (int)strcmp(str1, str2);
+}
+#endif
 
 int main(int argc, char **argv)
 {

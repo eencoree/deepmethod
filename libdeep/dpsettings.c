@@ -25,12 +25,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
+#ifdef GIO_STANDALONE_SOURCE
+#include <gio/gfile.h>
+#else
 #include <gio/gio.h>
+#endif
 #include "dpdeep.h"
 #include "dposda.h"
 #include "dprecombination.h"
 #include "dpopt.h"
 #include "dpsettings.h"
+
+#ifdef GIO_STANDALONE_SOURCE
+int g_strcmp0(char*str1, char*str2)
+{
+	return (int)strcmp(str1, str2);
+}
+#endif
 
 DpSettings*dp_settings_new()
 {

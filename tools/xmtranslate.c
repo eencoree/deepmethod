@@ -29,6 +29,13 @@
 #include "xmtranslate.h"
 #include "dpevaluation.h"
 
+#ifdef GIO_STANDALONE_SOURCE
+int g_strcmp0(char*str1, char*str2)
+{
+	return (int)strcmp(str1, str2);
+}
+#endif
+
 DpEvaluation *xm_translate_parms(XmModel *xmmodel)
 {
 	int i, j;

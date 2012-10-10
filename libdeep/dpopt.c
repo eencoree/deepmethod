@@ -32,6 +32,13 @@
 #include "dpdeep.h"
 #include "dposda.h"
 
+#ifdef GIO_STANDALONE_SOURCE
+int g_strcmp0(char*str1, char*str2)
+{
+	return (int)strcmp(str1, str2);
+}
+#endif
+
 DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count)
 {
 	DpOpt *hopt;

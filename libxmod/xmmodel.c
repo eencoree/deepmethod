@@ -25,8 +25,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
+#ifdef GIO_STANDALONE_SOURCE
+#include <gio/gfile.h>
+#else
 #include <gio/gio.h>
+#endif
 #include "xmmodel.h"
+
+#ifdef GIO_STANDALONE_SOURCE
+int g_strcmp0(char*str1, char*str2)
+{
+	return (int)strcmp(str1, str2);
+}
+#endif
 
 XmModel*xm_model_new()
 {
