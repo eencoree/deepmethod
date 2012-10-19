@@ -951,7 +951,7 @@ GString*xm_model_subsubset_contents(XmModel*xmmodel)
 	}
 	file_contents = g_string_new("");
 	k = 1;
-	for ( i = 0; i < xmmodel->size; i++ ) {
+	for ( i = 1; i < xmmodel->size; i++ ) {
 		if ( xmmodel->tweak[i] == 1 ) {
 			if ( xmmodel->mask[k] == 1 ) {
 				g_string_append_printf(file_contents, "%d\n", xmmodel->parms[i]);
