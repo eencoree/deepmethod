@@ -933,6 +933,11 @@ GString*xm_model_subsubset_contents(XmModel*xmmodel)
 	int i, j, k;
 	int main_index = 0;
 	int main_index_parm = xmmodel->parms[main_index];
+	if ( main_index_parm == main_index ) {
+		main_index_parm = xmmodel->parms[xmmodel->size - 1];
+		xmmodel->parms[xmmodel->size - 1] = main_index;
+		xmmodel->parms[main_index] = main_index_parm;
+	}
 	k = main_index_parm + 1;
 	xmmodel->mask[main_index] = 0;
 	for ( i = 1; i < k; i++ ) {
@@ -945,7 +950,7 @@ GString*xm_model_subsubset_contents(XmModel*xmmodel)
 		xmmodel->mask[i] = 0;
 	}
 	file_contents = g_string_new("");
-	k = 0;
+	k = 1;
 	for ( i = 0; i < xmmodel->size; i++ ) {
 		if ( xmmodel->tweak[i] == 1 ) {
 			if ( xmmodel->mask[k] == 1 ) {
