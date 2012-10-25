@@ -45,6 +45,7 @@ static char*target_file;
 static char*target_group;
 static char*output_file;
 static char*operation;
+static int monitor;
 
 static GOptionEntry entries[] = 
 {
@@ -56,6 +57,7 @@ static GOptionEntry entries[] =
 	{ "target-group", 0, 0, G_OPTION_ARG_STRING, &target_group, "Group name where target is described", "Target group name" },
 	{ "output-file", 0, 0, G_OPTION_ARG_STRING, &output_file, "File name to write", "Output file name" },
 	{ "operation", 0, 0, G_OPTION_ARG_STRING, &operation, "What to do", "Operation" },
+	{ "monitor", 0, 0, G_OPTION_ARG_INT, &monitor, "Extract line from log", "Save logline" },
 	{ NULL }
 };
 
@@ -118,6 +120,19 @@ int main(int argc, char **argv)
 			g_error("Settings process init:%s", gerror->message);
 		}
 		dp_opt_run(hopt);
+	} else if ( !g_strcmp0 ( operation, "monitor" ) ) {
+		heval = xm_translate_parms(xmmodel);
+		htarget = dp_target_new();
+		dp_settings_target_init(target_file, target_group, htarget, &gerror);
+		if ( gerror != NULL ) {
+			g_error(gerror->message);
+		}
+		xm_translate_score(htarget, xmmodel);
+		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->tau, dpsettings->stop_count);
+		dp_opt_monitor(hopt, monitor, &gerror);
+		if ( gerror != NULL ) {
+			g_error("Monitor error:%s", gerror->message);
+		}
 	}
 	if ( hopt->hloop->stop_flag != DP_LOOP_EXIT_ERROR ) {
 		dval = xm_model_parms_double_to_int((gpointer) xmmodel, xmmodel->dparms);

@@ -109,20 +109,13 @@ void dp_opt_run(DpOpt *hopt)
 	dp_loop_run (hloop);
 }
 
-DpOpt *dp_opt_monitor(char*filename, DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count, int monitor, char**dp_error)
+void dp_opt_monitor(DpOpt *hopt, int monitor, GError**gerror)
 {
 	DpLoop *hloop;
-	DpOpt *hopt;
 	GList *funcs = NULL;
 	GList *run_once_before = NULL;
 	GList *run_once_after = NULL;
 	DpLoopRunFunc *func;
-
-	hopt = (DpOpt*)malloc(sizeof(DpOpt));
-	hopt->world_id = world_id;
-	hopt->world_count = world_count;
-	hopt->monitor = monitor;
-	hopt->filename = g_strdup (filename);
 
 	func = (DpLoopRunFunc *)malloc(sizeof(DpLoopRunFunc));
 	func->tau_flag = 1;
@@ -130,18 +123,11 @@ DpOpt *dp_opt_monitor(char*filename, DpEvaluation*heval, DpTarget*htarget, int w
 	func->func = (DpLoopFunc)dp_read_log;
 	funcs = g_list_prepend (funcs, (void*)func);
 
-	hopt->logname = (char*)calloc(G_MAXSIZE, sizeof(char) );
-	sprintf( hopt->logname, "%s.hopt_log_%d", hopt->filename, hopt->world_id);
-	hopt->tstname = (char*)calloc(G_MAXSIZE, sizeof(char) );
-	sprintf( hopt->tstname, "%s.hopt_time", hopt->filename);
-	hopt->htarget = htarget;
-	hopt->heval = heval;
-
 	hloop = dp_loop_new(run_once_before, funcs, run_once_after);
 	dp_loop_zero_counters(hloop);
 	hopt->hloop = hloop;
+	hopt->monitor = monitor;
 	dp_loop_run (hloop);
-	return hopt;
 }
 
 DpLoopExitCode dp_opt_init_stop(DpLoop*hloop, gpointer user_data)
@@ -246,7 +232,7 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 
 DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 {
-	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_SUCCESS;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);

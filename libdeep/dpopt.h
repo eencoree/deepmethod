@@ -86,7 +86,7 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 
 void dp_opt_run(DpOpt *hopt);
 
-DpOpt *dp_opt_monitor(char*filename, DpEvaluation*heval, DpTarget*hqtarget, int world_id, int world_count, int monitor, char**h_error);
+void dp_opt_monitor(DpOpt *hopt, int monitor, GError**gerror);
 
 DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data);
 
