@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl Created by Anjuta application wizard.
 
-AC_INIT(deep, 0.0.9)
+AC_INIT(deep, 0.0.10)
 
 AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 AC_CONFIG_HEADERS([config.h])
@@ -30,7 +30,7 @@ AM_PROG_LIBTOOL
 
 
 
-PKG_CHECK_MODULES(DEEP, [glib-2.0 gsl gthread-2.0 gio-2.0])
+PKG_CHECK_MODULES(DEEP, [glib-2.0 gthread-2.0 gio-2.0])
 
 
 
