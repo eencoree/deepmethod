@@ -387,6 +387,10 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "optposteval") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_post_evaluate, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "deep") ) {
 			opt_type = H_OPT_DEEP;
 			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);

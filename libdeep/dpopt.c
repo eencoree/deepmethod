@@ -101,6 +101,54 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 		}
 	}
 }
+/*
+void dp_opt_add_funcs_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType opt_type, int order)
+{
+	int i;
+	for ( i = 0; list[i]; i += 2 ) {
+		tau_flag = g_strtod(list[i + 1], NULL);
+		if ( !g_strcmp0(list[i], "writelog") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_write_log, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "writestate") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_write_state, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "checkstop") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_check_stop, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "initstop") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "mpicomm") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_mpi_comm, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "optpost") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "optposteval") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_post_evaluate, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "deep") ) {
+			opt_type = H_OPT_DEEP;
+			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
+			method_info = (gpointer) hdeepinfo;
+			dp_opt_add_func(hopt, dp_opt_deep, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "osda") ) {
+			opt_type = H_OPT_OSDA;
+			hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);
+			method_info = (gpointer) hosdainfo;
+			dp_opt_add_func(hopt, dp_opt_osda, tau_flag, opt_type, order, method_info);
+		}
+	}
+}
+*/
 
 void dp_opt_run(DpOpt *hopt)
 {
@@ -121,7 +169,25 @@ void dp_opt_monitor(DpOpt *hopt, int monitor, GError**gerror)
 	func->tau_flag = 1;
 	func->user_data = (void*)hopt;
 	func->func = (DpLoopFunc)dp_read_log;
+	funcs = g_list_append (funcs, (void*)func);
+/*
+	func = (DpLoopRunFunc *)malloc(sizeof(DpLoopRunFunc));
+	func->tau_flag = 1;
+	func->user_data = (void*)hopt;
+	func->func = (DpLoopFunc)dp_opt_post;
 	funcs = g_list_prepend (funcs, (void*)func);
+
+	func = (DpLoopRunFunc *)malloc(sizeof(DpLoopRunFunc));
+	func->tau_flag = 1;
+	func->user_data = (void*)hopt;
+	func->func = (DpLoopFunc)dp_opt_post_evaluate;
+	funcs = g_list_prepend (funcs, (void*)func);
+*/
+	func = (DpLoopRunFunc *)malloc(sizeof(DpLoopRunFunc));
+	func->tau_flag = 1;
+	func->user_data = (void*)hopt;
+	func->func = (DpLoopFunc)dp_write_tst;
+	funcs = g_list_append (funcs, (void*)func);
 
 	hloop = dp_loop_new(run_once_before, funcs, run_once_after);
 	dp_loop_zero_counters(hloop);
@@ -232,7 +298,7 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 
 DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 {
-	DpLoopExitCode ret_val = DP_LOOP_EXIT_SUCCESS;
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);
@@ -262,7 +328,7 @@ DpLoopExitCode dp_write_state(DpLoop*hloop, gpointer user_data)
 
 DpLoopExitCode dp_write_tst(DpLoop*hloop, gpointer user_data)
 {
-	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_SUCCESS;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);

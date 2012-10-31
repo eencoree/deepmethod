@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 		}
 	}
 	if ( hopt->hloop->stop_flag != DP_LOOP_EXIT_ERROR ) {
-		dval = xm_model_parms_double_to_int((gpointer) xmmodel, xmmodel->dparms);
+		dval = xm_model_dparms_to_int((gpointer) xmmodel, xmmodel->dparms);
 		xm_model_save(xmmodel, output_file);
 	} else {
 		g_error("Loop finished with an unknown error.\nOutput not produced.");

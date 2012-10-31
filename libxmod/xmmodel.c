@@ -300,12 +300,11 @@ int xm_model_parms_sort_index_ascending(gpointer p1, gpointer p2, gpointer user_
 	return 0;
 }
 
-double xm_model_parms_double_to_int(gpointer user_data, double*x)
+double xm_model_dparms_to_int(gpointer user_data)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = -1;
 	int i, j;
-	xm_model_set_dparms(xmmodel, x);
 	for ( i = 0; i < xmmodel->index_size; i++ ) {
 		xmmodel->index[i] = i;
 	}
@@ -331,6 +330,16 @@ for ( i = 0; i < xmmodel->size; i++ ) {
 	}
 }
 fprintf(stderr, "\n");*/
+	return val;
+}
+
+double xm_model_parms_double_to_int(gpointer user_data, double*x)
+{
+	XmModel *xmmodel = (XmModel *)user_data;
+	double val = -1;
+	int i, j;
+	xm_model_set_dparms(xmmodel, x);
+	val = xm_model_dparms_to_int(user_data);
 	return val;
 }
 
