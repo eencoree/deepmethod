@@ -105,8 +105,8 @@ int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double
 		for ( i = 0; i < htarget->size; i++ ) {
 			f = htarget->penalty[i]->f(user_data, x);
 			if ( f < max_value ) {
-				f *= htarget->penalty[i]->weight;
 				penalty[i] = f;
+				f *= htarget->penalty[i]->weight;
 				value += f;
 			} else {
 				max_value_flag = 1;
