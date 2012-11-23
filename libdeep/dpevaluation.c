@@ -38,10 +38,12 @@ DpEvaluationCtrl*dp_evaluation_ctrl_new()
 	ec->roundoff_error = 1e-8;
 	ec->eval = NULL;
 	ec->eval_target = NULL;
+	ec->eval_max_threads = 0;
+	ec->exclusive = FALSE;
 	return ec;
 }
 
-DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy)
+DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_init, double roundoff_error, int eval_max_threads, DpEvaluationStrategy eval_strategy)
 {
 	DpEvaluationCtrl*hevalctrl;
 	hevalctrl = dp_evaluation_ctrl_new();
@@ -49,15 +51,16 @@ DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_ini
 	hevalctrl->yoffset = worldid;
 	hevalctrl->gamma_init = gamma_init;
 	hevalctrl->roundoff_error = roundoff_error;
+	hevalctrl->eval_max_threads = eval_max_threads;
 	hevalctrl->eval_strategy = eval_strategy;
 	return hevalctrl;
 }
 
-DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy)
+DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, int eval_max_threads, DpEvaluationStrategy eval_strategy)
 {
 	int i;
 	DpEvaluationCtrl*hevalctrl;
-	hevalctrl = dp_evaluation_ctrl_init(worldid, seed, gamma_init, roundoff_error, eval_strategy);
+	hevalctrl = dp_evaluation_ctrl_init(worldid, seed, gamma_init, roundoff_error, eval_max_threads, eval_strategy);
 	hevalctrl->eval = heval;
 	hevalctrl->eval_target = htarget;
 	for ( i = 0; i < hevalctrl->eval->size; i++) {
@@ -311,7 +314,7 @@ void dp_evaluation_individ_transform_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*
 	}
 }
 
-DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps)
+DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps)
 {
 	DpPopulation*pop;
 	int i;
@@ -320,9 +323,51 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, 0);
 	for ( i = 1; i < size; i++) {
-		pop->individ[i]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
+		pop->individ[i]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		dp_evaluation_individ_evaluate(hevalctrl, pop->individ[i], pop->individ[i], i, 0);
+	}
+	dp_population_update(pop, 0, pop->size);
+	return pop;
+}
+
+void dp_evaluation_population_init_func (gpointer data, gpointer user_data)
+{
+	DpEvaluationCtrl*hevalctrl = (DpEvaluationCtrl*)user_data;
+	DpIndivid*individ = (DpIndivid*)data;
+	individ->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
+	dp_evaluation_individ_evaluate(hevalctrl, individ, individ, 0, 0);
+}
+
+DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps)
+{
+	DpPopulation*pop;
+	int i;
+	gboolean immediate_stop = FALSE;
+	gboolean wait_finish = TRUE;
+	GError *gerror = NULL;
+	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
+	dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
+	pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
+	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, 0);
+	if ( hevalctrl->eval_max_threads > 0 ) {
+		hevalctrl->gthreadpool = g_thread_pool_new ((GFunc) dp_evaluation_population_init_func, (gpointer) hevalctrl, hevalctrl->eval_max_threads, hevalctrl->exclusive, &gerror);
+		if ( gerror != NULL ) {
+			g_error(gerror->message);
+		}
+		for ( i = 1; i < size; i++) {
+			dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
+			g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(pop->individ[i]), &gerror);
+			if ( gerror != NULL ) {
+				g_error(gerror->message);
+			}
+		}
+		g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
+	} else {
+		for ( i = 1; i < size; i++) {
+			dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
+			dp_evaluation_population_init_func ((gpointer)(pop->individ[i]), (gpointer) hevalctrl);
+		}
 	}
 	dp_population_update(pop, 0, pop->size);
 	return pop;

@@ -31,7 +31,7 @@
 DpOsdaInfo *dp_osda_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy, int number_of_trials, double step_parameter, double step_decrement, double derivative_step)
 {
 	DpOsdaInfo*hosdainfo = dp_osda_info_new(number_of_trials, step_parameter, step_decrement, derivative_step);
-	hosdainfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, seed, gamma_init, roundoff_error, eval_strategy);
+	hosdainfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, seed, gamma_init, roundoff_error, 0, eval_strategy);
 	hosdainfo->trial = dp_evaluation_individ_init(hosdainfo->hevalctrl);
 	hosdainfo->current = dp_evaluation_individ_init(hosdainfo->hevalctrl);
 	return hosdainfo;
