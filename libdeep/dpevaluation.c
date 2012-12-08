@@ -347,11 +347,13 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	gboolean wait_finish = TRUE;
 	GError *gerror = NULL;
 	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
-	dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
-	pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
-	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, 0);
 	if ( hevalctrl->eval_max_threads > 0 ) {
 		hevalctrl->gthreadpool = g_thread_pool_new ((GFunc) dp_evaluation_population_init_func, (gpointer) hevalctrl, hevalctrl->eval_max_threads, hevalctrl->exclusive, &gerror);
+		if ( gerror != NULL ) {
+			g_error(gerror->message);
+		}
+		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
+		g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(pop->individ[0]), &gerror);
 		if ( gerror != NULL ) {
 			g_error(gerror->message);
 		}
@@ -364,6 +366,8 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 		}
 		g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
 	} else {
+		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
+		dp_evaluation_population_init_func ((gpointer)(pop->individ[0]), (gpointer) hevalctrl);
 		for ( i = 1; i < size; i++) {
 			dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
 			dp_evaluation_population_init_func ((gpointer)(pop->individ[i]), (gpointer) hevalctrl);
