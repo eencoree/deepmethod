@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <glib.h>
 #ifdef GIO_STANDALONE_SOURCE
 #include <gio/gfile.h>
@@ -175,6 +176,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 	gchar *standard_output;
 	gchar *standard_error;
 	gchar*conversion;
+	double max_value = G_MAXDOUBLE;
 	command = g_string_new(xmmodel->command);
 	if ( xmmodel->convert != NULL ) {
 		if ( ( conversion = xmmodel->converter((gpointer)xmmodel, &gerror) ) == NULL ) {
@@ -207,7 +209,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 	}
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
-	if ( result != NULL ) {
+	if ( strlen(standard_output) > 0 && result != NULL ) {
 		for ( i = 0; i < xmmodel->num_values; i++ ) {
 			if ( result[xmmodel->keys[i]] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
@@ -220,6 +222,10 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 		}
 	} else {
 		g_warning ( "Couldn't parse output: %s", standard_output);
+		g_warning ( "Standard error: %s", standard_error);
+		for ( i = 0; i < xmmodel->num_values; i++ ) {
+			xmmodel->array[i] = max_value;
+		}
 	}
 	g_strfreev(result);
 	g_free(standard_output);
