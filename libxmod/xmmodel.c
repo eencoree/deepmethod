@@ -168,7 +168,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 {
 	gchar**result;
 	gchar**margv;
-	int argcp, i;
+	int argcp, i, j;
 	GString *command;
 	GError*gerror = NULL;
 	int flaggs, child_exit_status;
@@ -212,7 +212,10 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 			if ( result[xmmodel->keys[i]] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
 			} else {
-				g_warning ( "result[%d] doesn't exist", i);
+				g_warning ( "result[%d] doesn't exist", xmmodel->keys[i]);
+				for ( j = 0; j < g_strv_length(result); j++ ) {
+					g_printf("result[%d] = %s;\n", j, result[j]);
+				}
 			}
 		}
 	} else {
