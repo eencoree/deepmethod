@@ -191,7 +191,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 		}
 		g_string_append_printf(command, " %s", conversion);
 	} else {
-		g_string_append_printf(command, " '%s'", params->str);
+		g_string_append_printf(command, " %s", params->str);
 	}
 	if ( !g_shell_parse_argv(command->str, &argcp, &margv, &gerror) ) {
 		if ( gerror ) {
