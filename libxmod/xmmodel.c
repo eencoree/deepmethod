@@ -359,7 +359,7 @@ double xm_model_score_double(gpointer user_data, double*x)
 	GString *params = g_string_new("");
 	int i;
 	xm_model_set_dparms(xmmodel, x);
-	for ( i= 0; i < xmmodel->size; i++ ) {
+	for ( i = 0; i < xmmodel->size; i++ ) {
 		g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
 	}
 	xm_model_run(params, xmmodel);
@@ -1192,7 +1192,8 @@ void xm_model_conn_free(XmModelConn*conn)
 
 void xm_model_save(XmModel*xmmodel, gchar*filename)
 {
-	GString*file_contents;
+	GString*file_contents = NULL;
+	int i;
 	GError*gerror = NULL;
 	if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 		if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
@@ -1214,10 +1215,18 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 		if ( ( file_contents = xm_model_octave_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get subsubset contents");
 		}
+	} else {
+		file_contents = g_string_new("");
+		for ( i = 0; i < xmmodel->size; i++ ) {
+			g_string_append_printf(file_contents, "%f ", xmmodel->dparms[i]);
+		}
 	}
-	if ( !g_file_set_contents ((const gchar *)filename, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+	if ( file_contents != NULL ) {
+		if ( !g_file_set_contents ((const gchar *)filename, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+			g_string_free(file_contents, TRUE);
+			g_error (gerror->message);
+		}
 		g_string_free(file_contents, TRUE);
-		g_error (gerror->message);
 	}
-	g_string_free(file_contents, TRUE);
 }
+
