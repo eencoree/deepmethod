@@ -105,6 +105,8 @@ double xm_model_barrier_penalty(gpointer user_data, double*x);
 
 gchar *xm_model_convert_parms_to_sdf(gpointer *user_data, GError **err);
 
+gchar *xm_model_convert_parms_to_gcdm(gpointer *user_data, GError **err);
+
 gchar *xm_model_convert_parms_to_gemstat(gpointer *user_data, GError **err);
 
 gchar *xm_model_convert_parms_to_subset(gpointer *user_data, GError **err);
@@ -122,6 +124,8 @@ int xm_model_conn_comp_ports (gconstpointer a, gconstpointer b);
 void xm_model_conn_free(XmModelConn*conn);
 
 GString*xm_model_sdf_contents(XmModel*xmmodel);
+
+GString*xm_model_gcdm_contents(XmModel*xmmodel);
 
 GString*xm_model_gemstat_contents(XmModel*xmmodel);
 

@@ -30,6 +30,9 @@
 #else
 #include <gio/gio.h>
 #endif
+#ifdef MPIZE
+#include <mpi.h>
+#endif
 #include "dpdeep.h"
 #include "dprecombination.h"
 #include "dpopt.h"
@@ -106,6 +109,13 @@ int main(int argc, char **argv)
 	}
 	xmmodel = xm_model_new();
 	xm_model_init(model_file, model_group, xmmodel, &gerror);
+#ifdef MPIZE
+/* MPI initialization steps */
+	MPI_Init(&argc, &argv);     /* initializes the MPI execution environment */
+	MPI_Comm_size(MPI_COMM_WORLD, &world_count);         /* number of processors? */
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_id);          /* ID of local processor? */
+	if ( world_id == 0 ) { /* master process */
+#endif
 	if ( !g_strcmp0 ( operation, "optimize" ) ) {
 		heval = xm_translate_parms(xmmodel);
 		htarget = dp_target_new();
@@ -140,5 +150,26 @@ int main(int argc, char **argv)
 	} else {
 		g_error("Loop finished with an unknown error.\nOutput not produced.");
 	}
+#ifdef MPIZE
+	} else { /* slave process */
+		if ( !g_strcmp0 ( operation, "optimize" ) ) {
+			heval = xm_translate_parms(xmmodel);
+			htarget = dp_target_new();
+			dp_settings_target_init(target_file, target_group, htarget, &gerror);
+			if ( gerror != NULL ) {
+				g_error(gerror->message);
+			}
+			xm_translate_score(htarget, xmmodel);
+			hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->tau, dpsettings->stop_count);
+			dp_opt_worker(hopt, &gerror);
+			if ( gerror != NULL ) {
+				g_error("Monitor error:%s", gerror->message);
+			}
+			dp_opt_run(hopt);
+		}
+	}
+	MPI_Finalize();
+#endif
 	return 0;
 }
+

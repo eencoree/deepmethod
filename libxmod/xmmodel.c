@@ -697,6 +697,8 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->convert = str;
 		if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_sdf;
+		} else if ( !g_strcmp0 ( xmmodel->convert, "gcdm" ) ) {
+			xmmodel->converter = xm_model_convert_parms_to_gcdm;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_gemstat;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "subset" ) ) {
@@ -910,6 +912,46 @@ fprintf (stderr, "%s", file_contents->str);*/
 	return file_contents;
 }
 
+GString*xm_model_gcdm_contents(XmModel*xmmodel)
+{
+	GString*file_contents;
+	int i, j, k, target;
+	int num_targets, num_regulators;
+	file_contents = g_string_new("");
+	g_string_append_printf(file_contents, "$input\n");
+	i = 0;
+	k = 0;
+	g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
+	num_targets = xmmodel->part[i].num_parms;
+	for ( j = 0; j < num_targets; j++ ) {
+		g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+		k++;
+	}
+	file_contents = g_string_append_c(file_contents, '\n');
+	for ( i = 1; i < 4; i++ ) {
+		g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
+		num_regulators = xmmodel->part[i].num_parms / num_targets;
+		for ( target = 0; target < num_targets; target++ ) {
+			for ( j = 0; j < num_regulators; j++ ) {
+				g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+				k++;
+			}
+			file_contents = g_string_append_c(file_contents, '\n');
+		}
+	}
+	g_string_append_printf(file_contents, "xtra\n");
+	for ( i = 4; i < xmmodel->num_parts; i++ ) {
+		g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
+		for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
+			g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+			k++;
+		}
+		file_contents = g_string_append_c(file_contents, '\n');
+	}
+	g_string_append_printf(file_contents, "$$\n");
+	return file_contents;
+}
+
 GString*xm_model_gemstat_contents(XmModel*xmmodel)
 {
 	GString*file_contents;
@@ -1020,6 +1062,34 @@ gchar *xm_model_convert_parms_to_sdf(gpointer *user_data, GError **err)
 	}
 	close(fhandle);
 	if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
+		g_unlink(name_used);
+		return NULL;
+	}
+	if ( !g_file_set_contents ((const gchar *)name_used, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+		g_string_free(file_contents, TRUE);
+		g_propagate_error (err, gerror);
+		g_unlink(name_used);
+		return NULL;
+	}
+	g_string_free(file_contents, TRUE);
+	return name_used;
+}
+
+gchar *xm_model_convert_parms_to_gcdm(gpointer *user_data, GError **err)
+{
+	XmModel*xmmodel = (XmModel*)user_data;
+	gint fhandle;
+	const gchar *tmpl = NULL;
+	gchar *name_used = NULL;
+	GError *gerror = NULL;
+	GString*file_contents;
+	g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+	if ( ( fhandle = g_file_open_tmp (tmpl, &name_used, &gerror) ) == -1 ) {
+		g_propagate_error (err, gerror);
+		return NULL;
+	}
+	close(fhandle);
+	if ( ( file_contents = xm_model_gcdm_contents(xmmodel) ) == NULL ) {
 		g_unlink(name_used);
 		return NULL;
 	}
@@ -1198,6 +1268,10 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 	if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 		if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get sdf contents");
+		}
+	} else if ( !g_strcmp0 ( xmmodel->convert, "gcdm" ) ) {
+		if ( ( file_contents = xm_model_gcdm_contents(xmmodel) ) == NULL ) {
+			g_error("Can't get gcdm contents");
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
 		if ( ( file_contents = xm_model_gemstat_contents(xmmodel) ) == NULL ) {
