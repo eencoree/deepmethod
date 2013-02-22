@@ -52,10 +52,12 @@ typedef struct XmModelPart {
 } XmModelPart;
 
 typedef struct XmModel {
+	int debug;
 	int size;
 	int *parms;
 	int *iparms;
 	int *mask;
+	int *limited;
 	int *index;
 	int *tweak_index;
 	int index_size;
@@ -64,6 +66,7 @@ typedef struct XmModel {
 	double *bparms;
 	double *lbound;
 	double *hbound;
+	double *scale;
 	XmModelPart *part;
 	int *lookup;
 	int num_parts;

@@ -40,6 +40,7 @@
 XmModel*xm_model_new()
 {
 	XmModel *xmmodel = (XmModel*)g_malloc( sizeof(XmModel) );
+	xmmodel->debug = 0;
 	xmmodel->size = 0;
 	xmmodel->tweak = NULL;
 	xmmodel->command = NULL;
@@ -59,11 +60,13 @@ XmModel*xm_model_new()
 	xmmodel->prime_index = 0;
 	xmmodel->functional_value = G_MAXDOUBLE;
 	xmmodel->parms = NULL;
+	xmmodel->limited = NULL;
 	xmmodel->index = NULL;
 	xmmodel->dparms = NULL;
 	xmmodel->bparms = NULL;
 	xmmodel->lbound = NULL;
 	xmmodel->hbound = NULL;
+	xmmodel->scale = NULL;
 	xmmodel->convert = NULL;
 	return xmmodel;
 }
@@ -92,25 +95,30 @@ gpointer xm_model_copy_values(gpointer psrc)
 	}
 	xmmodel->converter = src->converter;
 	xmmodel->size = src->size;
+	xmmodel->debug = src->debug;
 	xmmodel->parms = g_new0 ( int, xmmodel->size );
 	xmmodel->iparms = g_new0 ( int, xmmodel->size );
 	xmmodel->lookup = g_new0 ( int, xmmodel->size );
 	xmmodel->tweak = g_new0 ( int, xmmodel->size );
+	xmmodel->limited = g_new0 ( int, xmmodel->size );
 	xmmodel->mask = g_new0 ( int, xmmodel->size );
 	xmmodel->dparms = g_new0 ( double, xmmodel->size );
 	xmmodel->bparms = g_new0 ( double, xmmodel->size );
 	xmmodel->lbound = g_new0 ( double, xmmodel->size );
 	xmmodel->hbound = g_new0 ( double, xmmodel->size );
+	xmmodel->scale = g_new0 ( double, xmmodel->size );
 	for ( j = 0; j < xmmodel->size; j ++ ) {
 		xmmodel->parms[j] = src->parms[j];
 		xmmodel->iparms[j] = src->iparms[j];
 		xmmodel->lookup[j] = src->lookup[j];
 		xmmodel->mask[j] = src->mask[j];
 		xmmodel->tweak[j] = src->tweak[j];
+		xmmodel->limited[j] = src->limited[j];
 		xmmodel->dparms[j] = src->dparms[j];
 		xmmodel->bparms[j] = src->bparms[j];
 		xmmodel->lbound[j] = src->lbound[j];
 		xmmodel->hbound[j] = src->hbound[j];
+		xmmodel->scale[j] = src->scale[j];
 	}
 	xmmodel->command = g_strdup(src->command);
 	if ( src->prime_command != NULL) {
@@ -210,14 +218,18 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	if ( strlen(standard_output) > 0 && result != NULL ) {
+		if ( xmmodel->debug == 1 ) {
+			int result_length = g_strv_length(result);
+			g_printf("result_length = %d;\n", result_length);
+			for ( j = 0; j < result_length; j++ ) {
+				g_printf("result[%d] = %s;\n", j, result[j]);
+			}
+		}
 		for ( i = 0; i < xmmodel->num_values; i++ ) {
 			if ( result[xmmodel->keys[i]] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
 			} else {
 				g_warning ( "result[%d] doesn't exist", xmmodel->keys[i]);
-				for ( j = 0; j < g_strv_length(result); j++ ) {
-					g_printf("result[%d] = %s;\n", j, result[j]);
-				}
 			}
 		}
 	} else {
@@ -474,13 +486,21 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_propagate_error (err, gerror);
 		return 1;
 	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "debug", &gerror) ) != 0  || gerror == NULL ) {
+		xmmodel->debug = ii;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "parms", &length, &gerror) ) != NULL ) {
 		xmmodel->size = length;
 		xmmodel->parms = ilist;
 		xmmodel->iparms = g_new0 ( int, length );
 		xmmodel->lookup = g_new0 ( int, length );
+		xmmodel->limited = g_new0 ( int, length );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->iparms[j] = xmmodel->parms[j];
+			xmmodel->limited[j] = 1;
 		}
 	} else {
 		g_warning ( gerror->message );
@@ -583,8 +603,10 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "dparms", &length, &gerror) ) != NULL ) {
 		xmmodel->dparms = dlist;
 		xmmodel->bparms = g_new0 ( double, xmmodel->size );
+		xmmodel->scale = g_new0 ( double, xmmodel->size );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->bparms[j] = xmmodel->dparms[j];
+			xmmodel->scale[j] = 1.0;
 		}
 	} else {
 		g_warning ( gerror->message );
@@ -626,6 +648,23 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->hbound = g_new0 ( double, xmmodel->size );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->hbound[j] = dval;
+		}
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "limited", &length, &gerror) ) != NULL ) {
+		for ( j = 0; j < xmmodel->size; j++) {
+			xmmodel->limited[j] = ilist[j];
+		}
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+
+	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "scale", &length, &gerror) ) != NULL ) {
+		for ( j = 0; j < xmmodel->size; j ++ ) {
+			xmmodel->scale[j] = dlist[j];
 		}
 	} else {
 		g_warning ( gerror->message );
