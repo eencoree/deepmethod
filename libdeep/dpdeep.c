@@ -54,6 +54,12 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 	return hdeepinfo;
 }
 
+void dp_deep_info_save(FILE*fp, DpDeepInfo *hdeepinfo)
+{
+  dp_population_save(fp, hdeepinfo->trial);
+  dp_population_save(fp, hdeepinfo->population);
+}
+
 void dp_deep_step_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;

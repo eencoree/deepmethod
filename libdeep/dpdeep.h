@@ -73,6 +73,8 @@ void dp_deep_post(DpDeepInfo*hdeepinfo);
 
 void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo);
 
+  void dp_deep_info_save(FILE*fp, DpDeepInfo *hdeepinfo);
+
 #ifdef __cplusplus
 }
 #endif

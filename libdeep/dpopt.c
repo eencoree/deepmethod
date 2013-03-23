@@ -51,6 +51,7 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 	hopt->tau = tau;
 	hopt->stop_count = stop_count;
 	hopt->logname = g_strdup_printf( "%s.hopt_log_%d", hopt->filename, hopt->world_id);
+	hopt->chkname = g_strdup_printf( "%s.hopt_chk_%d", hopt->filename, hopt->world_id);
 	hopt->tstname = g_strdup_printf( "%s.hopt_time", hopt->filename);
 	hopt->htarget = htarget;
 	hopt->heval = heval;
@@ -323,6 +324,33 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 DpLoopExitCode dp_write_state(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	DpOsdaInfo*hosdainfo;
+	FILE*fp;
+	fp = fopen(hopt->chkname, "w");
+	if ( !fp ) {
+		hloop->exit_str = g_strdup_printf ( "dp_write_state: can't open %s", hopt->chkname);
+		return DP_LOOP_EXIT_ERROR;
+	}
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			dp_deep_info_save(fp, hdeepinfo);
+		break;
+		case H_OPT_OSDA:
+			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
+			dp_osda_info_save(fp, hosdainfo);
+		break;
+	}
+	fclose(fp);
+	return ret_val;
+}
+
+DpLoopExitCode dp_read_state(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+
 	return ret_val;
 }
 

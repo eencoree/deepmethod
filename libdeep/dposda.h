@@ -62,6 +62,8 @@ void dp_osda_post(DpOsdaInfo*hosdainfo);
 
 void dp_osda_post_evaluate(DpOsdaInfo*hosdainfo);
 
+void dp_osda_info_save(FILE*fp, DpOsdaInfo*hosdainfo);
+
 #ifdef __cplusplus
 }
 #endif

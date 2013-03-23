@@ -58,6 +58,21 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int pre
 	return pop;
 }
 
+void dp_population_save(FILE*fp, DpPopulation*pop)
+{
+	int i;
+	for ( i = 0; i < pop->size; i++ ) {
+	  dp_individ_save(fp, pop->individ[i]);
+	  fprintf(fp, "%d\n", pop->cost_ascending[i]);
+	  fprintf(fp, "%d\n", pop->ages_descending[i]);
+	}
+	fprintf(fp, "%d\n", pop->imin);
+		fprintf(fp, "%13.9f\n", pop->dmin);
+		fprintf(fp, "%d\n", pop->iage);
+		fprintf(fp, "%d\n", pop->aage);
+		fprintf(fp, "%d\n", pop->iter);
+}
+
 void dp_population_delete(DpPopulation*pop)
 {
 	int i;

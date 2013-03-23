@@ -37,6 +37,11 @@ DpOsdaInfo *dp_osda_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 	return hosdainfo;
 }
 
+void dp_osda_info_save(FILE*fp, DpOsdaInfo*hosdainfo)
+{
+
+}
+
 DpOsdaInfo *dp_osda_info_new (int number_of_trials, double step_parameter, double step_decrement, double derivative_step)
 {
 	DpOsdaInfo*hosdainfo;

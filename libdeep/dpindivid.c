@@ -80,6 +80,34 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 	individ->hrand = trial->hrand;
 }
 
+void dp_individ_save(FILE*fp, DpIndivid*individ)
+{
+	int i;
+	fprintf(fp, "%13.9f\n", individ->cost);
+	fprintf(fp, "%d\n", individ->age);
+	for ( i = 0; i < individ->size; i++ ) {
+	  fprintf(fp, "%13.9f ", individ->x[i]);
+	}
+	fprintf(fp, "\n");
+	for ( i = 0; i < individ->size; i++ ) {
+	  fprintf(fp, "%13.9f ", individ->y[i]);
+	}
+	fprintf(fp, "\n");
+	for ( i = 0; i < individ->size; i++ ) {
+	  fprintf(fp, "%13.9f ", individ->z[i]);
+	}
+	fprintf(fp, "\n");
+	for ( i = 0; i < individ->ntargets; i++ ) {
+	  fprintf(fp, "%13.9f ", individ->targets[i]);
+	}
+	fprintf(fp, "\n");
+	for ( i = 0; i < individ->nprecond; i++ ) {
+	  fprintf(fp, "%13.9f", individ->precond[i]);
+	}
+	fprintf(fp, "\n");
+	/*	individ->hrand = trial->hrand;*/
+}
+
 void dp_individ_pack(DpIndivid*individ, double**buffer2send, int*bufferDim)
 {
 	int i;

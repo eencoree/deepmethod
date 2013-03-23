@@ -69,6 +69,7 @@ typedef struct DpOpt {
 	int stop_count;
 	char*filename;
 	char*logname;
+	char*chkname;
 	char*tstname;
 	DpLoop*hloop;
 	int world_id;

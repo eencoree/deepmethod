@@ -64,6 +64,8 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial);
 
 void dp_individ_delete(DpIndivid*individ);
 
+  void dp_individ_save(FILE*fp, DpIndivid*individ);
+
 #ifdef __cplusplus
 }
 #endif
