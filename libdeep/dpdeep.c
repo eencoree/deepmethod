@@ -58,6 +58,14 @@ void dp_deep_info_save(FILE*fp, DpDeepInfo *hdeepinfo)
 {
   dp_population_save(fp, hdeepinfo->trial);
   dp_population_save(fp, hdeepinfo->population);
+  dp_recombination_control_save(fp, hdeepinfo->recombination_control);
+}
+
+void dp_deep_info_load(FILE*fp, DpDeepInfo *hdeepinfo)
+{
+  dp_population_load(fp, hdeepinfo->trial);
+  dp_population_load(fp, hdeepinfo->population);
+  dp_recombination_control_load(fp, hdeepinfo->recombination_control);
 }
 
 void dp_deep_step_func (gpointer data, gpointer user_data)

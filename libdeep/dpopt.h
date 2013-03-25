@@ -93,6 +93,8 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_write_state(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_read_state(DpLoop*hloop, gpointer user_data);
+
 DpLoopExitCode dp_write_tst(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data);

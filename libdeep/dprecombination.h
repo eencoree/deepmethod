@@ -65,6 +65,10 @@ void dp_recombination_control_renew(DpRecombinationControl*rc, GRand*hrand, DpPo
 
 void dp_recombination_control_update(DpRecombinationControl*rc, GRand*hrand, DpPopulation*pop, int start_index, int end_index);
 
+void dp_recombination_control_save(FILE*fp, DpRecombinationControl*rc);
+
+void dp_recombination_control_load(FILE*fp, DpRecombinationControl*rc);
+
 #ifdef __cplusplus
 }
 #endif

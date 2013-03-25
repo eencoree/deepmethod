@@ -161,6 +161,43 @@ DpRecombinationControl*dp_recombination_control_init(DpRecombinationStrategy str
 	return rc;
 }
 
+void dp_recombination_control_save(FILE*fp, DpRecombinationControl*rc)
+{
+	int i;
+	for ( i = 0; i < rc->size; i++ ) {
+	  fprintf(fp, "%13.9f ", rc->f[i]);
+	}
+	fprintf(fp, "\n");
+	for ( i = 0; i < rc->size; i++ ) {
+	  fprintf(fp, "%13.9f ", rc->p[i]);
+	}
+	fprintf(fp, "\n");
+	for ( i = 0; i < rc->size; i++ ) {
+	  fprintf(fp, "%13.9f ", rc->v[i]);
+	}
+	fprintf(fp, "\n");
+	for ( i = 0; i < rc->size; i++ ) {
+	  fprintf(fp, "%13.9f ", rc->c[i]);
+	}
+}
+
+void dp_recombination_control_load(FILE*fp, DpRecombinationControl*rc)
+{
+	int i;
+	for ( i = 0; i < rc->size; i++ ) {
+	  fscanf(fp, "%lf", &(rc->f[i]));
+	}
+	for ( i = 0; i < rc->size; i++ ) {
+	  fscanf(fp, "%lf", &(rc->p[i]));
+	}
+	for ( i = 0; i < rc->size; i++ ) {
+	  fscanf(fp, "%lf", &(rc->v[i]));
+	}
+	for ( i = 0; i < rc->size; i++ ) {
+	  fscanf(fp, "%lf", &(rc->c[i]));
+	}
+}
+
 void dp_recombination_control_renew(DpRecombinationControl*rc, GRand*hrand, DpPopulation*pop)
 {
 	int i;

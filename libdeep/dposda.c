@@ -42,6 +42,11 @@ void dp_osda_info_save(FILE*fp, DpOsdaInfo*hosdainfo)
 
 }
 
+void dp_osda_info_load(FILE*fp, DpOsdaInfo*hosdainfo)
+{
+
+}
+
 DpOsdaInfo *dp_osda_info_new (int number_of_trials, double step_parameter, double step_decrement, double derivative_step)
 {
 	DpOsdaInfo*hosdainfo;
