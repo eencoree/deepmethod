@@ -49,8 +49,8 @@ DpEvaluation *xm_translate_parms(XmModel *xmmodel)
 			plist->points[index]->index = i;
 			plist->points[index]->upper = xmmodel->hbound[ i ];
 			plist->points[index]->lower = xmmodel->lbound[ i ];
-			plist->points[index]->scale = 1.0;
-			plist->points[index]->limited = 1;
+			plist->points[index]->scale = xmmodel->scale[ i ];
+			plist->points[index]->limited = xmmodel->limited[ i ];
 			index++;
 		}
 	}

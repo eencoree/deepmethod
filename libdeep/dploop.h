@@ -76,6 +76,8 @@ void dp_loop_zero_counters(DpLoop*hloop);
 
 void dp_loop_run(DpLoop*hloop);
 
+void dp_loop_del_func(DpLoop*hloop, DpLoopFunc func);
+
 #ifdef __cplusplus
 }
 #endif

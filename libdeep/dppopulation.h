@@ -66,6 +66,10 @@ int dp_individ_cost_ascending(void *p1, void *p2, void *user_data);
 
 void dp_population_mpi_comm_nbest(DpPopulation*pop, int mpi_id, int mpi_nnodes, int *frozen, int es_lambda);
 
+void dp_population_save(FILE*fp, DpPopulation*pop);
+
+void dp_population_load(FILE*fp, DpPopulation*pop);
+
 #ifdef __cplusplus
 }
 #endif

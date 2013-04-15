@@ -58,6 +58,50 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int pre
 	return pop;
 }
 
+void dp_population_save(FILE*fp, DpPopulation*pop)
+{
+	int i;
+	for ( i = 0; i < pop->size; i++ ) {
+	  dp_individ_save(fp, pop->individ[i]);
+	  fprintf(fp, "%d\n", pop->cost_ascending[i]);
+	  fprintf(fp, "%d\n", pop->ages_descending[i]);
+	}
+	for ( i = 0; i < pop->ind_size; i++ ) {
+		fprintf(fp, "%13.9f ", pop->mean[i]);
+	}
+	fprintf(fp, "\n");
+	for ( i = 0; i < pop->ind_size; i++ ) {
+		fprintf(fp, "%13.9f ", pop->variance[i]);
+	}
+	fprintf(fp, "\n");
+	fprintf(fp, "%d\n", pop->imin);
+	fprintf(fp, "%13.9f\n", pop->dmin);
+	fprintf(fp, "%d\n", pop->iage);
+	fprintf(fp, "%d\n", pop->aage);
+	fprintf(fp, "%d\n", pop->iter);
+}
+
+void dp_population_load(FILE*fp, DpPopulation*pop)
+{
+	int i;
+	for ( i = 0; i < pop->size; i++ ) {
+	  dp_individ_load(fp, pop->individ[i]);
+	  fscanf(fp, "%d", &(pop->cost_ascending[i]));
+	  fscanf(fp, "%d", &(pop->ages_descending[i]));
+	}
+	for ( i = 0; i < pop->ind_size; i++ ) {
+		fprintf(fp, "%lf", &(pop->mean[i]));
+	}
+	for ( i = 0; i < pop->ind_size; i++ ) {
+		fprintf(fp, "%lf", &(pop->variance[i]));
+	}
+	fscanf(fp, "%d", &(pop->imin));
+	fscanf(fp, "%lf", &(pop->dmin));
+	fscanf(fp, "%d", &(pop->iage));
+	fscanf(fp, "%d", &(pop->aage));
+	fscanf(fp, "%d", &(pop->iter));
+}
+
 void dp_population_delete(DpPopulation*pop)
 {
 	int i;

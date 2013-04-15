@@ -52,10 +52,12 @@ typedef struct XmModelPart {
 } XmModelPart;
 
 typedef struct XmModel {
+	int debug;
 	int size;
 	int *parms;
 	int *iparms;
 	int *mask;
+	int *limited;
 	int *index;
 	int *tweak_index;
 	int index_size;
@@ -64,6 +66,7 @@ typedef struct XmModel {
 	double *bparms;
 	double *lbound;
 	double *hbound;
+	double *scale;
 	XmModelPart *part;
 	int *lookup;
 	int num_parts;
@@ -107,6 +110,8 @@ double xm_model_barrier_penalty(gpointer user_data, double*x);
 
 gchar *xm_model_convert_parms_to_sdf(gpointer *user_data, GError **err);
 
+gchar *xm_model_convert_parms_to_gcdm(gpointer *user_data, GError **err);
+
 gchar *xm_model_convert_parms_to_gemstat(gpointer *user_data, GError **err);
 
 gchar *xm_model_convert_parms_to_subset(gpointer *user_data, GError **err);
@@ -124,6 +129,8 @@ int xm_model_conn_comp_ports (gconstpointer a, gconstpointer b);
 void xm_model_conn_free(XmModelConn*conn);
 
 GString*xm_model_sdf_contents(XmModel*xmmodel);
+
+GString*xm_model_gcdm_contents(XmModel*xmmodel);
 
 GString*xm_model_gemstat_contents(XmModel*xmmodel);
 

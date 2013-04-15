@@ -69,6 +69,7 @@ typedef struct DpOpt {
 	int stop_count;
 	char*filename;
 	char*logname;
+	char*chkname;
 	char*tstname;
 	DpLoop*hloop;
 	int world_id;
@@ -91,6 +92,8 @@ void dp_opt_monitor(DpOpt *hopt, int monitor, GError**gerror);
 DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_write_state(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_read_state(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_write_tst(DpLoop*hloop, gpointer user_data);
 

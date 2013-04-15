@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <glib.h>
 #if defined(__MINGW32__)
 #include <glib/gprintf.h>
@@ -43,6 +44,7 @@
 XmModel*xm_model_new()
 {
 	XmModel *xmmodel = (XmModel*)g_malloc( sizeof(XmModel) );
+	xmmodel->debug = 0;
 	xmmodel->size = 0;
 	xmmodel->tweak = NULL;
 	xmmodel->command = NULL;
@@ -62,11 +64,13 @@ XmModel*xm_model_new()
 	xmmodel->prime_index = 0;
 	xmmodel->functional_value = G_MAXDOUBLE;
 	xmmodel->parms = NULL;
+	xmmodel->limited = NULL;
 	xmmodel->index = NULL;
 	xmmodel->dparms = NULL;
 	xmmodel->bparms = NULL;
 	xmmodel->lbound = NULL;
 	xmmodel->hbound = NULL;
+	xmmodel->scale = NULL;
 	xmmodel->convert = NULL;
 	return xmmodel;
 }
@@ -95,25 +99,30 @@ gpointer xm_model_copy_values(gpointer psrc)
 	}
 	xmmodel->converter = src->converter;
 	xmmodel->size = src->size;
+	xmmodel->debug = src->debug;
 	xmmodel->parms = g_new0 ( int, xmmodel->size );
 	xmmodel->iparms = g_new0 ( int, xmmodel->size );
 	xmmodel->lookup = g_new0 ( int, xmmodel->size );
 	xmmodel->tweak = g_new0 ( int, xmmodel->size );
+	xmmodel->limited = g_new0 ( int, xmmodel->size );
 	xmmodel->mask = g_new0 ( int, xmmodel->size );
 	xmmodel->dparms = g_new0 ( double, xmmodel->size );
 	xmmodel->bparms = g_new0 ( double, xmmodel->size );
 	xmmodel->lbound = g_new0 ( double, xmmodel->size );
 	xmmodel->hbound = g_new0 ( double, xmmodel->size );
+	xmmodel->scale = g_new0 ( double, xmmodel->size );
 	for ( j = 0; j < xmmodel->size; j ++ ) {
 		xmmodel->parms[j] = src->parms[j];
 		xmmodel->iparms[j] = src->iparms[j];
 		xmmodel->lookup[j] = src->lookup[j];
 		xmmodel->mask[j] = src->mask[j];
 		xmmodel->tweak[j] = src->tweak[j];
+		xmmodel->limited[j] = src->limited[j];
 		xmmodel->dparms[j] = src->dparms[j];
 		xmmodel->bparms[j] = src->bparms[j];
 		xmmodel->lbound[j] = src->lbound[j];
 		xmmodel->hbound[j] = src->hbound[j];
+		xmmodel->scale[j] = src->scale[j];
 	}
 	xmmodel->command = g_strdup(src->command);
 	if ( src->prime_command != NULL) {
@@ -179,6 +188,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 	gchar *standard_output;
 	gchar *standard_error;
 	gchar*conversion;
+	double max_value = G_MAXDOUBLE;
 	command = g_string_new(xmmodel->command);
 	if ( xmmodel->convert != NULL ) {
 		if ( ( conversion = xmmodel->converter((gpointer)xmmodel, &gerror) ) == NULL ) {
@@ -193,7 +203,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 		}
 		g_string_append_printf(command, " %s", conversion);
 	} else {
-		g_string_append_printf(command, " '%s'", params->str);
+		g_string_append_printf(command, " %s", params->str);
 	}
 	if ( !g_shell_parse_argv(command->str, &argcp, &margv, &gerror) ) {
 		if ( gerror ) {
@@ -211,19 +221,27 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 	}
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
-	if ( result != NULL ) {
+	if ( strlen(standard_output) > 0 && result != NULL ) {
+		if ( xmmodel->debug == 1 ) {
+			int result_length = g_strv_length(result);
+			g_printf("result_length = %d;\n", result_length);
+			for ( j = 0; j < result_length; j++ ) {
+				g_printf("result[%d] = %s;\n", j, result[j]);
+			}
+		}
 		for ( i = 0; i < xmmodel->num_values; i++ ) {
 			if ( result[xmmodel->keys[i]] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
 			} else {
 				g_warning ( "result[%d] doesn't exist", xmmodel->keys[i]);
-				for ( j = 0; j < g_strv_length(result); j++ ) {
-					g_printf("result[%d] = %s;\n", j, result[j]);
-				}
 			}
 		}
 	} else {
 		g_warning ( "Couldn't parse output: %s", standard_output);
+		g_warning ( "Standard error: %s", standard_error);
+		for ( i = 0; i < xmmodel->num_values; i++ ) {
+			xmmodel->array[i] = max_value;
+		}
 	}
 	g_strfreev(result);
 	g_free(standard_output);
@@ -357,7 +375,7 @@ double xm_model_score_double(gpointer user_data, double*x)
 	GString *params = g_string_new("");
 	int i;
 	xm_model_set_dparms(xmmodel, x);
-	for ( i= 0; i < xmmodel->size; i++ ) {
+	for ( i = 0; i < xmmodel->size; i++ ) {
 		g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
 	}
 	xm_model_run(params, xmmodel);
@@ -472,13 +490,21 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_propagate_error (err, gerror);
 		return 1;
 	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "debug", &gerror) ) != 0  || gerror == NULL ) {
+		xmmodel->debug = ii;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "parms", &length, &gerror) ) != NULL ) {
 		xmmodel->size = length;
 		xmmodel->parms = ilist;
 		xmmodel->iparms = g_new0 ( int, length );
 		xmmodel->lookup = g_new0 ( int, length );
+		xmmodel->limited = g_new0 ( int, length );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->iparms[j] = xmmodel->parms[j];
+			xmmodel->limited[j] = 1;
 		}
 	} else {
 		g_warning ( gerror->message );
@@ -581,8 +607,10 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "dparms", &length, &gerror) ) != NULL ) {
 		xmmodel->dparms = dlist;
 		xmmodel->bparms = g_new0 ( double, xmmodel->size );
+		xmmodel->scale = g_new0 ( double, xmmodel->size );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->bparms[j] = xmmodel->dparms[j];
+			xmmodel->scale[j] = 1.0;
 		}
 	} else {
 		g_warning ( gerror->message );
@@ -624,6 +652,23 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->hbound = g_new0 ( double, xmmodel->size );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->hbound[j] = dval;
+		}
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "limited", &length, &gerror) ) != NULL ) {
+		for ( j = 0; j < xmmodel->size; j++) {
+			xmmodel->limited[j] = ilist[j];
+		}
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+
+	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "scale", &length, &gerror) ) != NULL ) {
+		for ( j = 0; j < xmmodel->size; j ++ ) {
+			xmmodel->scale[j] = dlist[j];
 		}
 	} else {
 		g_warning ( gerror->message );
@@ -695,6 +740,8 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->convert = str;
 		if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_sdf;
+		} else if ( !g_strcmp0 ( xmmodel->convert, "gcdm" ) ) {
+			xmmodel->converter = xm_model_convert_parms_to_gcdm;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_gemstat;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "subset" ) ) {
@@ -908,6 +955,46 @@ fprintf (stderr, "%s", file_contents->str);*/
 	return file_contents;
 }
 
+GString*xm_model_gcdm_contents(XmModel*xmmodel)
+{
+	GString*file_contents;
+	int i, j, k, target;
+	int num_targets, num_regulators;
+	file_contents = g_string_new("");
+	g_string_append_printf(file_contents, "$input\n");
+	i = 0;
+	k = 0;
+	g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
+	num_targets = xmmodel->part[i].num_parms;
+	for ( j = 0; j < num_targets; j++ ) {
+		g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+		k++;
+	}
+	file_contents = g_string_append_c(file_contents, '\n');
+	for ( i = 1; i < 4; i++ ) {
+		g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
+		num_regulators = xmmodel->part[i].num_parms / num_targets;
+		for ( target = 0; target < num_targets; target++ ) {
+			for ( j = 0; j < num_regulators; j++ ) {
+				g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+				k++;
+			}
+			file_contents = g_string_append_c(file_contents, '\n');
+		}
+	}
+	g_string_append_printf(file_contents, "xtra\n");
+	for ( i = 4; i < xmmodel->num_parts; i++ ) {
+		g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
+		for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
+			g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+			k++;
+		}
+		file_contents = g_string_append_c(file_contents, '\n');
+	}
+	g_string_append_printf(file_contents, "$$\n");
+	return file_contents;
+}
+
 GString*xm_model_gemstat_contents(XmModel*xmmodel)
 {
 	GString*file_contents;
@@ -1018,6 +1105,34 @@ gchar *xm_model_convert_parms_to_sdf(gpointer *user_data, GError **err)
 	}
 	close(fhandle);
 	if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
+		g_unlink(name_used);
+		return NULL;
+	}
+	if ( !g_file_set_contents ((const gchar *)name_used, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+		g_string_free(file_contents, TRUE);
+		g_propagate_error (err, gerror);
+		g_unlink(name_used);
+		return NULL;
+	}
+	g_string_free(file_contents, TRUE);
+	return name_used;
+}
+
+gchar *xm_model_convert_parms_to_gcdm(gpointer *user_data, GError **err)
+{
+	XmModel*xmmodel = (XmModel*)user_data;
+	gint fhandle;
+	const gchar *tmpl = NULL;
+	gchar *name_used = NULL;
+	GError *gerror = NULL;
+	GString*file_contents;
+	g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+	if ( ( fhandle = g_file_open_tmp (tmpl, &name_used, &gerror) ) == -1 ) {
+		g_propagate_error (err, gerror);
+		return NULL;
+	}
+	close(fhandle);
+	if ( ( file_contents = xm_model_gcdm_contents(xmmodel) ) == NULL ) {
 		g_unlink(name_used);
 		return NULL;
 	}
@@ -1190,11 +1305,16 @@ void xm_model_conn_free(XmModelConn*conn)
 
 void xm_model_save(XmModel*xmmodel, gchar*filename)
 {
-	GString*file_contents;
+	GString*file_contents = NULL;
+	int i;
 	GError*gerror = NULL;
 	if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 		if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get sdf contents");
+		}
+	} else if ( !g_strcmp0 ( xmmodel->convert, "gcdm" ) ) {
+		if ( ( file_contents = xm_model_gcdm_contents(xmmodel) ) == NULL ) {
+			g_error("Can't get gcdm contents");
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
 		if ( ( file_contents = xm_model_gemstat_contents(xmmodel) ) == NULL ) {
@@ -1212,10 +1332,18 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 		if ( ( file_contents = xm_model_octave_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get subsubset contents");
 		}
+	} else {
+		file_contents = g_string_new("");
+		for ( i = 0; i < xmmodel->size; i++ ) {
+			g_string_append_printf(file_contents, "%f ", xmmodel->dparms[i]);
+		}
 	}
-	if ( !g_file_set_contents ((const gchar *)filename, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+	if ( file_contents != NULL ) {
+		if ( !g_file_set_contents ((const gchar *)filename, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+			g_string_free(file_contents, TRUE);
+			g_error (gerror->message);
+		}
 		g_string_free(file_contents, TRUE);
-		g_error (gerror->message);
 	}
-	g_string_free(file_contents, TRUE);
 }
+
