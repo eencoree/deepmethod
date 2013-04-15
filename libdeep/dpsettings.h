@@ -72,6 +72,10 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 
 int dp_settings_init(gchar*filename, gchar*groupname, DpSettings *hopt, GError**err);
 
+int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, DpEvaluation*heval, DpTarget*htarget, GError**err);
+
+int dp_settings_target_init(gchar*filename, gchar*groupname, DpTarget *htarget, GError**err);
+
 #ifdef __cplusplus
 }
 #endif

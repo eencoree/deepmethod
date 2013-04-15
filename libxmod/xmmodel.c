@@ -25,6 +25,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
+#if defined(__MINGW32__)
+#include <glib/gprintf.h>
+#include <glib/gstdio.h>
+#endif
 #ifdef GIO_STANDALONE_SOURCE
 #include <gio/gfile.h>
 #else
