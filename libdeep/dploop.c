@@ -58,6 +58,11 @@ void dp_loop_add_func(DpLoop*hloop, DpLoopFunc func)
 	hloop->funcs = g_list_append(hloop->funcs, (gpointer) func);
 }
 
+void dp_loop_del_func(DpLoop*hloop, DpLoopFunc func)
+{
+	hloop->funcs = g_list_remove_all(hloop->funcs, (gconstpointer) func);
+}
+
 void dp_loop_add_func_after(DpLoop*hloop, DpLoopFunc func)
 {
 	hloop->run_once_after = g_list_append(hloop->run_once_after, (gpointer) func);

@@ -60,6 +60,7 @@ typedef struct DpTarget {
 	gpointer user_data;
 	DpFuncCopyModel copy_model;
 	DpFuncUpdateModel update_model;
+	int debug;
 } DpTarget;
 
 DpTarget*dp_target_new();

@@ -50,6 +50,7 @@ DpTarget*dp_target_new()
 	htarget->precond_size = 0;
 	htarget->precond = NULL;
 	htarget->prime = NULL;
+	htarget->debug = 0;
 	return htarget;
 }
 
@@ -80,7 +81,7 @@ void dp_target_insert_prime_func (DpTarget*htarget, int index, double weight, do
 int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data, int index, double cost0)
 {
 	int max_value_flag = 0, i;
-	double value, f, retval, max_value = G_MAXDOUBLE;
+	double value, f, retval, max_value = G_MAXDOUBLE, target_value;
 	for ( i = 0; i < htarget->precond_size; i++ ) {
 		f = htarget->precond[i]->f(user_data, x);
 		if ( f < max_value ) {
@@ -98,6 +99,7 @@ int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double
 	}
 	retval = max_value;
 	f = htarget->target->f(user_data, x);
+	target_value = f;
 	if ( f < max_value ) {
 		f *= htarget->target->weight;
 		retval = f;
@@ -119,6 +121,18 @@ int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double
 	}
 	(*cost) = retval;
 	(*invalid) = max_value_flag;
+	if ( htarget->debug == 1 ) {
+		fprintf(stdout, "target_value=%13.9f weight=%13.9f\n", target_value, htarget->target->weight);
+		fprintf(stdout, "N precond weight:\n");
+		for ( i = 0; i < htarget->precond_size; i++ ) {
+			fprintf(stdout, "%d %13.9f %13.9f\n", i, precond[i], htarget->precond[i]->weight);
+		}
+		fprintf(stdout, "N penalty weight:\n");
+		for ( i = 0; i < htarget->size; i++ ) {
+			fprintf(stdout, "%d %13.9f %13.9f\n", i, penalty[i], htarget->penalty[i]->weight);
+		}
+		fprintf(stdout, "max_value_flag=%d value=%13.9f retval=%13.9f\n", max_value_flag, value, retval);
+	}
 	return max_value_flag;
 }
 
