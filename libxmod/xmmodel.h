@@ -92,11 +92,13 @@ typedef struct XmModel {
 
 XmModel*xm_model_new();
 
+int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err);
+
 double xm_model_score(gpointer user_data);
 
 double xm_model_parms_double_to_int(gpointer user_data, double*x);
 
-double xm_model_dparms_int(gpointer user_data);
+double xm_model_dparms_to_int(gpointer user_data);
 
 double xm_model_score_double(gpointer user_data, double*x);
 

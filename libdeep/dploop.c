@@ -27,7 +27,11 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#if defined(__MINGW32__)
+
+#else
 #include <sys/times.h>
+#endif
 #include <unistd.h>
 #include <time.h>
 #include "dploop.h"
@@ -47,9 +51,13 @@ DpLoop *dp_loop_new(GList *before_funcs, GList *funcs, GList *after_funcs)
 	hloop->funcs = funcs;
 	hloop->run_once_before = before_funcs;
 	hloop->run_once_after = after_funcs;
+#if defined(__MINGW32__)
+
+#else
 	hloop->clk_tck = (double)sysconf(_SC_CLK_TCK);
 	hloop->cpu_start  = (struct tms *)malloc(sizeof(struct tms));
 	hloop->cpu_finish = (struct tms *)malloc(sizeof(struct tms));
+#endif
 	return hloop;
 }
 
@@ -93,8 +101,12 @@ void dp_loop_run_once_func(void *arg, gpointer user_data)
 
 void dp_loop_zero_counters(DpLoop*hloop)
 {
+#if defined(__MINGW32__)
+
+#else
 	times(hloop->cpu_start);
 	hloop->start = time(NULL);
+#endif
 	hloop->stop_flag = DP_LOOP_EXIT_NOEXIT;
 	hloop->tau_counter = 0;
 	hloop->w_time = 0;
@@ -107,12 +119,16 @@ void dp_loop_run(DpLoop*hloop)
 	while ( hloop->stop_flag == DP_LOOP_EXIT_NOEXIT ) {
 		g_list_foreach(hloop->funcs, dp_loop_run_func, (gpointer)hloop);
 		hloop->tau_counter++;
+#if defined(__MINGW32__)
+
+#else
 		times(hloop->cpu_finish);
 		hloop->finish = time(NULL);
 		hloop->w_time += hloop->finish - hloop->start;
 		hloop->u_time += (hloop->cpu_finish->tms_utime - hloop->cpu_start->tms_utime) / ( hloop->clk_tck );
 		hloop->start = hloop->finish;
 		hloop->cpu_start->tms_utime = hloop->cpu_finish->tms_utime;
+#endif
 	}
 	if ( hloop->stop_flag == DP_LOOP_EXIT_SUCCESS ) {
 		g_list_foreach(hloop->run_once_after, dp_loop_run_once_func, (gpointer)hloop);
