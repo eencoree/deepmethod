@@ -369,7 +369,6 @@ DpLoopExitCode dp_rotate_target(DpLoop*hloop, gpointer user_data)
 			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
 		break;
 	}
-	fclose(fp);
 	return ret_val;
 }
 
