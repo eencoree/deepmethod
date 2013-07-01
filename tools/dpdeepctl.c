@@ -40,6 +40,7 @@
 #include "xmmodel.h"
 #include "xmtranslate.h"
 
+static char*default_name;
 static char*model_file;
 static char*model_group;
 static char*settings_file;
@@ -52,6 +53,7 @@ static int monitor;
 
 static GOptionEntry entries[] = 
 {
+	{ "default-name", 0, 0, G_OPTION_ARG_STRING, &default_name, "File name for everything and default group names", "Default names" },
 	{ "model-file", 0, 0, G_OPTION_ARG_STRING, &model_file, "File name where model is described", "Model file name" },
 	{ "model-group", 0, 0, G_OPTION_ARG_STRING, &model_group, "Group name where model is described", "Model group name" },
 	{ "settings-file", 0, 0, G_OPTION_ARG_STRING, &settings_file, "File name where settings are described", "Settings file name" },
@@ -89,19 +91,42 @@ int main(int argc, char **argv)
 	}
 	g_option_context_free (context);
 	if ( model_file == NULL || model_group == NULL ) {
-		g_error("%s called with wrong options for model", argv[0]);
+		if ( default_name == NULL ) {
+			g_error("%s called with wrong options for model", argv[0]);
+		} else {
+			model_file = g_strdup(default_name);
+			model_group = g_strdup("default_model");
+		}
 	}
 	if ( settings_file == NULL || settings_group == NULL ) {
-		g_error("%s called with wrong options for settings", argv[0]);
+		if ( default_name == NULL ) {
+			g_error("%s called with wrong options for settings", argv[0]);
+		} else {
+			settings_file = g_strdup(default_name);
+			settings_group = g_strdup("default_settings");
+		}
 	}
 	if ( target_file == NULL || target_group == NULL ) {
-		g_error("%s called with wrong options for target", argv[0]);
+		if ( default_name == NULL ) {
+			g_error("%s called with wrong options for target", argv[0]);
+		} else {
+			target_file = g_strdup(default_name);
+			target_group = g_strdup("default_target");
+		}
 	}
 	if ( output_file == NULL ) {
-		g_error("%s called with wrong options for output", argv[0]);
+		if ( default_name == NULL ) {
+			g_error("%s called with wrong options for output", argv[0]);
+		} else {
+			output_file = g_strdup_printf("%s-deep-output", default_name);
+		}
 	}
 	if ( operation == NULL ) {
-		g_error("%s called with wrong options for operation", argv[0]);
+		if ( default_name == NULL ) {
+			g_error("%s called with wrong options for operation", argv[0]);
+		} else {
+			operation = g_strdup("optimize");
+		}
 	}
 	dp_settings_init(settings_file, settings_group, dpsettings, &gerror);
 	if ( gerror != NULL ) {

@@ -99,6 +99,8 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 			dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "optposteval") ) {
 			dp_opt_add_func(hopt, dp_opt_post_evaluate, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "rotatetarget") ) {
+			dp_opt_add_func(hopt, dp_rotate_target, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "initstop") ) {
 			dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
 		}
@@ -344,6 +346,27 @@ DpLoopExitCode dp_write_state(DpLoop*hloop, gpointer user_data)
 		case H_OPT_OSDA:
 			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
 			dp_osda_info_save(fp, hosdainfo);
+		break;
+	}
+	fclose(fp);
+	return ret_val;
+}
+
+DpLoopExitCode dp_rotate_target(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	DpOsdaInfo*hosdainfo;
+	int *indices_of_targets;
+	int n_indices;
+	int offset;
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+		break;
+		case H_OPT_OSDA:
+			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
 		break;
 	}
 	fclose(fp);

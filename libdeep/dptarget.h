@@ -61,6 +61,9 @@ typedef struct DpTarget {
 	DpFuncCopyModel copy_model;
 	DpFuncUpdateModel update_model;
 	int debug;
+	int *indices_to_rotate;
+	int n_indices_to_rotate;
+	int offset_to_rotate;
 } DpTarget;
 
 DpTarget*dp_target_new();
