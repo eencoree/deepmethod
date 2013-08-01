@@ -90,10 +90,10 @@ void dp_population_load(FILE*fp, DpPopulation*pop)
 	  fscanf(fp, "%d", &(pop->ages_descending[i]));
 	}
 	for ( i = 0; i < pop->ind_size; i++ ) {
-		fprintf(fp, "%lf", &(pop->mean[i]));
+		fscanf(fp, "%lf", &(pop->mean[i]));
 	}
 	for ( i = 0; i < pop->ind_size; i++ ) {
-		fprintf(fp, "%lf", &(pop->variance[i]));
+		fscanf(fp, "%lf", &(pop->variance[i]));
 	}
 	fscanf(fp, "%d", &(pop->imin));
 	fscanf(fp, "%lf", &(pop->dmin));

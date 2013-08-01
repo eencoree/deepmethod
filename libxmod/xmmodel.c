@@ -971,19 +971,20 @@ GString*xm_model_gcdm_contents(XmModel*xmmodel)
 		k++;
 	}
 	file_contents = g_string_append_c(file_contents, '\n');
-	for ( i = 1; i < 4; i++ ) {
+	for ( i = 1; i < 5; i++ ) {
 		g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
-		num_regulators = xmmodel->part[i].num_parms / num_targets;
-		for ( target = 0; target < num_targets; target++ ) {
-			for ( j = 0; j < num_regulators; j++ ) {
-				g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
-				k++;
+		if ( xmmodel->part[i].num_parms > 0 ) {
+			num_regulators = xmmodel->part[i].num_parms / num_targets;
+			for ( target = 0; target < num_targets; target++ ) {
+				for ( j = 0; j < num_regulators; j++ ) {
+					g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+					k++;
+				}
+				file_contents = g_string_append_c(file_contents, '\n');
 			}
-			file_contents = g_string_append_c(file_contents, '\n');
 		}
 	}
-	g_string_append_printf(file_contents, "xtra\n");
-	for ( i = 4; i < xmmodel->num_parts; i++ ) {
+	for ( i = 5; i < xmmodel->num_parts; i++ ) {
 		g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
 		for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
 			g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
