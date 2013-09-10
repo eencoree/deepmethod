@@ -357,7 +357,7 @@ void dp_evaluation_population_init_func (gpointer data, gpointer user_data)
 DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps)
 {
 	DpPopulation*pop;
-	int i;
+	int i, istart = 0;
 	gboolean immediate_stop = FALSE;
 	gboolean wait_finish = TRUE;
 	GError *gerror = NULL;
@@ -367,12 +367,15 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 		if ( gerror != NULL ) {
 			g_error(gerror->message);
 		}
-		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
-		g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(pop->individ[0]), &gerror);
-		if ( gerror != NULL ) {
-			g_error(gerror->message);
+		if ( noglobal_eps >= 0 ) {
+			dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
+			g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(pop->individ[0]), &gerror);
+			if ( gerror != NULL ) {
+				g_error(gerror->message);
+			}
+			istart = 1;
 		}
-		for ( i = 1; i < size; i++) {
+		for ( i = istart; i < size; i++) {
 			dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
 			g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(pop->individ[i]), &gerror);
 			if ( gerror != NULL ) {
