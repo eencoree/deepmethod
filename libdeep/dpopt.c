@@ -258,6 +258,10 @@ DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data)
 			hopt->old_cost = hopt->cost;
 			ret_val = DP_LOOP_EXIT_SUCCESS;
 		}
+	} else if ( hopt->stop_type == H_OPT_ABSOLUTE_TIME && hloop->w_time >= hopt->criterion ) {
+		ret_val = DP_LOOP_EXIT_SUCCESS;
+	} else if ( hopt->stop_type == H_OPT_ABSOLUTE_ITER && hloop->tau_counter >= hopt->criterion ) {
+		ret_val = DP_LOOP_EXIT_SUCCESS;
 	}
 	return ret_val;
 }
