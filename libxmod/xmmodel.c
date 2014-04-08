@@ -11,12 +11,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
@@ -53,7 +53,7 @@ XmModel*xm_model_new()
 	xmmodel->num_values = 0;
 	xmmodel->array = NULL;
 	xmmodel->mapping = NULL;
-	xmmodel->prime_command = NULL;	
+	xmmodel->prime_command = NULL;
 	xmmodel->prime_delimiters = NULL;
 	xmmodel->prime_keys = NULL;
 	xmmodel->num_prime_values = 0;
@@ -515,9 +515,11 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->parms = g_new0 ( int, length );
 		xmmodel->iparms = g_new0 ( int, length );
 		xmmodel->lookup = g_new0 ( int, length );
+		xmmodel->limited = g_new0 ( int, length );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->parms[j] = j;
 			xmmodel->iparms[j] = xmmodel->parms[j];
+			xmmodel->limited[j] = 1;
 		}
 	} else {
 		g_warning ( gerror->message );
@@ -619,9 +621,11 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	if ( ( length = g_key_file_get_integer(gkf, groupname, "numdparms", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->dparms = g_new0 ( double, xmmodel->size );
 		xmmodel->bparms = g_new0 ( double, xmmodel->size );
+		xmmodel->scale = g_new0 ( double, xmmodel->size );
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->dparms[j] = j;
 			xmmodel->bparms[j] = xmmodel->dparms[j];
+			xmmodel->scale[j] = 1.0;
 		}
 	} else {
 		g_warning ( gerror->message );
@@ -770,7 +774,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			}
 		}
 	} else {
-		g_warning ( gerror->message );	
+		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
 	g_key_file_free(gkf);
@@ -1077,13 +1081,13 @@ GString*xm_model_octave_contents(XmModel*xmmodel)
 		g_string_append_printf(file_contents, "%s =", xmmodel->part[i].name);
 		if ( xmmodel->part[i].num_parms == 1 ) {
 			k = xmmodel->part[i].index[0];
-			g_string_append_printf(file_contents, "%16.9f;", xmmodel->dparms[k]);		
+			g_string_append_printf(file_contents, "%16.9f;", xmmodel->dparms[k]);
 		} else if ( xmmodel->part[i].num_parms > 1 ) {
 			g_string_append_printf(file_contents, "[");
 			for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
 				k = xmmodel->part[i].index[j];
 				g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
-			}			
+			}
 			g_string_append_printf(file_contents, "];");
 		}
 		file_contents = g_string_append_c(file_contents, '\n');
