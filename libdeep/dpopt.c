@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -311,6 +311,10 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);
+	char              *base;
+	gchar **base_tokens;
+	int n_base_tokens, n_extra_tokens;
+	base = (char *)calloc(MAX_RECORD, sizeof(char *));
 	int monitor = hopt->monitor;
 	FILE*fp;
 	int i;
@@ -319,8 +323,17 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 		hloop->exit_str = g_strdup_printf ( "dp_read_log: can't open %s", hopt->logname);
 		return DP_LOOP_EXIT_ERROR;
 	}
+    base = fgets(base, MAX_RECORD, fp);
+    base_tokens = g_strsplit(base, ":", -1);
+    n_base_tokens = g_strv_length(base_tokens) - 1;
+    n_extra_tokens = n_base_tokens - ( heval->size + 3 );
+    g_strfreev(base_tokens);
+    free(base);
 	do {
 		fscanf(fp, "wtime:%lf tau:%d cost:%lf", &(hloop->w_time), &(hloop->tau_counter), &(hopt->cost));
+        for ( i = 0; i < n_extra_tokens; i++) {
+            fscanf(fp, " target[%*i]:%*f");
+		}
 		for ( i = 0; i < heval->size; i++) {
 			fscanf(fp, " p[%d]:%lf", &(heval->points[i]->index), heval->points[i]->param);
 		}
