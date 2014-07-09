@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
@@ -152,7 +152,7 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 		if ( gerror != NULL ) {
 			g_warning ( gerror->message );
 			g_clear_error (&gerror);
-		}		
+		}
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "stop_count", &gerror) ) != NULL ) {
 		hopt->stop_count = g_strtod( str , NULL);
@@ -371,6 +371,14 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_write_state, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "writepareto") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_write_pareto, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "evalpareto") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_evaluate_pareto_front, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "checkstop") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;

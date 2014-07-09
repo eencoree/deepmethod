@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,8 +43,11 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 	individ->nprecond = precond_size;
 	individ->hrand = g_rand_new_with_seed ((guint32)seed);
 	individ->age = 0;
+	individ->pareto_front = -1;
+	individ->dom_count = 0;
 	individ->user_data = NULL;
 	individ->gmutex = g_mutex_new();
+	individ->dominated = NULL;
 	return individ;
 }
 
@@ -65,6 +68,8 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 	int i;
 	individ->cost = trial->cost;
 	individ->age = trial->age;
+	individ->pareto_front = trial->pareto_front;
+	individ->dom_count = trial->dom_count;
 	for ( i = 0; i < individ->size; i++ ) {
 		individ->x[i] = trial->x[i];
 		individ->y[i] = trial->y[i];

@@ -1,39 +1,74 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="all" />
-	<File name="libdeep/dpopt.c" open="1" top="1" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libdeep/dpsettings.c" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="11847" topLine="313" />
+			<Cursor1 position="11468" topLine="357" />
 		</Cursor>
 	</File>
-	<File name="libdeep/dpopt.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libdeep/dpdeep.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1243" topLine="27" />
+			<Cursor1 position="3960" topLine="134" />
 		</Cursor>
 	</File>
-	<File name="libdeep/dpsettings.c" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libxmod/xmmodel.c" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2792" topLine="279" />
+			<Cursor1 position="2288" topLine="201" />
 		</Cursor>
 	</File>
-	<File name="libxmod/xmmodel.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libxmod/xmmodel.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="6171" topLine="197" />
+			<Cursor1 position="1879" topLine="63" />
 		</Cursor>
 	</File>
-	<File name="tools/dpdeepctl.c" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="tools/dpdeepctl.c" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="5724" topLine="42" />
 		</Cursor>
 	</File>
-	<File name="libdeep/dpindivid.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libdeep/dpindivid.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="0" topLine="0" />
+			<Cursor1 position="1242" topLine="36" />
 		</Cursor>
 	</File>
-	<File name="libdeep/dpevaluation.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libdeep/dppopulation.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="0" topLine="0" />
+			<Cursor1 position="1996" topLine="33" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpevaluation.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2385" topLine="81" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpevaluation.c" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6664" topLine="151" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpopt.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3461" topLine="78" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpindivid.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1888" topLine="27" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dppopulation.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1411" topLine="33" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpopt.c" open="1" top="1" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="20220" topLine="544" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dploop.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1242" topLine="22" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

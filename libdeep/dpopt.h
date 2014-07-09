@@ -117,6 +117,10 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_rotate_target(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_evaluate_pareto_front(DpLoop*hloop, gpointer user_data);
+
 #ifdef __cplusplus
 }
 #endif

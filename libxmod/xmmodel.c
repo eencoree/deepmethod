@@ -51,6 +51,7 @@ XmModel*xm_model_new()
 	xmmodel->delimiters = NULL;
 	xmmodel->keys = NULL;
 	xmmodel->num_values = 0;
+	xmmodel->num_keys = 0;
 	xmmodel->array = NULL;
 	xmmodel->mapping = NULL;
 	xmmodel->prime_command = NULL;
@@ -141,12 +142,15 @@ gpointer xm_model_copy_values(gpointer psrc)
 	}
 	xmmodel->delimiters = g_strdup(src->delimiters);
 	xmmodel->num_values = src->num_values;
-	xmmodel->array = g_new0 ( double, xmmodel->num_values );
-	xmmodel->keys = g_new0 ( int, xmmodel->num_values );
+	xmmodel->num_keys = src->num_keys;
+	xmmodel->array = g_new0 ( double, xmmodel->num_keys );
+	xmmodel->keys = g_new0 ( int, xmmodel->num_keys );
 	xmmodel->mapping = g_new0 ( int, xmmodel->num_values );
-	for ( j = 0; j < xmmodel->num_values; j++ ) {
+	for ( j = 0; j < xmmodel->num_keys; j++ ) {
 		xmmodel->array[j] = src->array[j];
 		xmmodel->keys[j] = src->keys[j];
+	}
+	for ( j = 0; j < xmmodel->num_values; j++ ) {
 		xmmodel->mapping[j] = src->mapping[j];
 	}
 	xmmodel->current_penalty_index = src->current_penalty_index;
@@ -229,7 +233,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 				g_printf("result[%d] = %s;\n", j, result[j]);
 			}
 		}
-		for ( i = 0; i < xmmodel->num_values; i++ ) {
+		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			if ( result[xmmodel->keys[i]] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
 			} else {
@@ -239,7 +243,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 	} else {
 		g_warning ( "Couldn't parse output: %s", standard_output);
 		g_warning ( "Standard error: %s", standard_error);
-		for ( i = 0; i < xmmodel->num_values; i++ ) {
+		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
 	}
@@ -680,23 +684,26 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "keys", &length, &gerror) ) != NULL ) {
 		xmmodel->keys = ilist;
+		xmmodel->num_keys = length;
 	} else {
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "mapping", &length, &gerror) ) != NULL ) {
 		xmmodel->mapping = ilist;
+		xmmodel->num_values = length;
+		xmmodel->array = g_new0 ( double, length );
 	} else {
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_values", &gerror) ) != 0  || gerror == NULL ) {
+/*	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_values", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->num_values = ii;
 		xmmodel->array = g_new0 ( double, ii );
 	} else {
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
-	}
+	}*/
 	if ( ( str = g_key_file_get_string(gkf, groupname, "delimiters", &gerror) ) != NULL ) {
 		xmmodel->delimiters = str;
 	} else {

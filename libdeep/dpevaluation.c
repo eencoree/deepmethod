@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,8 +106,8 @@ void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 	MPI_Status *status;
 	MPI_Request *request;
 	MPI_Allreduce(frozen, &sumFrozen, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-	
-	
+
+
 	MPI_Irecv(buffer2recv, bufferDim, MPI_DOUBLE, source, source, MPI_COMM_WORLD, &request[0]);
 	MPI_Send(buffer2send, bufferDim, MPI_DOUBLE, dest, mpi_id, MPI_COMM_WORLD);
 	MPI_Waitall(1, request, status);
@@ -151,6 +151,35 @@ int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_dat
 	return need_swap;
 }
 
+/* return 1 if p1 nondominates p2 *
+   that is p2 dominates p1 and we *
+   need to swap them to get non-  *
+   dominated sorting              *
+***********************************/
+
+int dp_evaluation_individ_dominates_compare(const void *p1, const void *p2, void *user_data)
+{
+	int i, dominates;
+	double u;
+	DpIndivid**i1 = (DpIndivid**)p1;
+	DpIndivid**i2 = (DpIndivid**)p2;
+	DpIndivid*individ = *i1;
+	DpIndivid*trial = *i2;
+	DpEvaluationCtrl*hevalctrl = (DpEvaluationCtrl*)user_data;
+	dominates = 1;
+	if ( individ->invalid == 1 && trial->invalid == 0 ) {
+		dominates = 0;
+	} else {
+		dominates = 1;
+		for ( i = 0; i < hevalctrl->eval_target->size; i++ ) {
+			if ( trial->targets[i] < individ->targets[i] ) {
+				dominates = 0;
+				break;
+			}
+		}
+	}
+	return dominates;
+}
 
 /*********************************************************************
  ** gaussian random: normal distribution                            **
