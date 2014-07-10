@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -179,3 +179,36 @@ void dp_target_eval_update_user_data(DpTarget*htarget, gpointer user_data, doubl
 	htarget->update_model(user_data, buffer, index, cost0);
 }
 
+void dp_target_shift_penalty_weights (DpTarget*htarget)
+{
+	int i;
+	double weight;
+	weight = htarget->penalty[ htarget->size - 1 ]->weight;
+	for ( i = htarget->size - 1; i > 0; i-- ) {
+		htarget->penalty[i]->weight = htarget->penalty[i - 1]->weight;
+	}
+	htarget->penalty[0]->weight = weight;
+	if ( htarget->debug == 1 ) {
+		fprintf(stdout, "dp_target_shift_penalty_weights: # rank weight\n");
+		for ( i = 0; i < htarget->size; i++ ) {
+			fprintf(stdout, "%d %13.9f %13.9f\n", i, htarget->penalty[i]->rank, htarget->penalty[i]->weight);
+		}
+	}
+}
+
+void dp_target_shift_penalty_ranks (DpTarget*htarget)
+{
+	int i;
+	double rank;
+	rank = htarget->penalty[ htarget->size - 1 ]->rank;
+	for ( i = htarget->size - 1; i > 0; i-- ) {
+		htarget->penalty[i]->rank = htarget->penalty[i - 1]->rank;
+	}
+	htarget->penalty[0]->rank = rank;
+	if ( htarget->debug == 1 ) {
+		fprintf(stdout, "dp_target_shift_penalty_ranks: # rank weight\n");
+		for ( i = 0; i < htarget->size; i++ ) {
+			fprintf(stdout, "%d %13.9f %13.9f\n", i, htarget->penalty[i]->rank, htarget->penalty[i]->weight);
+		}
+	}
+}

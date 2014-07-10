@@ -391,6 +391,7 @@ DpLoopExitCode dp_rotate_target(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
+	DpTarget*htarget = (DpTarget*)(hopt->htarget);
 	DpDeepInfo*hdeepinfo;
 	DpOsdaInfo*hosdainfo;
 	int *indices_of_targets;
@@ -399,6 +400,7 @@ DpLoopExitCode dp_rotate_target(DpLoop*hloop, gpointer user_data)
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			dp_target_shift_penalty_ranks (htarget);
 		break;
 		case H_OPT_OSDA:
 			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
