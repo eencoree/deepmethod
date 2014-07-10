@@ -291,6 +291,14 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 			hopt->recombination_strategy = DE_3_exp_T;
 		} else if ( !g_strcmp0(str, "de_3_bin_T") ) {
 			hopt->recombination_strategy = DE_3_bin_T;
+		} else if ( !g_strcmp0(str, "de_3_bin_rand") ) {
+			hopt->recombination_strategy = DE_3_bin;
+		} else if ( !g_strcmp0(str, "de_3_exp_rand") ) {
+			hopt->recombination_strategy = DE_3_exp;
+		} else if ( !g_strcmp0(str, "de_3_exp_rand_T") ) {
+			hopt->recombination_strategy = DE_3_exp_T;
+		} else if ( !g_strcmp0(str, "de_3_bin_rand_T") ) {
+			hopt->recombination_strategy = DE_3_bin_T;
 		}
 		g_free(str);
 	} else {
