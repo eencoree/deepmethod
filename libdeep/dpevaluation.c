@@ -134,10 +134,11 @@ int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_dat
 	DpIndivid*individ = *i1;
 	DpIndivid*trial = *i2;
 	DpEvaluationCtrl*hevalctrl = (DpEvaluationCtrl*)user_data;
+	int ignore_cost = hevalctrl->eval_target->ignore_cost;
 	need_swap = 0;
 	if ( individ->invalid == 1 && trial->invalid == 0 ) {
 		need_swap = 1;
-	} else if ( trial->cost < individ->cost ) {
+	} else if ( ignore_cost == 0 && trial->cost < individ->cost ) {
 		need_swap = 1;
 	} else {
 		need_swap = -1;

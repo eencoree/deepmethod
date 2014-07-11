@@ -451,6 +451,12 @@ int dp_settings_target_load(gchar*data, gsize size, gchar*groupname, DpTarget *h
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "ignore_cost", &gerror) ) != 0  || gerror == NULL ) {
+		htarget->ignore_cost = ii;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
 	for ( i = 0; i < (int)ksize; i++ ) {
 		if ( ( array = g_key_file_get_string_list(gkf, groupname, keys[i], &length, &gerror) ) != NULL ) {
 			if ( length == 4 ) {

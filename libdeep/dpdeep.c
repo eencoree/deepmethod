@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -80,8 +80,9 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	DpPopulation*population = hdeepinfo->population;
 	DpIndivid*my_individ = population->individ[my_id];
 	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+	int ignore_cost = hdeepinfo->hevalctrl->eval_target->ignore_cost;
 	GRand*hrand = my_individ->hrand;
-	r1 = population->imin;
+	r1 = ( ignore_cost == 0 ) ? population->imin : -1;
 	do {
 		r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
 	} while ( r2 == my_id || r2 == r1 );
@@ -91,6 +92,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	do {
 		r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
 	} while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
+	r1 = population->imin;
 	my_tabu = population->individ[r1];
 	start_index = g_rand_int_range (hrand, 0, population->ind_size);
 	end_index = population->ind_size;
@@ -98,7 +100,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	my_trial->age = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
 	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu, my_id, my_tabu->cost);
-	if ( my_id == population->imin ) {
+	if ( ignore_cost == 0 && my_id == population->imin ) {
 		if ( my_trial->cost >= my_individ->cost ) {
 			dp_individ_copy_values(my_trial, my_individ);
 			my_trial->age++;
