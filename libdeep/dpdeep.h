@@ -75,6 +75,18 @@ void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo);
 
 void dp_deep_info_save(FILE*fp, DpDeepInfo *hdeepinfo);
 
+void dp_deep_geneval_step(DpDeepInfo*hdeepinfo);
+
+void dp_deep_select_step(DpDeepInfo*hdeepinfo);
+
+void dp_deep_nondominated_select_step(DpDeepInfo*hdeepinfo);
+
+void dp_deep_combine_func (gpointer data, gpointer user_data);
+
+void dp_deep_evaluate_func (gpointer data, gpointer user_data);
+
+void dp_deep_select_func (gpointer data, gpointer user_data);
+
 #ifdef __cplusplus
 }
 #endif

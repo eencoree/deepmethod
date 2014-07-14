@@ -185,6 +185,11 @@ int dp_evaluation_individ_dominates_compare(const void *p1, const void *p2, void
 	return dominates;
 }
 
+
+void dp_evaluation_population_pareto_combine(DpPopulation*population, DpPopulation*trial, DpEvaluationCtrl*hevalctrl)
+{
+}
+
 /*********************************************************************
  ** gaussian random: normal distribution                            **
  ** N(mean, dev)                                                    **
