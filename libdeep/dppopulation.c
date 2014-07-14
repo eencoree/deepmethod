@@ -160,6 +160,55 @@ void dp_population_update(DpPopulation*pop, int start_index, int end_index)
 	pop->aage = amax;
 }
 
+void dp_population_cr2cost(DpPopulation*pop)
+{
+    GArray*curr_front;
+    int i, curr_ind, j, k;
+    int ntargets = pop->individ[j]->ntargets;
+    double tmax, tmin, trange, crdist;
+    DpIndivid* individ, *individ_l, *individ_r;
+    for ( k = 0; k < pop->fronts->len; k++ ) {
+        curr_front = g_array_index (pop->fronts, GArray*, k);
+        for ( j = 0; j < curr_front->len; j++ ) {
+            curr_ind = g_array_index (curr_front, int, j);
+            individ = pop->individ[curr_ind];
+            individ->crdist = 0;
+        }
+        for( i = 0; i < ntargets; i++) {
+            tmax = -G_MAXDOUBLE;
+            tmin = G_MAXDOUBLE;
+            for ( j = 0; j < curr_front->len; j++ ) {
+                curr_ind = g_array_index (curr_front, int, j);
+                individ = pop->individ[curr_ind];
+                tmin = MIN(tmin, individ->targets[i]);
+                tmax = MAX(tmax, individ->targets[i]);
+            }
+            trange = tmax - tmin;
+            if ( trange < G_MINDOUBLE ) {
+                continue;
+            }
+            curr_ind = g_array_index (curr_front, int, 0);
+            individ = pop->individ[curr_ind];
+            curr_ind = g_array_index (curr_front, int, 1);
+            individ_r = pop->individ[curr_ind];
+            individ->crdist += (individ->targets[i] - individ_r->targets[i])/trange;
+            for ( j = 1; j < curr_front->len - 1; j++ ) {
+                individ_l = individ;
+                individ = individ_r;
+                curr_ind = g_array_index (curr_front, int, j + 1);
+                individ_r = pop->individ[curr_ind];
+                individ->crdist += (individ_l->targets[i] - individ_r->targets[i])/trange;
+            }
+            individ_l = individ;
+            individ = individ_r;
+            individ->crdist += (individ_l->targets[i] - individ->targets[i])/trange;
+        }
+    }
+    for ( j = 0; j < pop->size; j++) {
+		pop->individ[j]->cost = ( pop->individ[j]->crdist > G_MINDOUBLE ) ? 1 / pop->individ[j]->crdist : pop->individ[j]->crdist;
+	}
+}
+
 void dp_population_nbest_pack(DpPopulation*pop, int index, double**buffer2send, int*bufferDim)
 {
 	int i;

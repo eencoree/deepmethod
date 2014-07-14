@@ -121,6 +121,8 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_evaluate_pareto_front(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_opt_cr2cost(DpLoop*hloop, gpointer user_data);
+
 #ifdef __cplusplus
 }
 #endif

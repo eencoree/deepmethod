@@ -52,6 +52,7 @@ DpTarget*dp_target_new()
 	htarget->prime = NULL;
 	htarget->debug = 0;
 	htarget->ignore_cost = 0;
+	htarget->use_crdist = 0;
 	return htarget;
 }
 

@@ -41,6 +41,7 @@ typedef struct DpIndivid {
 	int age;
 	int pareto_front;
 	int dom_count;
+	double crdist;
 	GArray *dominated;
 	double *x;
 	double *y;

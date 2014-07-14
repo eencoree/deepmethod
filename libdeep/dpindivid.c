@@ -48,6 +48,7 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 	individ->user_data = NULL;
 	individ->gmutex = g_mutex_new();
 	individ->dominated = NULL;
+	individ->crdist = 0;
 	return individ;
 }
 
@@ -70,6 +71,7 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 	individ->age = trial->age;
 	individ->pareto_front = trial->pareto_front;
 	individ->dom_count = trial->dom_count;
+	individ->crdist = trial->crdist;
 	for ( i = 0; i < individ->size; i++ ) {
 		individ->x[i] = trial->x[i];
 		individ->y[i] = trial->y[i];

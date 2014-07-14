@@ -62,6 +62,7 @@ typedef struct DpTarget {
 	DpFuncUpdateModel update_model;
 	int debug;
 	int ignore_cost;
+	double use_crdist;
 } DpTarget;
 
 DpTarget*dp_target_new();

@@ -387,6 +387,10 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_opt_evaluate_pareto_front, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "cr2cost") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_cr2cost, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "checkstop") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
@@ -453,6 +457,12 @@ int dp_settings_target_load(gchar*data, gsize size, gchar*groupname, DpTarget *h
 	}
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "ignore_cost", &gerror) ) != 0  || gerror == NULL ) {
 		htarget->ignore_cost = ii;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( rank = g_key_file_get_double(gkf, groupname, "use_crdist", &gerror) ) != 0  || gerror == NULL ) {
+		htarget->use_crdist = rank;
 	} else {
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);

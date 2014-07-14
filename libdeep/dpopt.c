@@ -106,6 +106,8 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 			dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "writepareto") ) {
 			dp_opt_add_func(hopt, dp_write_pareto, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "cr2cost") ) {
+			dp_opt_add_func(hopt, dp_opt_cr2cost, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "evalpareto") ) {
 			dp_opt_add_func(hopt, dp_opt_evaluate_pareto_front, tau_flag, opt_type, order, method_info);
 		}
@@ -657,5 +659,23 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
 	}
 	fclose(fp);
 	g_free(pareto_logname);
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_cr2cost(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	DpOsdaInfo*hosdainfo;
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			dp_population_cr2cost(hdeepinfo->population);
+		break;
+		case H_OPT_OSDA:
+			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
+		break;
+	}
 	return ret_val;
 }
