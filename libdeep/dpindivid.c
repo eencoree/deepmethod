@@ -30,6 +30,7 @@
 
 DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 {
+	int i;
 	DpIndivid*individ;
 	individ = (DpIndivid*)malloc(sizeof(DpIndivid));
 	individ->size = size;
@@ -39,6 +40,9 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 	individ->z = (double*)calloc(size, sizeof(double));
 	individ->targets = (double*)calloc(targets_size, sizeof(double));
 	individ->ntargets = targets_size;
+	for ( i = 0; i < targets_size; i++ ) {
+        individ->targets[i] = G_MAXDOUBLE;
+	}
 	individ->precond = (double*)calloc(precond_size, sizeof(double));
 	individ->nprecond = precond_size;
 	individ->hrand = g_rand_new_with_seed ((guint32)seed);

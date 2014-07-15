@@ -51,6 +51,7 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 	hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->size, hdeepinfo->hevalctrl->eval_target->precond_size, hdeepinfo->hevalctrl->seed + hdeepinfo->hevalctrl->yoffset);
 	hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->noglobal_eps);
 	hdeepinfo->recombination_control = dp_recombination_control_init(recomb_strategy, hdeepinfo->population, hdeepinfo->population->individ[0]->hrand, hdeepinfo->recombination_weight, hdeepinfo->recombination_prob, hdeepinfo->recombination_gamma);
+	hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
 	return hdeepinfo;
 }
 
@@ -65,6 +66,7 @@ void dp_deep_info_load(FILE*fp, DpDeepInfo *hdeepinfo)
 {
   dp_population_load(fp, hdeepinfo->trial);
   dp_population_load(fp, hdeepinfo->population);
+  hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
   dp_recombination_control_load(fp, hdeepinfo->recombination_control);
 }
 
@@ -142,7 +144,7 @@ void dp_deep_step(DpDeepInfo*hdeepinfo)
 	hdeepinfo->trial = population;
 }
 
-void dp_deep_combine_func (gpointer data, gpointer user_data)
+void dp_deep_generate_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;
 	int start_index, end_index;
@@ -220,7 +222,7 @@ void dp_deep_select_func (gpointer data, gpointer user_data)
 	}
 }
 
-void dp_deep_geneval_step(DpDeepInfo*hdeepinfo)
+void dp_deep_generate_step(DpDeepInfo*hdeepinfo)
 {
 	int individ_id;
 	gboolean immediate_stop = FALSE;
@@ -229,8 +231,18 @@ void dp_deep_geneval_step(DpDeepInfo*hdeepinfo)
 	DpPopulation*trial = hdeepinfo->trial;
 	GError *gerror = NULL;
 	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
-		dp_deep_combine_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
+		dp_deep_generate_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
     }
+}
+
+void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo)
+{
+	int individ_id;
+	gboolean immediate_stop = FALSE;
+	gboolean wait_finish = TRUE;
+	DpPopulation*population = hdeepinfo->population;
+	DpPopulation*trial = hdeepinfo->trial;
+	GError *gerror = NULL;
 	if ( hdeepinfo->max_threads > 0 ) {
 		hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_evaluate_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
 		if ( gerror != NULL ) {
@@ -262,21 +274,6 @@ void dp_deep_select_step(DpDeepInfo*hdeepinfo)
 	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 		dp_deep_select_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
     }
-	dp_population_update(trial, 0, trial->size);
-	trial->iter = population->iter + 1;
-	hdeepinfo->population = trial;
-	hdeepinfo->trial = population;
-}
-
-void dp_deep_nondominated_select_step(DpDeepInfo*hdeepinfo)
-{
-	int individ_id;
-	gboolean immediate_stop = FALSE;
-	gboolean wait_finish = TRUE;
-	DpPopulation*population = hdeepinfo->population;
-	DpPopulation*trial = hdeepinfo->trial;
-/* modifies trial in place */
-    dp_evaluation_population_pareto_combine(population, trial, hdeepinfo->hevalctrl);
 	dp_population_update(trial, 0, trial->size);
 	trial->iter = population->iter + 1;
 	hdeepinfo->population = trial;

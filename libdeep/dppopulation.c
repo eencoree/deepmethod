@@ -60,6 +60,38 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int pre
 	return pop;
 }
 
+DpPopulation*dp_population_union(DpPopulation*population, DpPopulation*trial)
+{
+	int i;
+	DpPopulation*pop;
+	pop = (DpPopulation*)malloc(sizeof(DpPopulation));
+	pop->size = population->size + trial->size;
+	pop->ind_size = population->ind_size;
+	pop->individ = (DpIndivid**)calloc(pop->size, sizeof(DpIndivid*));
+	pop->mean = (double*)calloc(pop->ind_size, sizeof(double));
+	pop->variance = (double*)calloc(pop->ind_size, sizeof(double));
+	pop->cost_ascending = (int*)calloc(pop->size, sizeof(int));
+	pop->ages_descending = (int*)calloc(pop->size, sizeof(int));
+	for ( i = 0; i < population->size; i++ ) {
+		pop->individ[i] = population->individ[i];
+		pop->cost_ascending[i] = i;
+		pop->ages_descending[i] = i;
+	}
+	for ( i = 0; i < trial->size; i++ ) {
+		pop->individ[population->size + i] = trial->individ[i];
+		pop->cost_ascending[i] = population->size + i;
+		pop->ages_descending[i] = population->size + i;
+	}
+	pop->imin = 0;
+	pop->dmin = -1;
+	pop->iage = 0;
+	pop->aage = 0;
+	pop->iter = 0;
+	pop->nfronts = 0;
+	pop->fronts = NULL;
+	return pop;
+}
+
 void dp_population_save(FILE*fp, DpPopulation*pop)
 {
 	int i;

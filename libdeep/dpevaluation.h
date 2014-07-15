@@ -116,7 +116,7 @@ void dp_evaluation_population_init_func (gpointer data, gpointer user_data);
 
 DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps);
 
-void dp_evaluation_population_pareto_combine(DpPopulation*population, DpPopulation*trial, DpEvaluationCtrl*hevalctrl);
+int dp_evaluation_cr_compare(gconstpointer a, gconstpointer b, gpointer user_data);
 
 #ifdef __cplusplus
 }

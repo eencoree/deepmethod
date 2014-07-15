@@ -103,6 +103,12 @@ DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_deep(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_opt_deep_generate(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_deep_evaluate(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_deep_select(DpLoop*hloop, gpointer user_data);
+
 DpLoopExitCode dp_opt_osda(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_mpi_comm(DpLoop*hloop, gpointer user_data);
@@ -122,6 +128,10 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data);
 DpLoopExitCode dp_opt_evaluate_pareto_front(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_cr2cost(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_sort_pareto_front(DpLoop*hloop, gpointer user_data);
 
 #ifdef __cplusplus
 }

@@ -387,6 +387,14 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_opt_evaluate_pareto_front, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "selpareto") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_select_pareto_front, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "sortpareto") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_sort_pareto_front, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "cr2cost") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
@@ -420,6 +428,19 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "gdeep") ) {
+			opt_type = H_OPT_DEEP;
+			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
+			method_info = (gpointer) hdeepinfo;
+			dp_opt_add_func(hopt, dp_opt_deep_generate, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "edeep") ) {
+            opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_deep_evaluate, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "sdeep") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_deep_select, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "osda") ) {
 			opt_type = H_OPT_OSDA;
 			hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);

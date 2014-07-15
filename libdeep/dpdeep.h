@@ -46,6 +46,7 @@ typedef struct DpDeepInfo {
 	double noglobal_eps;
 	DpPopulation*trial;
 	DpPopulation*population;
+	DpPopulation*popunion;
 	DpRecombinationControl *recombination_control;
 	DpEvaluationCtrl *hevalctrl;
 	GThreadPool*gthreadpool;
@@ -75,13 +76,13 @@ void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo);
 
 void dp_deep_info_save(FILE*fp, DpDeepInfo *hdeepinfo);
 
-void dp_deep_geneval_step(DpDeepInfo*hdeepinfo);
+void dp_deep_generate_step(DpDeepInfo*hdeepinfo);
+
+void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo);
 
 void dp_deep_select_step(DpDeepInfo*hdeepinfo);
 
-void dp_deep_nondominated_select_step(DpDeepInfo*hdeepinfo);
-
-void dp_deep_combine_func (gpointer data, gpointer user_data);
+void dp_deep_generate_func (gpointer data, gpointer user_data);
 
 void dp_deep_evaluate_func (gpointer data, gpointer user_data);
 

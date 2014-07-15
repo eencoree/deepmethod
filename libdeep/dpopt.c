@@ -110,6 +110,10 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 			dp_opt_add_func(hopt, dp_opt_cr2cost, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "evalpareto") ) {
 			dp_opt_add_func(hopt, dp_opt_evaluate_pareto_front, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "selpareto") ) {
+			dp_opt_add_func(hopt, dp_select_pareto_front, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "sortpareto") ) {
+			dp_opt_add_func(hopt, dp_sort_pareto_front, tau_flag, opt_type, order, method_info);
 		}
 	}
 }
@@ -289,6 +293,35 @@ DpLoopExitCode dp_opt_deep(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
+DpLoopExitCode dp_opt_deep_generate(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	dp_deep_generate_step(hdeepinfo);
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_deep_evaluate(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	dp_deep_evaluate_step(hdeepinfo);
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_deep_select(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	dp_deep_select_step(hdeepinfo);
+	dp_deep_accept_step(hdeepinfo, &(hopt->cost));
+	dp_deep_update_step(hdeepinfo);
+	return ret_val;
+}
+
 DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
@@ -304,11 +337,12 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 		hloop->exit_str = g_strdup_printf ( "dp_write_log: can't open %s", hopt->logname);
 		return DP_LOOP_EXIT_ERROR;
 	}
-	fprintf(fp, "wtime:%e tau:%d cost:%f", hloop->w_time, hloop->tau_counter, hopt->cost);
+	fprintf(fp, "wtime:%e tau:%d", hloop->w_time, hloop->tau_counter);
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
             DpIndivid* individ = hdeepinfo->population->individ[hdeepinfo->population->imin];
+            fprintf(fp, " cost:%f", individ->cost);
             for( i = 0; i < individ->ntargets; i++) {
                 fprintf(fp, " target[%i]:%f", i, individ->targets[i]);
             }
@@ -553,7 +587,7 @@ DpLoopExitCode dp_opt_evaluate_pareto_front(DpLoop*hloop, gpointer user_data)
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-			pop = hdeepinfo->population;
+			pop = hdeepinfo->popunion;
 			for ( i = 0; i < pop->size; i++ ) {
                 pop->individ[i]->pareto_front = -1;
                 pop->individ[i]->dom_count = 0;
@@ -617,6 +651,66 @@ DpLoopExitCode dp_opt_evaluate_pareto_front(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
+DpLoopExitCode dp_sort_pareto_front(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	DpPopulation*pop, *trial, *population;
+	GArray*curr_front;
+	int i, curr_ind, j, k;
+	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			pop = hdeepinfo->popunion;
+            for ( k = 0; k < pop->fronts->len; k++ ) {
+                curr_front = g_array_index (pop->fronts, GArray*, k);
+                g_array_sort_with_data(curr_front, (GCompareDataFunc) dp_evaluation_cr_compare, (gpointer) pop);
+            }
+		break;
+	}
+	return ret_val;
+}
+
+DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	DpPopulation*pop, *trial, *population;
+	GArray*curr_front;
+	int i, curr_ind, j, k;
+	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			pop = hdeepinfo->popunion;
+			population = hdeepinfo->population;
+			trial = hdeepinfo->trial;
+			i = 0;
+            for ( k = 0; k < pop->fronts->len; k++ ) {
+                curr_front = g_array_index (pop->fronts, GArray*, k);
+                for ( j = 0; j < curr_front->len; j++ ) {
+                    curr_ind = g_array_index (curr_front, int, j);
+                    if ( i < population->size ) {
+                        population->individ[i] = pop->individ[curr_ind];
+                    } else {
+                        trial->individ[i - population->size] = pop->individ[curr_ind];
+                    }
+                    i++;
+                }
+            }
+            trial->iter = population->iter;
+            population->iter++;
+            dp_population_update(population, 0, population->size);
+            dp_deep_accept_step(hdeepinfo, &(hopt->cost));
+            dp_deep_update_step(hdeepinfo);
+		break;
+	}
+	return ret_val;
+}
+
 DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
@@ -637,13 +731,13 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-			pop = hdeepinfo->population;
+			pop = hdeepinfo->popunion;
             for ( k = 0; k < pop->fronts->len; k++ ) {
                 curr_front = g_array_index (pop->fronts, GArray*, k);
                 for ( j = 0; j < curr_front->len; j++ ) {
                     curr_ind = g_array_index (curr_front, int, j);
                     DpIndivid* individ = pop->individ[curr_ind];
-                    fprintf(fp, "wtime:%e tau:%d cost:%f front:%d", hloop->w_time, hloop->tau_counter, hopt->cost, k);
+                    fprintf(fp, "wtime:%e tau:%d cost:%f front:%d:%d", hloop->w_time, hloop->tau_counter, hopt->cost, k, j);
                     for( i = 0; i < individ->ntargets; i++) {
                         fprintf(fp, " target[%i]:%f", i, individ->targets[i]);
                     }
@@ -671,7 +765,7 @@ DpLoopExitCode dp_opt_cr2cost(DpLoop*hloop, gpointer user_data)
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-			dp_population_cr2cost(hdeepinfo->population);
+			dp_population_cr2cost(hdeepinfo->popunion);
 		break;
 		case H_OPT_OSDA:
 			hosdainfo = (DpOsdaInfo*)(hopt->method_info);

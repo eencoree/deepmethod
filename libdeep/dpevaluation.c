@@ -155,6 +155,23 @@ int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_dat
 	return need_swap;
 }
 
+int dp_evaluation_cr_compare(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	int need_swap;
+	int *ia = (int*)a;
+	int *ib = (int*)b;
+	DpPopulation*popunion = (DpPopulation*)user_data;
+	DpIndivid*i1 = popunion->individ[(*ia)];
+	DpIndivid*i2 = popunion->individ[(*ib)];
+	need_swap = 0;
+	if ( i1->crdist < i2->crdist ) {
+		need_swap = 1;
+	} else if ( i1->crdist > i2->crdist ) {
+		need_swap = -1;
+	}
+	return need_swap;
+}
+
 /* return 1 if p1 nondominates p2 *
    that is p2 dominates p1 and we *
    need to swap them to get non-  *
@@ -183,11 +200,6 @@ int dp_evaluation_individ_dominates_compare(const void *p1, const void *p2, void
 		}
 	}
 	return dominates;
-}
-
-
-void dp_evaluation_population_pareto_combine(DpPopulation*population, DpPopulation*trial, DpEvaluationCtrl*hevalctrl)
-{
 }
 
 /*********************************************************************

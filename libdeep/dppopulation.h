@@ -74,6 +74,8 @@ void dp_population_load(FILE*fp, DpPopulation*pop);
 
 void dp_population_cr2cost(DpPopulation*pop);
 
+DpPopulation*dp_population_union(DpPopulation*population, DpPopulation*trial);
+
 #ifdef __cplusplus
 }
 #endif
