@@ -141,7 +141,7 @@ int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_dat
 		need_swap = 1;
 	} else if ( ignore_cost == 0 && trial->cost < individ->cost ) {
 		need_swap = 1;
-	} else if ( use_crdist > 0 && trial->crdist > individ->crdist && g_rand_double(individ->hrand) < use_crdist ) {
+	} else if ( use_crdist > 0 && ( trial->pareto_front < individ->pareto_front || (( trial->pareto_front == individ->pareto_front ) && trial->crdist > individ->crdist) ) && g_rand_double(individ->hrand) < use_crdist ) {
 		need_swap = 1;
 	} else {
 		need_swap = -1;
