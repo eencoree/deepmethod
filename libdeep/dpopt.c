@@ -737,7 +737,7 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
                 for ( j = 0; j < curr_front->len; j++ ) {
                     curr_ind = g_array_index (curr_front, int, j);
                     DpIndivid* individ = pop->individ[curr_ind];
-                    fprintf(fp, "wtime:%e tau:%d cost:%f front:%d:%d", hloop->w_time, hloop->tau_counter, hopt->cost, k, j);
+                    fprintf(fp, "wtime:%e tau:%d cost:%f front:%d:%d", hloop->w_time, hloop->tau_counter, individ->cost, k, j);
                     for( i = 0; i < individ->ntargets; i++) {
                         fprintf(fp, " target[%i]:%f", i, individ->targets[i]);
                     }

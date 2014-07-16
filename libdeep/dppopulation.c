@@ -57,6 +57,7 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int pre
 	pop->iter = 0;
 	pop->nfronts = 0;
 	pop->fronts = NULL;
+	pop->target_index = 0;
 	return pop;
 }
 
@@ -89,6 +90,7 @@ DpPopulation*dp_population_union(DpPopulation*population, DpPopulation*trial)
 	pop->iter = 0;
 	pop->nfronts = 0;
 	pop->fronts = NULL;
+	pop->target_index = 0;
 	return pop;
 }
 
@@ -192,6 +194,23 @@ void dp_population_update(DpPopulation*pop, int start_index, int end_index)
 	pop->aage = amax;
 }
 
+int dp_population_target_compare(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	int need_swap, target_index;
+	int *ia = (int*)a;
+	int *ib = (int*)b;
+	DpPopulation*popunion = (DpPopulation*)user_data;
+	DpIndivid*i1 = popunion->individ[(*ia)];
+	DpIndivid*i2 = popunion->individ[(*ib)];
+	need_swap = 0;
+	if ( i1->targets[target_index] > i2->targets[target_index] ) {
+		need_swap = 1;
+	} else if ( i1->targets[target_index] < i2->targets[target_index] ) {
+		need_swap = -1;
+	}
+	return need_swap;
+}
+
 void dp_population_cr2cost(DpPopulation*pop)
 {
     GArray*curr_front;
@@ -207,37 +226,33 @@ void dp_population_cr2cost(DpPopulation*pop)
             individ->crdist = 0;
         }
         for( i = 0; i < ntargets; i++) {
-            tmax = -G_MAXDOUBLE;
-            tmin = G_MAXDOUBLE;
-            for ( j = 0; j < curr_front->len; j++ ) {
-                curr_ind = g_array_index (curr_front, int, j);
-                individ = pop->individ[curr_ind];
-                tmin = MIN(tmin, individ->targets[i]);
-                tmax = MAX(tmax, individ->targets[i]);
-            }
+            pop->target_index = i;
+            g_array_sort_with_data(curr_front, (GCompareDataFunc) dp_population_target_compare, (gpointer) pop);
+            curr_ind = g_array_index (curr_front, int, curr_front->len - 1);
+            individ = pop->individ[curr_ind];
+            tmax = individ->targets[i];
+            individ->crdist = G_MAXDOUBLE;
+            curr_ind = g_array_index (curr_front, int, 0);
+            individ = pop->individ[curr_ind];
+            tmin = individ->targets[i];
+            individ->crdist = G_MAXDOUBLE;
             trange = tmax - tmin;
             if ( trange < G_MINDOUBLE ) {
                 continue;
             }
-            curr_ind = g_array_index (curr_front, int, 0);
-            individ = pop->individ[curr_ind];
             curr_ind = g_array_index (curr_front, int, 1);
             individ_r = pop->individ[curr_ind];
-            individ->crdist += (individ->targets[i] - individ_r->targets[i])/trange;
             for ( j = 1; j < curr_front->len - 1; j++ ) {
                 individ_l = individ;
                 individ = individ_r;
                 curr_ind = g_array_index (curr_front, int, j + 1);
                 individ_r = pop->individ[curr_ind];
-                individ->crdist += (individ_l->targets[i] - individ_r->targets[i])/trange;
+                individ->crdist += (individ_r->targets[i] - individ_l->targets[i])/trange;
             }
-            individ_l = individ;
-            individ = individ_r;
-            individ->crdist += (individ_l->targets[i] - individ->targets[i])/trange;
         }
     }
     for ( j = 0; j < pop->size; j++) {
-		pop->individ[j]->cost = ( pop->individ[j]->crdist > G_MINDOUBLE ) ? 1 / pop->individ[j]->crdist : pop->individ[j]->crdist;
+		pop->individ[j]->cost = ( pop->individ[j]->crdist > G_MINDOUBLE ) ? 1 / pop->individ[j]->crdist : G_MAXDOUBLE;
 	}
 }
 
