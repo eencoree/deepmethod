@@ -213,11 +213,13 @@ void dp_deep_select_func (gpointer data, gpointer user_data)
 	my_tabu = population->individ[r1];
 	if ( ignore_cost == 0 && my_id == population->imin ) {
 		if ( my_trial->cost >= my_individ->cost ) {
-			dp_individ_copy_values(my_trial, my_individ);
+			population->individ[my_id] = my_trial;
+			trial->individ[my_id] = my_individ;
 			my_trial->age++;
 		}
 	} else if ( 1 != dp_evaluation_individ_compare((const void *)(&my_individ), (const void *)(&my_trial), (void*)(hdeepinfo->hevalctrl)) ) {
-		dp_individ_copy_values(my_trial, my_individ);
+		population->individ[my_id] = my_trial;
+		trial->individ[my_id] = my_individ;
 		my_trial->age++;
 	}
 }
@@ -273,7 +275,7 @@ void dp_deep_select_step(DpDeepInfo*hdeepinfo)
 	GError *gerror = NULL;
 	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 		dp_deep_select_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
-    }
+	}
 	dp_population_update(trial, 0, trial->size);
 	trial->iter = population->iter + 1;
 	hdeepinfo->population = trial;
