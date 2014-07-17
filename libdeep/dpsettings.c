@@ -403,6 +403,10 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_sort_pareto_front, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "permutepop") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_permute, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "cr2cost") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;

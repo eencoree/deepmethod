@@ -134,6 +134,8 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_sort_pareto_front(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_opt_permute(DpLoop*hloop, gpointer user_data);
+
 #ifdef __cplusplus
 }
 #endif

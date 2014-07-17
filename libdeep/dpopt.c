@@ -115,6 +115,8 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 			dp_opt_add_func(hopt, dp_select_pareto_front, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "sortpareto") ) {
 			dp_opt_add_func(hopt, dp_sort_pareto_front, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "permutepop") ) {
+			dp_opt_add_func(hopt, dp_opt_permute, tau_flag, opt_type, order, method_info);
 		}
 	}
 }
@@ -543,6 +545,30 @@ DpLoopExitCode dp_opt_mpi_comm(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
+DpLoopExitCode dp_opt_permute(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+    int i, src_ind, dst_ind, seed_ind;
+    DpIndivid*tmp_ind;
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			DpPopulation*pop = hdeepinfo->population;
+			seed_ind = hdeepinfo->es_lambda % pop->size;
+			for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
+                src_ind = g_rand_int_range (pop->individ[seed_ind]->hrand, 0, pop->size);
+                dst_ind = g_rand_int_range (pop->individ[seed_ind]->hrand, 0, pop->size);
+                tmp_ind = pop->individ[dst_ind];
+                pop->individ[dst_ind] = pop->individ[src_ind];
+                pop->individ[src_ind] = tmp_ind;
+			}
+		break;
+	}
+	return ret_val;
+}
+
 DpLoopExitCode dp_opt_post(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
@@ -704,8 +730,10 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data)
                     curr_ind = g_array_index (curr_front, int, j);
                     if ( i < population->size ) {
                         population->individ[i] = pop->individ[curr_ind];
+                        population->individ[i]->age = 0;
                     } else {
                         trial->individ[i - population->size] = pop->individ[curr_ind];
+                        trial->individ[i - population->size]->age++;
                     }
                     i++;
                 }
