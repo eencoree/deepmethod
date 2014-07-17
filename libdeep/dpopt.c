@@ -37,7 +37,7 @@
 #define g_strcmp0(str1, str2) strcmp(str1, str2)
 #endif
 
-DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count)
+DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count, int pareto_all)
 {
 	DpOpt *hopt;
 	GList *funcs = NULL;
@@ -59,6 +59,7 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 	hopt->hloop = dp_loop_new(NULL, NULL, NULL);
 	hopt->opt_type = H_OPT_NONE;
 	hopt->method_info = NULL;
+	hopt->pareto_all = pareto_all;
 	return hopt;
 }
 
@@ -299,6 +300,7 @@ DpLoopExitCode dp_opt_deep_generate(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 	dp_deep_generate_step(hdeepinfo);
+	hdeepinfo->selection_done = 0;
 	return ret_val;
 }
 
@@ -316,9 +318,13 @@ DpLoopExitCode dp_opt_deep_select(DpLoop*hloop, gpointer user_data)
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	if ( hdeepinfo->selection_done == 1 ) {
+        return ret_val;
+	}
 	dp_deep_select_step(hdeepinfo);
 	dp_deep_accept_step(hdeepinfo, &(hopt->cost));
 	dp_deep_update_step(hdeepinfo);
+	hdeepinfo->selection_done = 1;
 	return ret_val;
 }
 
@@ -685,6 +691,9 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data)
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+            if ( hdeepinfo->selection_done == 1 ) {
+                return ret_val;
+            }
 			pop = hdeepinfo->popunion;
 			population = hdeepinfo->population;
 			trial = hdeepinfo->trial;
@@ -706,6 +715,7 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data)
             dp_population_update(population, 0, population->size);
             dp_deep_accept_step(hdeepinfo, &(hopt->cost));
             dp_deep_update_step(hdeepinfo);
+            hdeepinfo->selection_done = 1;
 		break;
 	}
 	return ret_val;
@@ -718,7 +728,7 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
 	DpDeepInfo*hdeepinfo;
 	DpPopulation*pop;
 	GArray*curr_front;
-	int i, curr_ind, j, k;
+	int i, curr_ind, j, k, lim_ind;
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	FILE*fp;
 	gchar*pareto_logname;
@@ -732,7 +742,8 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 			pop = hdeepinfo->popunion;
-            for ( k = 0; k < pop->fronts->len; k++ ) {
+			lim_ind = ( hopt->pareto_all < 0 ) ? pop->fronts->len : hopt->pareto_all + 1;
+            for ( k = 0; k < lim_ind; k++ ) {
                 curr_front = g_array_index (pop->fronts, GArray*, k);
                 for ( j = 0; j < curr_front->len; j++ ) {
                     curr_ind = g_array_index (curr_front, int, j);

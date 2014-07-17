@@ -83,6 +83,7 @@ DpSettings*dp_settings_new()
 	opts->run_after[1] = g_strdup("optpost");
 	opts->run_after[2] = g_strdup("writelog");
 	opts->run_after[3] = NULL;
+	opts->pareto_all = -1;
 	return opts;
 }
 
@@ -198,6 +199,13 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "es_lambda", &gerror) ) != NULL ) {
 		hopt->es_lambda = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "pareto_all", &gerror) ) != NULL ) {
+		hopt->pareto_all = g_strtod( str , NULL);
 		g_free(str);
 	} else {
 		g_warning ( gerror->message );

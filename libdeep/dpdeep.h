@@ -43,6 +43,7 @@ typedef struct DpDeepInfo {
 	double recombination_prob;
 	double recombination_gamma;
 	int es_lambda;
+	int selection_done;
 	double noglobal_eps;
 	DpPopulation*trial;
 	DpPopulation*population;

@@ -77,11 +77,12 @@ typedef struct DpOpt {
 	int world_id;
 	int world_count;
 	int monitor;
+	int pareto_all;
 } DpOpt;
 
 //DpOptSettings*dp_opt_settings_new();
 
-DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count);
+DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count, int pareto_all);
 
 void dp_opt_add_func(DpOpt *hopt, DpLoopFunc func, int tau_flag, DpOptType opt_type, int order, gpointer method_info);
 
