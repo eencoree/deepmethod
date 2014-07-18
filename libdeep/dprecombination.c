@@ -210,18 +210,18 @@ DpRecombinationControl*dp_recombination_control_init(DpRecombinationStrategy str
 	rc->p = (double*)calloc(rc->size, sizeof(double));
 	rc->c = (double*)calloc(rc->size, sizeof(double));
 	rc->v = (double*)calloc(rc->size, sizeof(double));
-	if ( weight > 0 && prob > 0 ) {
-		rc->adjust = 0;
-		for ( i = 0; i < rc->size; i++ ) {
-			rc->f[i] = weight;
-			rc->p[i] = prob;
-			rc->v[i] = pop->variance[i];
-		}
-	} else {
+	if ( weight == 0 && prob == 0 && gamma > 0 ) {
 		rc->adjust = 1;
 		for ( i = 0; i < rc->size; i++ ) {
 			rc->f[i] = g_rand_double_range(hrand, rc->f_inf, rc->f_supp);
 			rc->p[i] = g_rand_double_range(hrand, rc->p_inf, rc->p_supp);
+			rc->v[i] = pop->variance[i];
+		}
+	} else {
+		rc->adjust = 0;
+		for ( i = 0; i < rc->size; i++ ) {
+			rc->f[i] = weight;
+			rc->p[i] = prob;
 			rc->v[i] = pop->variance[i];
 		}
 	}
