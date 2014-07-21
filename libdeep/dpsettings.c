@@ -46,7 +46,6 @@ DpSettings*dp_settings_new()
 	opts->stop_type = H_OPT_PROPORTIONAL_STOP;
 	opts->criterion = 1e-5;
 	opts->stop_count = 10;
-	opts->tau = 2;
 	opts->population_size = 5;
 	opts->recombination_strategy = DE_3_bin_T;
 	opts->recombination_weight = 0;
@@ -157,13 +156,6 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "stop_count", &gerror) ) != NULL ) {
 		hopt->stop_count = g_strtod( str , NULL);
-		g_free(str);
-	} else {
-		g_warning ( gerror->message );
-		g_clear_error (&gerror);
-	}
-	if ( ( str = g_key_file_get_string(gkf, groupname, "tau", &gerror) ) != NULL ) {
-		hopt->tau = g_strtod( str , NULL);
 		g_free(str);
 	} else {
 		g_warning ( gerror->message );
@@ -423,6 +415,14 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_opt_mpi_comm, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "duplicate") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_duplicate, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "dpupdate") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_deep_update, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "optpost") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;

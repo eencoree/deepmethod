@@ -65,7 +65,6 @@ typedef struct DpOpt {
 	double old_cost;
 	double cost_start;
 	int stop_counter;
-	int tau;
 	double criterion;
 	DpOptStopType stop_type;
 	int stop_count;
@@ -82,7 +81,7 @@ typedef struct DpOpt {
 
 //DpOptSettings*dp_opt_settings_new();
 
-DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count, int pareto_all);
+DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int stop_count, int pareto_all);
 
 void dp_opt_add_func(DpOpt *hopt, DpLoopFunc func, int tau_flag, DpOptType opt_type, int order, gpointer method_info);
 
@@ -135,6 +134,10 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data);
 DpLoopExitCode dp_sort_pareto_front(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_permute(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_duplicate(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_deep_update(DpLoop*hloop, gpointer user_data);
 
 #ifdef __cplusplus
 }

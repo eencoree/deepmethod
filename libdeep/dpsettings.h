@@ -42,7 +42,6 @@ typedef struct DpSettings {
 	DpOptStopType stop_type;
 	double criterion;
 	int stop_count;
-	int tau;
 	int population_size;
 	DpRecombinationStrategy recombination_strategy;
 	double recombination_weight;

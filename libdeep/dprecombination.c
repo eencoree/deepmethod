@@ -202,10 +202,10 @@ DpRecombinationControl*dp_recombination_control_init(DpRecombinationStrategy str
 	rc->pop_size = pop->size;
 	rc->toggle = 0;
 	rc->gamma = gamma;
-	rc->p_inf = 0.1;
+	rc->p_inf = G_MINDOUBLE;
 	rc->p_supp = 1.0;
 	rc->f_inf = 1.0 / sqrt((double)pop->ind_size);
-	rc->f_supp = 1.0;
+	rc->f_supp = 2.0;
 	rc->f = (double*)calloc(rc->size, sizeof(double));
 	rc->p = (double*)calloc(rc->size, sizeof(double));
 	rc->c = (double*)calloc(rc->size, sizeof(double));

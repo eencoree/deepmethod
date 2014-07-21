@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 			g_error(gerror->message);
 		}
 		xm_translate_score(htarget, xmmodel);
-		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->tau, dpsettings->stop_count, dpsettings->pareto_all);
+		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all);
 		dp_settings_process_run(dpsettings, hopt, world_id, heval, htarget, &gerror);
 		if ( gerror != NULL ) {
 			g_error("Settings process init:%s", gerror->message);
@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 			g_error(gerror->message);
 		}
 		xm_translate_score(htarget, xmmodel);
-		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->tau, dpsettings->stop_count, dpsettings->pareto_all);
+		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all);
 		dp_opt_monitor(hopt, monitor, &gerror);
 		if ( gerror != NULL ) {
 			g_error("Monitor error:%s", gerror->message);

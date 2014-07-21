@@ -37,7 +37,7 @@
 #define g_strcmp0(str1, str2) strcmp(str1, str2)
 #endif
 
-DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int tau, int stop_count, int pareto_all)
+DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int stop_count, int pareto_all)
 {
 	DpOpt *hopt;
 	GList *funcs = NULL;
@@ -49,7 +49,6 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 	hopt->filename = g_strdup (filename);
 	hopt->stop_type = stop_type;
 	hopt->criterion = criterion;
-	hopt->tau = tau;
 	hopt->stop_count = stop_count;
 	hopt->logname = g_strdup_printf( "%s.hopt_log_%d", hopt->filename, hopt->world_id);
 	hopt->chkname = g_strdup_printf( "%s.hopt_chk_%d", hopt->filename, hopt->world_id);
@@ -97,6 +96,8 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 			dp_opt_add_func(hopt, dp_write_tst, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "mpicomm") ) {
 			dp_opt_add_func(hopt, dp_opt_mpi_comm, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "duplicate") ) {
+			dp_opt_add_func(hopt, dp_opt_duplicate, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "optpost") ) {
 			dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "optposteval") ) {
@@ -286,13 +287,9 @@ DpLoopExitCode dp_opt_deep(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 	double energy_start;
-	int iteration;
 	energy_start = hopt->cost;
-	for( iteration = 0; iteration < hopt->tau; iteration++ ) {
-		dp_deep_step(hdeepinfo);
-		dp_deep_accept_step(hdeepinfo, &(hopt->cost));
-	}
-	dp_deep_update_step(hdeepinfo);
+	dp_deep_step(hdeepinfo);
+	dp_deep_accept_step(hdeepinfo, &(hopt->cost));
 	return ret_val;
 }
 
@@ -325,8 +322,16 @@ DpLoopExitCode dp_opt_deep_select(DpLoop*hloop, gpointer user_data)
 	}
 	dp_deep_select_step(hdeepinfo);
 	dp_deep_accept_step(hdeepinfo, &(hopt->cost));
-	dp_deep_update_step(hdeepinfo);
 	hdeepinfo->selection_done = 1;
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_deep_update(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	dp_deep_update_step(hdeepinfo);
 	return ret_val;
 }
 
@@ -516,12 +521,9 @@ DpLoopExitCode dp_opt_osda(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpOsdaInfo*hosdainfo = (DpOsdaInfo*)(hopt->method_info);
 	double energy_start;
-	int iteration;
 	energy_start = hopt->cost;
-	for( iteration = 0; iteration < hopt->tau; iteration++ ) {
-		dp_osda_step(hosdainfo);
-		dp_osda_accept_step(hosdainfo, &(hopt->cost));
-	}
+	dp_osda_step(hosdainfo);
+	dp_osda_accept_step(hosdainfo, &(hopt->cost));
 	dp_osda_update_step(hosdainfo);
 	return ret_val;
 }
@@ -538,6 +540,32 @@ DpLoopExitCode dp_opt_mpi_comm(DpLoop*hloop, gpointer user_data)
 			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, hdeepinfo->population);
 			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
 			dp_population_mpi_comm_nbest(hdeepinfo->population, hopt->world_id, hopt->world_count, &stop_flag, hdeepinfo->es_lambda);
+			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
+		break;
+	}
+	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_duplicate(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	int stop_flag = ( hloop->stop_flag == DP_LOOP_EXIT_SUCCESS ) ? 1 : 0;
+	int src_ind, dst_ind, i;
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, hdeepinfo->population);
+			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
+            for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
+                src_ind = hdeepinfo->population->cost_ascending[i];
+                dst_ind = hdeepinfo->population->ages_descending[i];
+                if ( dst_ind != hdeepinfo->population->imin ) {
+                    dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
+                }
+			}
 			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
 		break;
 	}
@@ -742,7 +770,6 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data)
             population->iter++;
             dp_population_update(population, 0, population->size);
             dp_deep_accept_step(hdeepinfo, &(hopt->cost));
-            dp_deep_update_step(hdeepinfo);
             hdeepinfo->selection_done = 1;
 		break;
 	}
