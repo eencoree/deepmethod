@@ -442,6 +442,9 @@ double xm_model_read_penalty(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;
+	if ( xmmodel->current_penalty_index > xmmodel->num_values - 1 ) {
+        xmmodel->current_penalty_index = 1;
+	}
 	val = xmmodel->array[xmmodel->mapping[ xmmodel->current_penalty_index ]];
 	xmmodel->current_penalty_index++;
 	return val;
