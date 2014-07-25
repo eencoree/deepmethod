@@ -1,89 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="all" />
-	<File name="libdeep/dprecombination.c" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="7148" topLine="186" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dptarget.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6135" topLine="36" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpopt.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2132" topLine="72" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpdeep.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="12559" topLine="278" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpsettings.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1537" topLine="396" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpsettings.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1344" topLine="36" />
-		</Cursor>
-	</File>
-	<File name="tools/dpdeepctl.c" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6303" topLine="138" />
-		</Cursor>
-	</File>
-	<File name="tools/xmtranslate.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="66" />
-		</Cursor>
-	</File>
-	<File name="libxmod/xmmodel.c" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6547" topLine="360" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpindivid.c" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libdeep/dpindivid.c" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="2262" topLine="60" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpevaluation.c" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5189" topLine="127" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpdeep.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2439" topLine="59" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpmutation.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="54" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpopt.c" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="18588" topLine="515" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dppopulation.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1236" topLine="34" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dppopulation.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4521" topLine="155" />
-		</Cursor>
-	</File>
-	<File name="libdeep/dpindivid.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1277" topLine="36" />
 		</Cursor>
 	</File>
 	<File name="libdeep/dprecombination.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -91,14 +11,79 @@
 			<Cursor1 position="1292" topLine="24" />
 		</Cursor>
 	</File>
+	<File name="libdeep/dpindivid.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1277" topLine="36" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dptarget.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2705" topLine="50" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpevaluation.c" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5189" topLine="127" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpmutation.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="54" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpsettings.c" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="18918" topLine="483" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpopt.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2132" topLine="72" />
+		</Cursor>
+	</File>
+	<File name="tools/xmtranslate.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="66" />
+		</Cursor>
+	</File>
+	<File name="tools/dpdeepctl.c" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6303" topLine="154" />
+		</Cursor>
+	</File>
+	<File name="libxmod/xmmodel.c" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="14105" topLine="425" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dptarget.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1822" topLine="52" />
+		</Cursor>
+	</File>
 	<File name="libdeep/dploop.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="1242" topLine="25" />
 		</Cursor>
 	</File>
-	<File name="libxmod/xmmodel.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libdeep/dpsettings.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1879" topLine="63" />
+			<Cursor1 position="1344" topLine="36" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpdeep.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2439" topLine="59" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dppopulation.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1236" topLine="34" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dprecombination.c" open="1" top="1" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6677" topLine="138" />
 		</Cursor>
 	</File>
 	<File name="libdeep/dpevaluation.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -106,9 +91,24 @@
 			<Cursor1 position="4073" topLine="92" />
 		</Cursor>
 	</File>
-	<File name="libdeep/dptarget.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="libdeep/dpdeep.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1822" topLine="52" />
+			<Cursor1 position="6770" topLine="153" />
+		</Cursor>
+	</File>
+	<File name="libxmod/xmmodel.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1879" topLine="63" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dppopulation.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4521" topLine="155" />
+		</Cursor>
+	</File>
+	<File name="libdeep/dpopt.c" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="18588" topLine="515" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

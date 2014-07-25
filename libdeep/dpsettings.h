@@ -62,6 +62,7 @@ typedef struct DpSettings {
 	gchar**run_after;
 	gint max_threads;
 	int pareto_all;
+	int precision;
 } DpSettings;
 
 DpSettings*dp_settings_new();

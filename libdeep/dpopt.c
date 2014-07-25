@@ -37,7 +37,7 @@
 #define g_strcmp0(str1, str2) strcmp(str1, str2)
 #endif
 
-DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int stop_count, int pareto_all)
+DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world_count,char*filename, DpOptStopType stop_type, double criterion, int stop_count, int pareto_all, int precision)
 {
 	DpOpt *hopt;
 	GList *funcs = NULL;
@@ -59,6 +59,7 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 	hopt->opt_type = H_OPT_NONE;
 	hopt->method_info = NULL;
 	hopt->pareto_all = pareto_all;
+	hopt->precision = precision;
 	return hopt;
 }
 
@@ -345,6 +346,7 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 	DpOsdaInfo*hosdainfo;
 	FILE*fp;
 	int i;
+	int precision = hopt->precision;
 	fp = fopen(hopt->logname, "a");
 	if ( !fp ) {
 		hloop->exit_str = g_strdup_printf ( "dp_write_log: can't open %s", hopt->logname);
@@ -355,9 +357,9 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
             DpIndivid* individ = hdeepinfo->population->individ[hdeepinfo->population->imin];
-            fprintf(fp, " cost:%f", individ->cost);
+            fprintf(fp, " cost:%.*f", precision, individ->cost);
             for( i = 0; i < individ->ntargets; i++) {
-                fprintf(fp, " target[%i]:%f", i, individ->targets[i]);
+                fprintf(fp, " target[%i]:%.*f", i, precision, individ->targets[i]);
             }
 		break;
 		case H_OPT_OSDA:
@@ -365,7 +367,7 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 		break;
 	}
 	for ( i = 0; i < heval->size; i++) {
-		fprintf(fp, " p[%d]:%f", heval->points[i]->index, *(heval->points[i]->param));
+		fprintf(fp, " p[%d]:%.*f", heval->points[i]->index, precision, *(heval->points[i]->param));
 	}
 	fprintf(fp, "\n");
 	fclose(fp);

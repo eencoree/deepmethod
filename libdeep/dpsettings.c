@@ -161,6 +161,13 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "precision", &gerror) ) != NULL ) {
+		hopt->precision = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "population_size", &gerror) ) != NULL ) {
 		hopt->population_size = g_strtod( str , NULL);
 		g_free(str);
