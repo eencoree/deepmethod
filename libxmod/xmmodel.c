@@ -73,6 +73,8 @@ XmModel*xm_model_new()
 	xmmodel->hbound = NULL;
 	xmmodel->scale = NULL;
 	xmmodel->convert = NULL;
+	xmmodel->a_precision = 16;
+	xmmodel->b_precision = 9;
 	return xmmodel;
 }
 
@@ -157,6 +159,8 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->current_functional_value = src->current_functional_value;
 	xmmodel->convert = g_strdup(src->convert);
 	xmmodel->functional_value = src->functional_value;
+	xmmodel->a_precision = src->a_precision;
+	xmmodel->b_precision = src->b_precision;
 	return xmmodel;
 }
 
@@ -499,6 +503,18 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	}
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "debug", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->debug = ii;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+    if ( ( ii = g_key_file_get_integer(gkf, groupname, "a_precision", &gerror) ) != 0  || gerror == NULL ) {
+		xmmodel->a_precision = ii;
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+    if ( ( ii = g_key_file_get_integer(gkf, groupname, "b_precision", &gerror) ) != 0  || gerror == NULL ) {
+		xmmodel->b_precision = ii;
 	} else {
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);

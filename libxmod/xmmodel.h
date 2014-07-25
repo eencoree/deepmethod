@@ -89,6 +89,8 @@ typedef struct XmModel {
 	double current_functional_value;
 	double functional_value;
 	int prime_index;
+	int a_precision;
+	int b_precision;
 } XmModel;
 
 XmModel*xm_model_new();

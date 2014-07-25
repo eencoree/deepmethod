@@ -83,6 +83,7 @@ DpSettings*dp_settings_new()
 	opts->run_after[2] = g_strdup("writelog");
 	opts->run_after[3] = NULL;
 	opts->pareto_all = -1;
+	opts->precision = 9;
 	return opts;
 }
 
