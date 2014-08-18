@@ -343,7 +343,7 @@ double xm_model_dparms_to_int(gpointer user_data)
 	}
 	g_qsort_with_data(xmmodel->index, xmmodel->index_size, sizeof(xmmodel->index[0]), (GCompareDataFunc)xm_model_parms_sort_index_ascending, xmmodel);
 	j = 0;
-	for ( i= 0; i < xmmodel->size; i++ ) {
+	for ( i = 0; i < xmmodel->size; i++ ) {
 		if ( xmmodel->tweak[i] == 1 ) {
 			xmmodel->parms[ xmmodel->tweak_index[ j ] ] = xmmodel->tweak_index[ xmmodel->index[ j ] ];
 			j++;
@@ -525,7 +525,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->iparms = g_new0 ( int, length );
 		xmmodel->lookup = g_new0 ( int, length );
 		xmmodel->limited = g_new0 ( int, length );
-		for ( j = 0; j < xmmodel->size; j ++ ) {
+		for ( j = 0; j < xmmodel->size; j++ ) {
 			xmmodel->iparms[j] = xmmodel->parms[j];
 			xmmodel->limited[j] = 1;
 		}
@@ -539,10 +539,19 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->iparms = g_new0 ( int, length );
 		xmmodel->lookup = g_new0 ( int, length );
 		xmmodel->limited = g_new0 ( int, length );
-		for ( j = 0; j < xmmodel->size; j ++ ) {
+		for ( j = 0; j < xmmodel->size; j++ ) {
 			xmmodel->parms[j] = j;
 			xmmodel->iparms[j] = xmmodel->parms[j];
 			xmmodel->limited[j] = 1;
+		}
+	} else {
+		g_warning ( gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "valparms", &gerror) ) != 0  || gerror == NULL ) {
+		for ( j = 0; j < xmmodel->size; j++ ) {
+			xmmodel->parms[j] = ii;
+			xmmodel->iparms[j] = ii;
 		}
 	} else {
 		g_warning ( gerror->message );

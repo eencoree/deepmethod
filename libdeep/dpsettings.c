@@ -479,6 +479,7 @@ int dp_settings_target_load(gchar*data, gsize size, gchar*groupname, DpTarget *h
 	int retval = 0, i, ii;
 	gsize length, ksize;
 	int index;
+	double dindex;
 	double rank;
 	double weight;
 	gkf = g_key_file_new();
@@ -511,7 +512,12 @@ int dp_settings_target_load(gchar*data, gsize size, gchar*groupname, DpTarget *h
 	for ( i = 0; i < (int)ksize; i++ ) {
 		if ( ( array = g_key_file_get_string_list(gkf, groupname, keys[i], &length, &gerror) ) != NULL ) {
 			if ( length == 4 ) {
-				index = (int)( g_strtod(array[1], NULL) + 0.5 );
+                dindex = g_strtod(array[1], NULL);
+                if ( dindex < 0 ) {
+                    index = (int)( dindex - 0.5 );
+                } else {
+                    index = (int)( dindex + 0.5 );
+                }
 				rank = g_strtod(array[2], NULL);
 				weight = g_strtod(array[3], NULL);
 				dp_target_add_func (htarget, index, weight, rank, array[0]);
