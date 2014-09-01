@@ -1088,28 +1088,9 @@ GString*xm_model_subsubset_contents(XmModel*xmmodel)
 		xmmodel->parms[xmmodel->size - 1] = main_index;
 		xmmodel->parms[main_index] = main_index_parm;
 	}
-	k = main_index_parm + 1;
-	xmmodel->mask[main_index] = 0;
-	for ( i = 1; i < k; i++ ) {
-		xmmodel->mask[i] = 1;
-		if ( xmmodel->parms[i] == main_index ) {
-			xmmodel->parms[i] = main_index_parm;
-		}
-	}
-	for ( i = k; i < xmmodel->size; i++ ) {
-		xmmodel->mask[i] = 0;
-	}
-	file_contents = g_string_new("");
-	k = 1;
-	for ( i = 1; i < xmmodel->size; i++ ) {
-		if ( xmmodel->tweak[i] == 1 ) {
-			if ( xmmodel->mask[k] == 1 ) {
-				g_string_append_printf(file_contents, "%d\n", xmmodel->parms[i]);
-				k++;
-			}
-		} else {
-			g_string_append_printf(file_contents, "%d\n", xmmodel->parms[i]);
-		}
+    file_contents = g_string_new("");
+	for ( i = 1; i < main_index_parm + 1; i++ ) {
+        g_string_append_printf(file_contents, "%d\n", xmmodel->parms[i]);
 	}
 	return file_contents;
 }
