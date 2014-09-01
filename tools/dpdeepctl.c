@@ -81,8 +81,6 @@ int main(int argc, char **argv)
 	double dval;
 	GOptionContext *context;
 	GError *gerror = NULL;
-	g_thread_init (NULL);
-	g_type_init();
 	context = g_option_context_new ("- DEEP optimizer");
 	g_option_context_add_main_entries(context, (const GOptionEntry *)entries, "deep");
 	g_option_context_set_ignore_unknown_options(context, TRUE);

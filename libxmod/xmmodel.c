@@ -548,11 +548,18 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ii = g_key_file_get_integer(gkf, groupname, "valparms", &gerror) ) != 0  || gerror == NULL ) {
+//	if ( ( ii = g_key_file_get_integer(gkf, groupname, "valparms", &gerror) ) != 0  || gerror == NULL ) {
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "valparms", &length, &gerror) ) != NULL ) {
+	    k = 0;
 		for ( j = 0; j < xmmodel->size; j++ ) {
-			xmmodel->parms[j] = ii;
-			xmmodel->iparms[j] = ii;
+			xmmodel->parms[j] = ilist[k];
+			xmmodel->iparms[j] = ilist[k];
+            k++;
+            if ( k >= length ) {
+                k = 0;
+            }
 		}
+		g_free(ilist);
 	} else {
 		g_warning ( gerror->message );
 		g_clear_error (&gerror);
