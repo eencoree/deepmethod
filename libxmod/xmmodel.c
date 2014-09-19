@@ -376,6 +376,40 @@ double xm_model_parms_double_to_int(gpointer user_data, double*x)
 	return val;
 }
 
+double xm_model_dparms_to_index(gpointer user_data)
+{
+	XmModel *xmmodel = (XmModel *)user_data;
+	double val = -1, z, beta;
+	double f1 = 500;
+	double f2 = 999;
+	int alpha;
+	int i, j, k;
+	j = 0;
+	for ( i = 0; i < xmmodel->size; i++ ) {
+		if ( xmmodel->tweak[i] == 1 ) {
+			k = xmmodel->tweak_index[ j ];
+			z = f2 * ( 1 + xmmodel->dparms[ k ] ) / f1;
+			alpha = (int)(z + 0.5);
+			beta = alpha - z;
+			xmmodel->parms[ k ] = ( beta > 0.5 ) ? alpha - 1 : alpha;
+			j++;
+		} else {
+			xmmodel->parms[i] = xmmodel->iparms[i];
+		}
+	}
+	return val;
+}
+
+double xm_model_parms_double_to_index(gpointer user_data, double*x)
+{
+	XmModel *xmmodel = (XmModel *)user_data;
+	double val = -1;
+	int i, j;
+	xm_model_set_dparms(xmmodel, x);
+	val = xm_model_dparms_to_index(user_data);
+	return val;
+}
+
 double xm_model_score_double(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;

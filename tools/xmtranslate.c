@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
- 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <glib.h>
@@ -62,6 +62,8 @@ DpFunc xm_translate_get_score_func_by_name ( char*name )
 {
 	if ( !g_strcmp0(name, "doubletoint") ) {
 		return (DpFunc)xm_model_parms_double_to_int;
+	} else if ( !g_strcmp0(name, "doubletoindex") ) {
+		return (DpFunc)xm_model_parms_double_to_index;
 	} else if ( !g_strcmp0(name, "scoreint") ) {
 		return (DpFunc)xm_model_score_int;
 	} else if ( !g_strcmp0(name, "scoredouble") ) {
