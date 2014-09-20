@@ -388,7 +388,8 @@ double xm_model_dparms_to_index(gpointer user_data)
 	for ( i = 0; i < xmmodel->size; i++ ) {
 		if ( xmmodel->tweak[i] == 1 ) {
 			k = xmmodel->tweak_index[ j ];
-			z = f2 * ( 1 + xmmodel->dparms[ k ] ) / f1;
+/*			z = f2 * ( 1 + xmmodel->dparms[ k ] ) / f1;*/
+			z = xmmodel->dparms[ k ];
 			alpha = (int)(z + 0.5);
 			beta = alpha - z;
 			xmmodel->parms[ k ] = ( beta > 0.5 ) ? alpha - 1 : alpha;
@@ -407,6 +408,15 @@ double xm_model_parms_double_to_index(gpointer user_data, double*x)
 	int i, j;
 	xm_model_set_dparms(xmmodel, x);
 	val = xm_model_dparms_to_index(user_data);
+	if ( xmmodel->debug == 1 ) {
+		for ( i = 0; i < xmmodel->size; i++ ) {
+			g_printf("%f;", xmmodel->dparms[i]);
+		}
+		g_printf("\n");
+		for ( i = 0; i < xmmodel->size; i++ ) {
+			g_printf("%d;", xmmodel->parms[i]);
+		}
+	}
 	return val;
 }
 
