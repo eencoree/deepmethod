@@ -97,3 +97,14 @@ void xm_translate_score(DpTarget*htarget, XmModel *xmmodel)
 	}
 }
 
+void xm_retranslate_precond(DpTarget*htarget, XmModel *xmmodel)
+{
+	int i;
+	for ( i = 0; i < htarget->precond_size; i++ ) {
+        if ( !g_strcmp0(htarget->precond[i]->name, "doubletoint") ) {
+            xm_model_dparms_to_int((gpointer) xmmodel);
+        } else if ( !g_strcmp0(htarget->precond[i]->name, "doubletoindex") ) {
+            xm_model_dparms_to_index((gpointer) xmmodel);
+        }
+	}
+}
