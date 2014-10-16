@@ -53,7 +53,7 @@ typedef struct DpIndivid {
 	GRand*hrand;
 	int invalid;
 	gpointer user_data;
-	GMutex gmutex;
+/*	GMutex gmutex;*/
 } DpIndivid;
 
 DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed);
