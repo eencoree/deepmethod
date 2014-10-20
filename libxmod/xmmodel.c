@@ -185,7 +185,7 @@ void xm_model_set_dparms(XmModel *xmmodel, double*x)
 	}
 }
 
-int xm_model_run(GString *params, XmModel *xmmodel)
+int xm_model_run(XmModel *xmmodel)
 {
 	gchar**result;
 	gchar**margv;
@@ -211,7 +211,12 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 		}
 		g_string_append_printf(command, " %s", conversion);
 	} else {
+        GString *params = g_string_new("");
+        for ( i = 0; i < xmmodel->size; i++ ) {
+            g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
+        }
 		g_string_append_printf(command, " %s", params->str);
+        g_string_free(params, TRUE);
 	}
 	if ( !g_shell_parse_argv(command->str, &argcp, &margv, &gerror) ) {
 		if ( gerror ) {
@@ -260,7 +265,7 @@ int xm_model_run(GString *params, XmModel *xmmodel)
 	return child_exit_status;
 }
 
-int xm_model_run_prime(GString *params, XmModel *xmmodel)
+int xm_model_run_prime(XmModel *xmmodel)
 {
 	gchar**result;
 	gchar**margv;
@@ -285,7 +290,12 @@ int xm_model_run_prime(GString *params, XmModel *xmmodel)
 		}
 		g_string_append_printf(command, " %s", conversion);
 	} else {
+        GString *params = g_string_new("");
+        for ( i = 0; i < xmmodel->size; i++ ) {
+            g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
+        }
 		g_string_append_printf(command, " '%s'", params->str);
+        g_string_free(params, TRUE);
 	}
 	g_string_append_printf(command, " %d", xmmodel->prime_index);
 	if ( !g_shell_parse_argv(command->str, &argcp, &margv, &gerror) ) {
@@ -424,15 +434,9 @@ double xm_model_score_double(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;
-	GString *params = g_string_new("");
-	int i;
 	xm_model_set_dparms(xmmodel, x);
-	for ( i = 0; i < xmmodel->size; i++ ) {
-		g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
-	}
-	xm_model_run(params, xmmodel);
-	g_string_free(params, TRUE);
-	val = xmmodel->array[xmmodel->mapping[0]];
+    xm_model_run(xmmodel);
+    val = xmmodel->array[xmmodel->mapping[0]];
 	xmmodel->current_penalty_index = 1;
 	xmmodel->current_functional_value = val;
 	return val;
@@ -442,13 +446,7 @@ double xm_model_score_int(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;
-	GString *params = g_string_new("");
-	int i;
-	for ( i= 0; i < xmmodel->size; i++ ) {
-		g_string_append_printf(params, "%d ", xmmodel->parms[i]);
-	}
-	xm_model_run(params, xmmodel);
-	g_string_free(params, TRUE);
+	xm_model_run(xmmodel);
 	val = xmmodel->array[xmmodel->mapping[0]];
 	xmmodel->current_penalty_index = 1;
 	xmmodel->current_functional_value = val;
@@ -459,14 +457,8 @@ double xm_model_prime_double(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;
-	GString *params = g_string_new("");
-	int i;
 	xm_model_set_dparms(xmmodel, x);
-	for ( i= 0; i < xmmodel->size; i++ ) {
-		g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
-	}
-	xm_model_run_prime(params, xmmodel);
-	g_string_free(params, TRUE);
+	xm_model_run_prime(xmmodel);
 	val = xmmodel->prime_array[xmmodel->prime_mapping[0]];
 	return val;
 }
@@ -475,13 +467,7 @@ double xm_model_prime_int(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;
-	GString *params = g_string_new("");
-	int i;
-	for ( i= 0; i < xmmodel->size; i++ ) {
-		g_string_append_printf(params, "%d ", xmmodel->parms[i]);
-	}
-	xm_model_run_prime(params, xmmodel);
-	g_string_free(params, TRUE);
+	xm_model_run_prime(xmmodel);
 	val = xmmodel->prime_array[xmmodel->prime_mapping[0]];
 	return val;
 }
@@ -1419,3 +1405,27 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 	}
 }
 
+GString *xm_model_score_double_to_string(gpointer user_data, double*x)
+{
+	XmModel *xmmodel = (XmModel *)user_data;
+	double val = G_MAXDOUBLE;
+	GString *params = g_string_new("");
+	int i;
+	xm_model_set_dparms(xmmodel, x);
+	for ( i = 0; i < xmmodel->size; i++ ) {
+		g_string_append_printf(params, "x[%d]:%.*f ", i, xmmodel->b_precision, xmmodel->dparms[i]);
+	}
+	return params;
+}
+
+GString *xm_model_score_int_to_string(gpointer user_data, double*x)
+{
+	XmModel *xmmodel = (XmModel *)user_data;
+	double val = G_MAXDOUBLE;
+	GString *params = g_string_new("");
+	int i;
+	for ( i= 0; i < xmmodel->size; i++ ) {
+		g_string_append_printf(params, "x[%d]:%d ", i, xmmodel->parms[i]);
+	}
+	return params;
+}

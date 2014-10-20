@@ -159,11 +159,17 @@ void xm_model_set_dparms(XmModel *xmmodel, double*x);
 
 void xm_model_update_values(gpointer psrc, double*x, int prime_index, double functional_value);
 
-int xm_model_run_prime(GString *params, XmModel *xmmodel);
+int xm_model_run(XmModel *xmmodel);
+
+int xm_model_run_prime(XmModel *xmmodel);
 
 double xm_model_prime_double(gpointer user_data, double*x);
 
 double xm_model_prime_int(gpointer user_data, double*x);
+
+GString *xm_model_score_int_to_string(gpointer user_data, double*x);
+
+GString *xm_model_score_double_to_string(gpointer user_data, double*x);
 
 #ifdef __cplusplus
 }

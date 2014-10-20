@@ -40,6 +40,8 @@ typedef gpointer (*DpFuncCopyModel)(gpointer user_data);
 
 typedef void (*DpFuncUpdateModel)(gpointer user_data, double*buffer, int index, double cost0);
 
+typedef GString* (*DpFuncParamsToString)(void *user_data, double*x);
+
 typedef struct DpTargetFunc {
 	char*name;
 	DpFunc f;
@@ -60,6 +62,7 @@ typedef struct DpTarget {
 	gpointer user_data;
 	DpFuncCopyModel copy_model;
 	DpFuncUpdateModel update_model;
+	DpFuncParamsToString params_to_string;
 	int debug;
 	int ignore_cost;
 	double use_crdist;

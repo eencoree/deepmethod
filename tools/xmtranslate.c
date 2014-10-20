@@ -89,8 +89,14 @@ void xm_translate_score(DpTarget*htarget, XmModel *xmmodel)
 	for ( i = 0; i < htarget->size; i++ ) {
 		htarget->penalty[i]->f = xm_translate_get_score_func_by_name(htarget->penalty[i]->name);
 	}
+	htarget->params_to_string = xm_model_score_double_to_string;
 	for ( i = 0; i < htarget->precond_size; i++ ) {
 		htarget->precond[i]->f = xm_translate_get_score_func_by_name(htarget->precond[i]->name);
+        if ( !g_strcmp0(htarget->precond[i]->name, "doubletoint") ) {
+            htarget->params_to_string = xm_model_score_int_to_string;
+        } else if ( !g_strcmp0(htarget->precond[i]->name, "doubletoindex") ) {
+            htarget->params_to_string = xm_model_score_int_to_string;
+        }
 	}
 	if ( htarget->prime != NULL ) {
 		htarget->prime->f = xm_translate_get_score_func_by_name(htarget->prime->name);

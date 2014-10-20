@@ -813,6 +813,7 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
 	DpDeepInfo*hdeepinfo;
 	DpPopulation*pop;
 	GArray*curr_front;
+	GString *params;
 	int i, curr_ind, j, k, lim_ind;
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	FILE*fp;
@@ -825,7 +826,8 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
 	}
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
-			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+		    hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			DpTarget*htarget = hopt->htarget;
 			pop = hdeepinfo->popunion;
 			lim_ind = ( hopt->pareto_all < 0 ) ? pop->fronts->len : hopt->pareto_all + 1;
             for ( k = 0; k < lim_ind; k++ ) {
@@ -833,14 +835,17 @@ DpLoopExitCode dp_write_pareto(DpLoop*hloop, gpointer user_data)
                 for ( j = 0; j < curr_front->len; j++ ) {
                     curr_ind = g_array_index (curr_front, int, j);
                     DpIndivid* individ = pop->individ[curr_ind];
+                    params = htarget->params_to_string(individ->user_data, individ->z);
                     fprintf(fp, "wtime:%e tau:%d cost:%f front:%d:%d", hloop->w_time, hloop->tau_counter, individ->cost, k, j);
                     for( i = 0; i < individ->ntargets; i++) {
                         fprintf(fp, " target[%i]:%f", i, individ->targets[i]);
                     }
-                    for ( i = 0; i < heval->size; i++) {
+/*                    for ( i = 0; i < heval->size; i++) {
                         fprintf(fp, " p[%d]:%f", heval->points[i]->index, individ->z[i]);
-                    }
+                    }*/
+                    fprintf(fp, " %s", params->str);
                     fprintf(fp, "\n");
+                    g_string_free(params, TRUE);
                 }
                 fprintf(fp, "\n\n");
             }
