@@ -1424,8 +1424,16 @@ GString *xm_model_score_int_to_string(gpointer user_data, double*x)
 	double val = G_MAXDOUBLE;
 	GString *params = g_string_new("");
 	int i;
-	for ( i= 0; i < xmmodel->size; i++ ) {
-		g_string_append_printf(params, "x[%d]:%d ", i, xmmodel->parms[i]);
+	if ( !g_strcmp0 ( xmmodel->convert, "subsubset" ) ) {
+	    int main_index = 0;
+        int main_index_parm = xmmodel->parms[main_index];
+        for ( i = 1; i < main_index_parm + 1; i++ ) {
+            g_string_append_printf(params, "x[%d]:%d ", i, xmmodel->parms[i]);
+        }
+	} else {
+        for ( i= 0; i < xmmodel->size; i++ ) {
+            g_string_append_printf(params, "x[%d]:%d ", i, xmmodel->parms[i]);
+        }
 	}
 	return params;
 }
