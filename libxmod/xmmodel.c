@@ -75,6 +75,9 @@ XmModel*xm_model_new()
 	xmmodel->convert = NULL;
 	xmmodel->a_precision = 16;
 	xmmodel->b_precision = 9;
+	xmmodel->ref_counter = 0;
+	xmmodel->copy_val_parms = 0;
+	xmmodel->copy_counter = 0;
 	return xmmodel;
 }
 
@@ -161,6 +164,10 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->functional_value = src->functional_value;
 	xmmodel->a_precision = src->a_precision;
 	xmmodel->b_precision = src->b_precision;
+	xmmodel->ref_counter = src->copy_counter + 1;
+	xmmodel->copy_val_parms = src->copy_val_parms;
+	xmmodel->copy_counter = 0;
+	src->copy_counter++;
 	return xmmodel;
 }
 
@@ -262,6 +269,7 @@ int xm_model_run(XmModel *xmmodel)
 	if ( xmmodel->convert != NULL ) {
 		g_unlink(conversion);
 	}
+    xmmodel->copy_val_parms = 0;
 	return child_exit_status;
 }
 
@@ -348,6 +356,12 @@ double xm_model_dparms_to_int(gpointer user_data)
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = -1;
 	int i, j;
+	if (xmmodel->copy_val_parms > 0 && xmmodel->ref_counter == 1) {
+        for ( i = 0; i < xmmodel->size; i++ ) {
+			xmmodel->parms[i] = xmmodel->iparms[i];
+		}
+        return val;
+	}
 	for ( i = 0; i < xmmodel->index_size; i++ ) {
 		xmmodel->index[i] = i;
 	}
@@ -361,18 +375,6 @@ double xm_model_dparms_to_int(gpointer user_data)
 			xmmodel->parms[i] = xmmodel->iparms[i];
 		}
 	}
-/*for ( i = 0; i < xmmodel->size; i++ ) {
-	if ( xmmodel->tweak[i] == 1 ) {
-		fprintf(stderr, "%f ", xmmodel->dparms[i]);
-	}
-}
-fprintf(stderr, "==>");
-for ( i = 0; i < xmmodel->size; i++ ) {
-	if ( xmmodel->tweak[i] == 1 ) {
-		fprintf(stderr, "%d[%d] ", i, xmmodel->parms[i]);
-	}
-}
-fprintf(stderr, "\n");*/
 	return val;
 }
 
@@ -589,6 +591,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
                 k = 0;
             }
 		}
+		xmmodel->copy_val_parms = 1;
 		g_free(ilist);
 	} else {
 		g_warning ( gerror->message );

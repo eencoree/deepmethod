@@ -91,6 +91,9 @@ typedef struct XmModel {
 	int prime_index;
 	int a_precision;
 	int b_precision;
+	int ref_counter;
+	int copy_val_parms;
+	int copy_counter;
 } XmModel;
 
 XmModel*xm_model_new();
@@ -104,8 +107,6 @@ double xm_model_parms_double_to_int(gpointer user_data, double*x);
 double xm_model_dparms_to_int(gpointer user_data);
 
 double xm_model_parms_double_to_index(gpointer user_data, double*x);
-
-double xm_model_dparms_to_idex(gpointer user_data);
 
 double xm_model_score_double(gpointer user_data, double*x);
 
