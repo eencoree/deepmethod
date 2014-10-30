@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#ifdef MPI
+#ifdef MPIZE
 #include <mpi.h>
 #endif
 
@@ -58,6 +58,18 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int pre
 	pop->nfronts = 0;
 	pop->fronts = NULL;
 	pop->target_index = 0;
+	pop->slice_a = 0;
+	pop->slice_b = size;
+#ifdef MPIZE
+/* MPI initialization steps */
+	int world_id = 0, world_count = 1;
+	MPI_Comm_size(MPI_COMM_WORLD, &world_count);
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_id);
+	int ind_per_node = (int)ceil(pop->size / world_count);
+	int ind_per_last_node = pop->size - ind_per_node * (world_count - 1);
+	pop->slice_a = world_id * ind_per_node;
+	pop->slice_b = (world_id == world_count - 1) ? size : pop->slice_a + ind_per_node;
+#endif
 	return pop;
 }
 

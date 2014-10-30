@@ -400,21 +400,28 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	gboolean wait_finish = TRUE;
 	GError *gerror = NULL;
 	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
+	if ( noglobal_eps == 0 ) {
+		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
+		istart = 1;
+	}
+	for ( i = istart; i < size; i++) {
+		dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
+	}
+#ifdef MPIZE
+/* MPI initialization steps */
+	int world_id = 0, world_count = 1;
+	MPI_Comm_size(MPI_COMM_WORLD, &world_count);
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_id);
+	int ind_per_node = (int)ceil(pop->size / world_count);
+	int ind_per_last_node = pop->size - ind_per_node * (world_count - 1);
+	dp_population_mpi_distribute(pop, world_id, world_count);
+#endif
 	if ( hevalctrl->eval_max_threads > 0 ) {
 		hevalctrl->gthreadpool = g_thread_pool_new ((GFunc) dp_evaluation_population_init_func, (gpointer) hevalctrl, hevalctrl->eval_max_threads, hevalctrl->exclusive, &gerror);
 		if ( gerror != NULL ) {
 			g_error(gerror->message);
 		}
-		if ( noglobal_eps >= 0 ) {
-			dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
-			g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(pop->individ[0]), &gerror);
-			if ( gerror != NULL ) {
-				g_error(gerror->message);
-			}
-			istart = 1;
-		}
-		for ( i = istart; i < size; i++) {
-			dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
+		for ( i = pop->slice_a; i < pop->slice_b; i++) {
 			g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(pop->individ[i]), &gerror);
 			if ( gerror != NULL ) {
 				g_error(gerror->message);
@@ -422,13 +429,13 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 		}
 		g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
 	} else {
-		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
-		dp_evaluation_population_init_func ((gpointer)(pop->individ[0]), (gpointer) hevalctrl);
-		for ( i = 1; i < size; i++) {
-			dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
+		for ( i = pop->slice_a; i < pop->slice_b; i++) {
 			dp_evaluation_population_init_func ((gpointer)(pop->individ[i]), (gpointer) hevalctrl);
 		}
 	}
+#ifdef MPIZE
+	dp_population_mpi_gather(pop, world_id, world_count);
+#endif
 	dp_population_update(pop, 0, pop->size);
 	return pop;
 }

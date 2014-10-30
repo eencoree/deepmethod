@@ -51,6 +51,8 @@ typedef struct DpPopulation {
 	int *cost_ascending;
 	int nfronts;
 	GArray*fronts;
+	int slice_a;
+	int slice_b;
 } DpPopulation;
 
 DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size, int seed);

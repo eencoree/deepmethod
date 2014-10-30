@@ -264,7 +264,7 @@ void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo)
 	GError *gerror = NULL;
 	gulong microseconds = G_USEC_PER_SEC / 1000;
 	if ( hdeepinfo->max_threads > 0 ) {
-		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+		for ( individ_id = population->slice_a; individ_id < population->slice_b; individ_id++ ) {
 			g_thread_pool_push (hdeepinfo->gthreadpool, GINT_TO_POINTER(individ_id + 1), &gerror);
 			if ( gerror != NULL ) {
 				g_error(gerror->message);
@@ -274,7 +274,7 @@ void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo)
             g_usleep (microseconds);
         }
 	} else {
-		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+		for ( individ_id = population->slice_a; individ_id < population->slice_b; individ_id++ ) {
 			dp_deep_evaluate_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
 		}
 	}
