@@ -41,11 +41,18 @@ DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, 
 	hdeepinfo->exclusive = FALSE;
 	hdeepinfo->max_threads = max_threads;
 	hdeepinfo->selection_done = 0;
+    hdeepinfo->gthreadpool = NULL;
 	return hdeepinfo;
 }
 
-DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy, int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, double es_lambda, double noglobal_eps, DpRecombinationStrategy recomb_strategy, gint max_threads)
+DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed,
+                              double gamma_init, double roundoff_error,
+                              DpEvaluationStrategy eval_strategy, int population_size,
+                              double recombination_weight, double recombination_prob,
+                              double recombination_gamma, double es_lambda, double noglobal_eps,
+                              DpRecombinationStrategy recomb_strategy, gint max_threads)
 {
+	GError *gerror = NULL;
 	DpDeepInfo*hdeepinfo = dp_deep_info_new(population_size, recombination_weight, recombination_prob, recombination_gamma, es_lambda, noglobal_eps, max_threads);
 	DpRecombinationStrategy strategy;
 	hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, seed, gamma_init, roundoff_error, max_threads, eval_strategy);
@@ -53,6 +60,12 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 	hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->noglobal_eps);
 	hdeepinfo->recombination_control = dp_recombination_control_init(recomb_strategy, hdeepinfo->population, hdeepinfo->population->individ[0]->hrand, hdeepinfo->recombination_weight, hdeepinfo->recombination_prob, hdeepinfo->recombination_gamma);
 	hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
+	if ( hdeepinfo->max_threads > 0 ) {
+        hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_evaluate_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
+		if ( gerror != NULL ) {
+			g_error(gerror->message);
+		}
+	}
 	return hdeepinfo;
 }
 
@@ -123,7 +136,9 @@ void dp_deep_step(DpDeepInfo*hdeepinfo)
 	DpPopulation*trial = hdeepinfo->trial;
 	GError *gerror = NULL;
 	if ( hdeepinfo->max_threads > 0 ) {
-		hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_step_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
+        if (hdeepinfo->gthreadpool == NULL) {
+            hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_step_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
+        }
 		if ( gerror != NULL ) {
 			g_error(gerror->message);
 		}
@@ -134,6 +149,7 @@ void dp_deep_step(DpDeepInfo*hdeepinfo)
 			}
 		}
 		g_thread_pool_free (hdeepinfo->gthreadpool, immediate_stop, wait_finish);
+		hdeepinfo->gthreadpool = NULL;
 	} else {
 		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 			dp_deep_step_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
@@ -246,18 +262,17 @@ void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo)
 	DpPopulation*population = hdeepinfo->population;
 	DpPopulation*trial = hdeepinfo->trial;
 	GError *gerror = NULL;
+	gulong microseconds = G_USEC_PER_SEC / 1000;
 	if ( hdeepinfo->max_threads > 0 ) {
-		hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_evaluate_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
-		if ( gerror != NULL ) {
-			g_error(gerror->message);
-		}
 		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 			g_thread_pool_push (hdeepinfo->gthreadpool, GINT_TO_POINTER(individ_id + 1), &gerror);
 			if ( gerror != NULL ) {
 				g_error(gerror->message);
 			}
 		}
-		g_thread_pool_free (hdeepinfo->gthreadpool, immediate_stop, wait_finish);
+        while(g_thread_pool_unprocessed (hdeepinfo->gthreadpool) > 0) {
+            g_usleep (microseconds);
+        }
 	} else {
 		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 			dp_deep_evaluate_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
