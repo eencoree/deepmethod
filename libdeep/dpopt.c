@@ -95,8 +95,10 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 			dp_opt_add_func(hopt, dp_read_state, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "writetst") ) {
 			dp_opt_add_func(hopt, dp_write_tst, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "mpicomm") ) {
-			dp_opt_add_func(hopt, dp_opt_mpi_comm, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "mpidistribute") ) {
+			dp_opt_add_func(hopt, dp_opt_mpi_distribute, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "mpigather") ) {
+			dp_opt_add_func(hopt, dp_opt_mpi_gather, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "duplicate") ) {
 			dp_opt_add_func(hopt, dp_opt_duplicate, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "substitute") ) {
@@ -124,54 +126,6 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 		}
 	}
 }
-/*
-void dp_opt_add_funcs_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType opt_type, int order)
-{
-	int i;
-	for ( i = 0; list[i]; i += 2 ) {
-		tau_flag = g_strtod(list[i + 1], NULL);
-		if ( !g_strcmp0(list[i], "writelog") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_write_log, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "writestate") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_write_state, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "checkstop") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_check_stop, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "initstop") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "mpicomm") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_mpi_comm, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "optpost") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "optposteval") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_post_evaluate, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "deep") ) {
-			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
-			method_info = (gpointer) hdeepinfo;
-			dp_opt_add_func(hopt, dp_opt_deep, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "osda") ) {
-			opt_type = H_OPT_OSDA;
-			hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);
-			method_info = (gpointer) hosdainfo;
-			dp_opt_add_func(hopt, dp_opt_osda, tau_flag, opt_type, order, method_info);
-		}
-	}
-}
-*/
 
 void dp_opt_run(DpOpt *hopt)
 {
@@ -532,7 +486,7 @@ DpLoopExitCode dp_opt_osda(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
-DpLoopExitCode dp_opt_mpi_comm(DpLoop*hloop, gpointer user_data)
+DpLoopExitCode dp_opt_mpi_distribute(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
@@ -541,10 +495,23 @@ DpLoopExitCode dp_opt_mpi_comm(DpLoop*hloop, gpointer user_data)
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, hdeepinfo->population);
-			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
-			dp_population_mpi_comm_nbest(hdeepinfo->population, hopt->world_id, hopt->world_count, &stop_flag, hdeepinfo->es_lambda);
-			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
+			dp_population_mpi_distribute(hdeepinfo->trial, hopt->world_id, hopt->world_count);
+		break;
+	}
+	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_mpi_gather(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	int stop_flag = ( hloop->stop_flag == DP_LOOP_EXIT_SUCCESS ) ? 1 : 0;
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			dp_population_mpi_gather(hdeepinfo->trial, hopt->world_id, hopt->world_count);
 		break;
 	}
 	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;

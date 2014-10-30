@@ -59,15 +59,13 @@ void dp_population_delete(DpPopulation*pop);
 
 void dp_population_update(DpPopulation*pop, int start_index, int end_index);
 
-void dp_population_nbest_pack(DpPopulation*pop, int index, double**buffer2send, int*bufferDim);
-
-void dp_population_nbest_unpack(DpPopulation*pop, int index, double*buffer2recv, int bufferDim);
-
 int dp_individ_ages_descending(void *p1, void *p2, void *user_data);
 
 int dp_individ_cost_ascending(void *p1, void *p2, void *user_data);
 
-void dp_population_mpi_comm_nbest(DpPopulation*pop, int mpi_id, int mpi_nnodes, int *frozen, int es_lambda);
+void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes);
+
+void dp_population_mpi_gather(DpPopulation*pop, int mpi_id, int mpi_nnodes);
 
 void dp_population_save(FILE*fp, DpPopulation*pop);
 

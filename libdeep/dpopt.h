@@ -112,7 +112,9 @@ DpLoopExitCode dp_opt_deep_select(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_osda(DpLoop*hloop, gpointer user_data);
 
-DpLoopExitCode dp_opt_mpi_comm(DpLoop*hloop, gpointer user_data);
+DpLoopExitCode dp_opt_mpi_distribute(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_mpi_gather(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_post(DpLoop*hloop, gpointer user_data);
 

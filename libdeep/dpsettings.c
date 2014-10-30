@@ -419,10 +419,14 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "mpicomm") ) {
+		} else if ( !g_strcmp0(list[i], "mpidistribute") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_mpi_comm, tau_flag, opt_type, order, method_info);
+			dp_opt_add_func(hopt, dp_opt_mpi_distribute, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "mpigather") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_mpi_gather, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "duplicate") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;

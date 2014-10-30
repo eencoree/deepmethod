@@ -101,19 +101,7 @@ void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 	individ->invalid = 1;
 	dp_evaluation_individ_prepare(hevalctrl, individ);
 	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
-#ifdef MPIZE
-/* master process sends the slave */
-	MPI_Status *status;
-	MPI_Request *request;
-	MPI_Allreduce(frozen, &sumFrozen, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-
-	MPI_Irecv(buffer2recv, bufferDim, MPI_DOUBLE, source, source, MPI_COMM_WORLD, &request[0]);
-	MPI_Send(buffer2send, bufferDim, MPI_DOUBLE, dest, mpi_id, MPI_COMM_WORLD);
-	MPI_Waitall(1, request, status);
-#else
 	max_value_flag = dp_target_eval (hevalctrl->eval_target, individ->z, &(individ->invalid), &(individ->cost), individ->targets, individ->precond, individ->user_data, index, cost);
-#endif
 }
 
 void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
