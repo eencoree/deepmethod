@@ -53,6 +53,7 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
                               DpRecombinationStrategy recomb_strategy, gint max_threads)
 {
 	GError *gerror = NULL;
+	int i;
 	DpDeepInfo*hdeepinfo = dp_deep_info_new(population_size, recombination_weight, recombination_prob, recombination_gamma, es_lambda, noglobal_eps, max_threads);
 	DpRecombinationStrategy strategy;
 	hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, seed, gamma_init, roundoff_error, max_threads, eval_strategy);
@@ -65,6 +66,9 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 		if ( gerror != NULL ) {
 			g_error(gerror->message);
 		}
+	}
+	for (i = 0; i < population_size; i++) {
+		hdeepinfo->trial->individ[i]->user_data = hdeepinfo->population->individ[i]->user_data;
 	}
 	return hdeepinfo;
 }

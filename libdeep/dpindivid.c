@@ -50,7 +50,6 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 	individ->pareto_front = -1;
 	individ->dom_count = 0;
 	individ->user_data = NULL;
-/*	g_mutex_init(&(individ->gmutex));*/
 	individ->dominated = NULL;
 	individ->crdist = 0;
 	return individ;
@@ -64,7 +63,6 @@ void dp_individ_delete(DpIndivid*individ)
 	free(individ->targets);
 	free(individ->precond);
 	g_rand_free(individ->hrand);
-/*	g_mutex_clear(&(individ->gmutex));*/
 	free(individ);
 }
 
@@ -87,7 +85,7 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 	for ( i = 0; i < individ->nprecond && i < trial->nprecond; i++ ) {
 		individ->precond[i] = trial->precond[i];
 	}
-	individ->user_data = trial->user_data;
+	if (individ->user_data == NULL) individ->user_data = trial->user_data;
 	individ->hrand = trial->hrand;
 }
 
