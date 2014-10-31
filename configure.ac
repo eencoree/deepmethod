@@ -32,6 +32,47 @@ AM_PROG_LIBTOOL
 
 PKG_CHECK_MODULES(DEEP, [glib-2.0 gthread-2.0 gio-2.0])
 
+# Define a macro that is used to parse a --with-mpi parameter
+# The macro is named "CHECK_MPICC"
+AC_DEFUN([CHECK_MPICC],[
+
+        AC_ARG_WITH(
+                mpi,
+                [  --with-mpi[=DIR]     OpenMPI installation directory],
+                ,
+                [with_mpi="/usr/lib64/openmpi"]
+        )
+
+        AC_MSG_CHECKING(for OpenMPI installation directory)
+
+        if test "$with_mpi" = "no"; then
+                AC_MSG_ERROR( You need to specify the OpenMPI installation directory directory using --with-mpi)
+        else
+		MPICC="$with_mpi/bin/mpicc"
+		MPILIBS="$with_mpi/lib"
+                if test -x $MPICC; then
+                        MPI_CFLAGS=`$MPICC --showme:compile 2>/dev/null`
+                        MPI_LDADD=`$MPICC --showme:link 2>/dev/null`
+			MPI_CLIBS="-Wl,--rpath $MPILIBS $MPI_LDADD"
+                        AC_MSG_RESULT(OpenMPI installation directory found!)
+                else
+                        AC_MSG_ERROR( $with_mpi not found.  Check the value you specified with --with-mpi)
+                fi
+        fi
+
+])
+
+dnl Let people enable/disable the mpi stuff.
+AC_ARG_ENABLE(mpi-build-target,
+              [  --enable-mpi-build-target  Use mpi-build-target to run on parallel machine [default=no]],
+                enable_mpi_build_target="$enableval", enable_mpi_build_target=no)
+if test x$enable_mpi_build_target = xyes ; then
+	# Now call the CHECK_MPICC macro that was just specified
+	CHECK_MPICC
+	AC_SUBST(MPI_CFLAGS)
+	AC_SUBST(MPI_CLIBS)
+fi
+AM_CONDITIONAL(ENABLE_MPI_BUILD_TARGET, test x$enable_mpi_build_target = xyes)
 
 
 
@@ -42,3 +83,4 @@ libdeep/Makefile
 libxmod/Makefile
 tools/Makefile
 ])
+

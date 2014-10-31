@@ -1,6 +1,12 @@
 
+if ENABLE_MPI_BUILD_TARGET
+MPI_BUILD_LIBTARGET = libdeep_mpi.la
+else
+MPI_BUILD_LIBTARGET =
+endif
+
 lib_LTLIBRARIES = \
-	libdeep.la
+	libdeep.la $(MPI_BUILD_LIBTARGET)
 
 libdeep_la_SOURCES = \
 	dpindivid.c \
@@ -31,6 +37,13 @@ libdeep_la_LIBADD = \
 
 AM_CPPFLAGS = \
 	$(DEEP_CFLAGS)
+
+libdeep_mpi_la_SOURCES = $(libdeep_la_SOURCES)
+
+libdeep_mpi_la_CFLAGS = \
+	-DMPIZE \
+	$(libdeep_la_CFLAGS) \
+	$(MPI_CFLAGS)
 
 ## File created by the gnome-build tools
 

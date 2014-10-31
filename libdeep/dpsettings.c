@@ -379,46 +379,73 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 	list = dpsettings->run;
 	for ( i = 0; list[i]; i += 2 ) {
 		tau_flag = g_strtod(list[i + 1], NULL);
-		if ( !g_strcmp0(list[i], "writelog") ) {
+		if (hopt->world_id == 0) {
+			if ( !g_strcmp0(list[i], "writelog") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_write_log, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "writestate") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_write_state, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "writepareto") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_write_pareto, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "evalpareto") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_evaluate_pareto_front, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "selpareto") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_select_pareto_front, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "sortpareto") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_sort_pareto_front, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "permutepop") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_permute, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "cr2cost") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_cr2cost, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "checkstop") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_check_stop, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "initstop") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "duplicate") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_duplicate, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "substitute") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_substitute, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "dpupdate") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_deep_update, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "optpost") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "optposteval") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_post_evaluate, tau_flag, opt_type, order, method_info);
+			}
+		}
+		if ( !g_strcmp0(list[i], "rotatetarget") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
-			dp_opt_add_func(hopt, dp_write_log, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "writestate") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_write_state, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "writepareto") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_write_pareto, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "evalpareto") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_evaluate_pareto_front, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "selpareto") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_select_pareto_front, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "sortpareto") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_sort_pareto_front, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "permutepop") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_permute, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "cr2cost") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_cr2cost, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "checkstop") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_check_stop, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "initstop") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
+			dp_opt_add_func(hopt, dp_rotate_target, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "mpidistribute") ) {
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
@@ -427,30 +454,6 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_opt_mpi_gather, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "duplicate") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_duplicate, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "substitute") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_substitute, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "dpupdate") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_deep_update, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "optpost") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "optposteval") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_opt_post_evaluate, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "rotatetarget") ) {
-			opt_type = H_OPT_NONE;
-			method_info = NULL;
-			dp_opt_add_func(hopt, dp_rotate_target, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "deep") ) {
 			opt_type = H_OPT_DEEP;
 			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
