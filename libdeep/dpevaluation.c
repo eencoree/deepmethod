@@ -388,7 +388,6 @@ void dp_evaluation_population_init_func (gpointer data, gpointer user_data)
 {
 	DpEvaluationCtrl*hevalctrl = (DpEvaluationCtrl*)user_data;
 	DpIndivid*individ = (DpIndivid*)data;
-	individ->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 	dp_evaluation_individ_evaluate(hevalctrl, individ, individ, 0, 0);
 }
 
@@ -402,10 +401,12 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
 	if ( noglobal_eps == 0 ) {
 		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
+		pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		istart = 1;
 	}
 	for ( i = istart; i < size; i++) {
 		dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
+		pop->individ[i]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 	}
 #ifdef MPIZE
 /* MPI initialization steps */
