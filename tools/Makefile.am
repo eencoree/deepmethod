@@ -1,27 +1,27 @@
 
 if ENABLE_MPI_BUILD_TARGET
-MPI_BUILD_TARGET = dpdeepctl_mpi
+MPI_BUILD_TARGET = deepmethod_openmpi
 else
 MPI_BUILD_TARGET =
 endif
 
 bin_PROGRAMS = \
-	dpdeepctl $(MPI_BUILD_TARGET)
+	deepmethod $(MPI_BUILD_TARGET)
 
-dpdeepctl_SOURCES = \
+deepmethod_SOURCES = \
 	dpdeepctl.c\
 	dpdeepctl.h \
 	xmtranslate.c \
 	xmtranslate.h
 
-dpdeepctl_CFLAGS = \
+deepmethod_CFLAGS = \
 	-I$(top_builddir)/libdeep\
 	-I$(top_builddir)/libxmod
 
-dpdeepctl_LDFLAGS = \
+deepmethod_LDFLAGS = \
 	-lm
 
-dpdeepctl_LDADD = \
+deepmethod_LDADD = \
 	$(DEEP_LIBS) \
 	$(top_builddir)/libdeep/libdeep.la \
 	$(top_builddir)/libxmod/libxmod.la
@@ -29,17 +29,17 @@ dpdeepctl_LDADD = \
 AM_CPPFLAGS = \
 	$(DEEP_CFLAGS)
 
-dpdeepctl_mpi_SOURCES = $(dpdeepctl_SOURCES)
+deepmethod_openmpi_SOURCES = $(deepmethod_SOURCES)
 
-dpdeepctl_mpi_LDADD = \
+deepmethod_openmpi_LDADD = \
 	$(MPI_CLIBS) \
 	$(DEEP_LIBS) \
-	$(top_builddir)/libdeep/libdeep_mpi.la \
+	$(top_builddir)/libdeep/libdeep_openmpi.la \
 	$(top_builddir)/libxmod/libxmod.la
 
-dpdeepctl_mpi_CFLAGS = \
+deepmethod_openmpi_CFLAGS = \
 	-DMPIZE \
-	$(dpdeepctl_CFLAGS) \
+	$(deepmethod_CFLAGS) \
 	$(MPI_CFLAGS)
 
 ## File created by the gnome-build tools

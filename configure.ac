@@ -74,13 +74,15 @@ if test x$enable_mpi_build_target = xyes ; then
 fi
 AM_CONDITIONAL(ENABLE_MPI_BUILD_TARGET, test x$enable_mpi_build_target = xyes)
 
-
+AS_IF([test "x$enable_mpi_build_target" == "xyes"], [AC_CONFIG_FILES(libdeep/libdeep_openmpi-1.0.pc)] )
 
 AC_OUTPUT([
 Makefile
 po/Makefile.in
 libdeep/Makefile
+libdeep/libdeep-1.0.pc
 libxmod/Makefile
+libxmod/libxmod-1.0.pc
 tools/Makefile
 ])
 
