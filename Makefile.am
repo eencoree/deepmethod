@@ -6,7 +6,7 @@ SUBDIRS = po \
 	libxmod \
 	tools
 
-deepdocdir = ${prefix}/doc/deep
+deepdocdir = ${prefix}/doc/deepmethod
 deepdoc_DATA = \
 	README\
 	COPYING\
