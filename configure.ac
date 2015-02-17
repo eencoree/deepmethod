@@ -84,5 +84,6 @@ libdeep/libdeep-1.0.pc
 libxmod/Makefile
 libxmod/libxmod-1.0.pc
 tools/Makefile
+doc/Makefile
 ])
 

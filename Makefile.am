@@ -4,7 +4,8 @@
 SUBDIRS = po \
 	libdeep \
 	libxmod \
-	tools
+	tools \
+	doc
 
 deepdocdir = ${docdir}
 deepdoc_DATA = \

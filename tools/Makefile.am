@@ -9,8 +9,8 @@ bin_PROGRAMS = \
 	deepmethod $(MPI_BUILD_TARGET)
 
 deepmethod_SOURCES = \
-	dpdeepctl.c\
-	dpdeepctl.h \
+	deepmethod.c\
+	deepmethod.h \
 	xmtranslate.c \
 	xmtranslate.h
 
