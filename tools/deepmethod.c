@@ -127,10 +127,10 @@ int main(int argc, char **argv)
         g_type_init();
 	}
 	g_setenv("LANG", setlocale (LC_ALL, ""), TRUE);
-	context = g_option_context_new (N_("- DEEP optimizer"));
-	g_option_context_set_translation_domain(context, GETTEXT_PACKAGE);
+	context = g_option_context_new (_("- DEEP optimizer"));
 	g_option_context_add_main_entries(context, (const GOptionEntry *)entries, NULL);
 	g_option_context_set_ignore_unknown_options(context, TRUE);
+	g_option_context_set_translation_domain(context, GETTEXT_PACKAGE);
 	if (!g_option_context_parse (context, &argc, &argv, &gerror)) {
 		g_error (_("option parsing failed: %s\n"), gerror->message);
 	}
