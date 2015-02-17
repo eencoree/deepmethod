@@ -7,22 +7,50 @@
 deepmethod \- Optimize using DEEP.
 .
 .SH SYNOPSIS
-.B deepmethod
+.B deepmethod [OPTION...]
 .
 .SH DESCRIPTION
 The
 .B deepmethod
-calls DEEP metho.
+calls DEEP method.
 .
 .SH OPTIONS
 .TP
-.BR \-n ", " \-\-bits =\fIBITS\fR
-Set the number of bits to modify.
-Default is one bit.
+.BR \-h ", " \-\-help " Show help options"
+.TP
+.BR \-\-default-name =\fIFILENAME\fR 
+File name for everything and default group names
+.TP
+.BR \-\-model-file =\fIFILENAME\fR
+File name where model is described
+.TP
+.BR \-\-model-group =\fIGROUP\fR
+Group name where model is described
+.TP
+.BR \-\-settings-file =\fIFILENAME\fR
+File name where settings are described
+.TP
+.BR \-\-settings-group =\fIGROUP\fR
+Group name where settings are described
+.TP
+.BR \-\-target-file =\fIFILENAME\fR
+File name where target is described
+.TP
+.BR \-\-target-group =\fIGROUP\fR
+Group name where target is described
+.TP
+.BR \-\-output-file =\fIFILENAME\fR
+File name to write
+.TP
+.BR \-\-operation =\fIOPERATION\fR
+What to do
+.TP
+.BR \-\-monitor =\fINUMBER\fR
+Extract line from log
 .
 .SH BUGS
-The command name should have been chosen more carefully
-to reflect its purpose.
+The order of directives in the model section is not arbittrary as the
+memory can be allocated only at ciretain steps.
 .
 .SH AUTHOR
 Konstantin Kozlov <mackoel@gmail.com>

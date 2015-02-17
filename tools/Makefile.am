@@ -27,7 +27,8 @@ deepmethod_LDADD = \
 	$(top_builddir)/libxmod/libxmod.la
 
 AM_CPPFLAGS = \
-	$(DEEP_CFLAGS)
+	$(DEEP_CFLAGS) \
+	-DDEEPMETHOD_LOCALEDIR=\"${DEEPMETHOD_LOCALEDIR}\"
 
 deepmethod_openmpi_SOURCES = $(deepmethod_SOURCES)
 

@@ -22,6 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
@@ -51,18 +52,53 @@ static char*output_file;
 static char*operation;
 static int monitor;
 
+/*
+ * Standard gettext macros.
+*/
+#ifdef ENABLE_NLS
+#  include <libintl.h>
+#  undef _
+#  define _(String) dgettext (PACKAGE, String)
+#  ifdef gettext_noop
+#    define N_(String) gettext_noop (String)
+#  else
+#    define N_(String) (String)
+#  endif
+#else
+#  define textdomain(String) (String)
+#  define gettext(String) (String)
+#  define dgettext(Domain,Message) (Message)
+#  define dcgettext(Domain,Message,Type) (Message)
+#  define bindtextdomain(Domain,Directory) (Domain)
+#  define _(String) (String)
+#  define N_(String) (String)
+#endif
+
+static gboolean
+option_version_cb (const gchar *option_name,
+                   const gchar *value,
+                   gpointer     data,
+                   GError     **error)
+{
+  g_print ("%s %s\n", _("DEEP optimizer, version "), VERSION);
+
+  exit (0);
+  return FALSE;
+}
+
 static GOptionEntry entries[] =
 {
-	{ "default-name", 0, 0, G_OPTION_ARG_STRING, &default_name, "File name for everything and default group names", "Default names" },
-	{ "model-file", 0, 0, G_OPTION_ARG_STRING, &model_file, "File name where model is described", "Model file name" },
-	{ "model-group", 0, 0, G_OPTION_ARG_STRING, &model_group, "Group name where model is described", "Model group name" },
-	{ "settings-file", 0, 0, G_OPTION_ARG_STRING, &settings_file, "File name where settings are described", "Settings file name" },
-	{ "settings-group", 0, 0, G_OPTION_ARG_STRING, &settings_group, "Group name where settings are described", "Settings group name" },
-	{ "target-file", 0, 0, G_OPTION_ARG_STRING, &target_file, "File name where target is described", "Target file name" },
-	{ "target-group", 0, 0, G_OPTION_ARG_STRING, &target_group, "Group name where target is described", "Target group name" },
-	{ "output-file", 0, 0, G_OPTION_ARG_STRING, &output_file, "File name to write", "Output file name" },
-	{ "operation", 0, 0, G_OPTION_ARG_STRING, &operation, "What to do", "Operation" },
-	{ "monitor", 0, 0, G_OPTION_ARG_INT, &monitor, "Extract line from log", "Save logline" },
+	{ "default-name", 0, 0, G_OPTION_ARG_STRING, &default_name, N_("File name for everything and default group names"), N_("FILENAME") },
+	{ "model-file", 0, 0, G_OPTION_ARG_STRING, &model_file, N_("File name where model is described"), N_("FILENAME") },
+	{ "model-group", 0, 0, G_OPTION_ARG_STRING, &model_group, N_("Group name where model is described"), N_("GROUP") },
+	{ "settings-file", 0, 0, G_OPTION_ARG_STRING, &settings_file, N_("File name where settings are described"), N_("FILENAME") },
+	{ "settings-group", 0, 0, G_OPTION_ARG_STRING, &settings_group, N_("Group name where settings are described"), N_("GROUP") },
+	{ "target-file", 0, 0, G_OPTION_ARG_STRING, &target_file, N_("File name where target is described"), N_("FILENAME") },
+	{ "target-group", 0, 0, G_OPTION_ARG_STRING, &target_group, N_("Group name where target is described"), N_("GROUP") },
+	{ "output-file", 0, 0, G_OPTION_ARG_STRING, &output_file, N_("File name to write"), N_("FILENAME") },
+	{ "operation", 0, 0, G_OPTION_ARG_STRING, &operation, N_("What to do"), N_("OPERATION") },
+	{ "monitor", 0, 0, G_OPTION_ARG_INT, &monitor, N_("Extract line from log"), N_("NUMBER") },
+	{ "version", 0, G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, option_version_cb, NULL, NULL },
 	{ NULL }
 };
 
@@ -81,20 +117,27 @@ int main(int argc, char **argv)
 	double dval;
 	GOptionContext *context;
 	GError *gerror = NULL;
+#ifdef ENABLE_NLS
+	bindtextdomain (GETTEXT_PACKAGE, DEEPMETHOD_LOCALEDIR);
+	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+	textdomain (GETTEXT_PACKAGE);
+#endif
 	if (!GLIB_CHECK_VERSION (2, 36, 0)) {
         g_thread_init (NULL);
         g_type_init();
 	}
-	context = g_option_context_new ("- DEEP optimizer");
-	g_option_context_add_main_entries(context, (const GOptionEntry *)entries, "deep");
+	g_setenv("LANG", setlocale (LC_ALL, ""), TRUE);
+	context = g_option_context_new (N_("- DEEP optimizer"));
+	g_option_context_set_translation_domain(context, GETTEXT_PACKAGE);
+	g_option_context_add_main_entries(context, (const GOptionEntry *)entries, NULL);
 	g_option_context_set_ignore_unknown_options(context, TRUE);
 	if (!g_option_context_parse (context, &argc, &argv, &gerror)) {
-		g_error ("option parsing failed: %s\n", gerror->message);
+		g_error (_("option parsing failed: %s\n"), gerror->message);
 	}
 	g_option_context_free (context);
 	if ( model_file == NULL || model_group == NULL ) {
 		if ( default_name == NULL ) {
-			g_error("%s called with wrong options for model", argv[0]);
+			g_error(_("%s called with wrong options for model"), g_get_prgname());
 		} else {
 			model_file = g_strdup(default_name);
 			model_group = g_strdup("default_model");
@@ -102,7 +145,7 @@ int main(int argc, char **argv)
 	}
 	if ( settings_file == NULL || settings_group == NULL ) {
 		if ( default_name == NULL ) {
-			g_error("%s called with wrong options for settings", argv[0]);
+			g_error(_("%s called with wrong options for settings"), g_get_prgname());
 		} else {
 			settings_file = g_strdup(default_name);
 			settings_group = g_strdup("default_settings");
@@ -110,7 +153,7 @@ int main(int argc, char **argv)
 	}
 	if ( target_file == NULL || target_group == NULL ) {
 		if ( default_name == NULL ) {
-			g_error("%s called with wrong options for target", argv[0]);
+			g_error(_("%s called with wrong options for target"), g_get_prgname());
 		} else {
 			target_file = g_strdup(default_name);
 			target_group = g_strdup("default_target");
@@ -118,21 +161,21 @@ int main(int argc, char **argv)
 	}
 	if ( output_file == NULL ) {
 		if ( default_name == NULL ) {
-			g_error("%s called with wrong options for output", argv[0]);
+			g_error(_("%s called with wrong options for output"), g_get_prgname());
 		} else {
 			output_file = g_strdup_printf("%s-deep-output", default_name);
 		}
 	}
 	if ( operation == NULL ) {
 		if ( default_name == NULL ) {
-			g_error("%s called with wrong options for operation", argv[0]);
+			g_error(_("%s called with wrong options for operation"), g_get_prgname());
 		} else {
 			operation = g_strdup("optimize");
 		}
 	}
 	dp_settings_init(settings_file, settings_group, dpsettings, &gerror);
 	if ( gerror != NULL ) {
-		g_error("Settings init:%s", gerror->message);
+		g_error(_("Settings init:%s"), gerror->message);
 	}
 	xmmodel = xm_model_new();
 	xm_model_init(model_file, model_group, xmmodel, &gerror);
@@ -153,7 +196,7 @@ int main(int argc, char **argv)
 		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
 		dp_settings_process_run(dpsettings, hopt, world_id, heval, htarget, &gerror);
 		if ( gerror != NULL ) {
-			g_error("Settings process init:%s", gerror->message);
+			g_error(_("Settings process init:%s"), gerror->message);
 		}
 		dp_opt_run(hopt);
 	} else if ( !g_strcmp0 ( operation, "monitor" ) ) {
@@ -167,7 +210,7 @@ int main(int argc, char **argv)
 		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
 		dp_opt_monitor(hopt, monitor, &gerror);
 		if ( gerror != NULL ) {
-			g_error("Monitor error:%s", gerror->message);
+			g_error(_("Monitor error:%s"), gerror->message);
 		}
 	}
 #ifdef MPIZE
@@ -177,7 +220,7 @@ int main(int argc, char **argv)
 		xm_retranslate_precond(htarget, xmmodel);
 		xm_model_save(xmmodel, output_file);
 	} else {
-		g_error("Loop finished with an unknown error.\nOutput not produced.");
+		g_error(_("Loop finished with an unknown error.\nOutput not produced."));
 	}
 #ifdef MPIZE
 	}
