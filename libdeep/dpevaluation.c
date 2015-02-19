@@ -80,7 +80,7 @@ DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int wo
 
 void dp_evaluation_individ_evaluate_prime(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
 {
-	int max_value_flag = 0;
+	int max_value_flag;
 	individ->invalid = 1;
 	dp_evaluation_individ_prepare(hevalctrl, individ);
 	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
@@ -106,7 +106,7 @@ void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 
 void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
 {
-	int max_value_flag = 0;
+	int max_value_flag;
 	individ->invalid = 1;
 	dp_evaluation_individ_prepare(hevalctrl, individ);
 	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
@@ -116,7 +116,6 @@ void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivi
 int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_data)
 {
 	int i, need_swap;
-	double u;
 	DpIndivid**i1 = (DpIndivid**)p1;
 	DpIndivid**i2 = (DpIndivid**)p2;
 	DpIndivid*individ = *i1;
@@ -169,7 +168,6 @@ int dp_evaluation_cr_compare(gconstpointer a, gconstpointer b, gpointer user_dat
 int dp_evaluation_individ_dominates_compare(const void *p1, const void *p2, void *user_data)
 {
 	int i, dominates;
-	double u;
 	DpIndivid**i1 = (DpIndivid**)p1;
 	DpIndivid**i2 = (DpIndivid**)p2;
 	DpIndivid*individ = *i1;
@@ -325,9 +323,8 @@ void dp_evaluation_individ_set(DpEvaluationCtrl*hevalctrl, DpIndivid*individ)
 void dp_evaluation_individ_set_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*individ)
 {
 	int i;
-	double y, z, w;
+	double z, w;
 	for ( i = 0; i < hevalctrl->eval->size; i++) {
-		y = (*(hevalctrl->eval->points[i]->param)) * hevalctrl->eval->points[i]->scale;
 		z = (*(hevalctrl->eval->points[i]->grad)) * hevalctrl->eval->points[i]->scale;
 		if ( hevalctrl->eval->points[i]->limited ) {
 			if ( hevalctrl->eval_strategy == sin_trans_flag )
@@ -348,7 +345,6 @@ void dp_evaluation_individ_set_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 void dp_evaluation_individ_transform_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, int index)
 {
 	double orig_grad = individ->y[index];
-	double y = individ->z[index] * hevalctrl->eval->points[index]->scale;
 	double z = orig_grad * hevalctrl->eval->points[index]->scale;
 	double w;
 	if ( hevalctrl->eval->points[index]->limited ) {
@@ -420,12 +416,12 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	if ( hevalctrl->eval_max_threads > 0 ) {
 		hevalctrl->gthreadpool = g_thread_pool_new ((GFunc) dp_evaluation_population_init_func, (gpointer) hevalctrl, hevalctrl->eval_max_threads, hevalctrl->exclusive, &gerror);
 		if ( gerror != NULL ) {
-			g_error(gerror->message);
+			g_error("%s", gerror->message);
 		}
 		for ( i = pop->slice_a; i < pop->slice_b; i++) {
 			g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(pop->individ[i]), &gerror);
 			if ( gerror != NULL ) {
-				g_error(gerror->message);
+				g_error("%s", gerror->message);
 			}
 		}
 		g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);

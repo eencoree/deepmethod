@@ -64,7 +64,7 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 	if ( hdeepinfo->max_threads > 0 ) {
         hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_evaluate_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
 		if ( gerror != NULL ) {
-			g_error(gerror->message);
+			g_error("%s", gerror->message);
 		}
 	}
 	for (i = 0; i < population_size; i++) {
@@ -144,12 +144,12 @@ void dp_deep_step(DpDeepInfo*hdeepinfo)
             hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_step_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
         }
 		if ( gerror != NULL ) {
-			g_error(gerror->message);
+			g_error("%s", gerror->message);
 		}
 		for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 			g_thread_pool_push (hdeepinfo->gthreadpool, GINT_TO_POINTER(individ_id + 1), &gerror);
 			if ( gerror != NULL ) {
-				g_error(gerror->message);
+				g_error("%s", gerror->message);
 			}
 		}
 		g_thread_pool_free (hdeepinfo->gthreadpool, immediate_stop, wait_finish);
@@ -271,7 +271,7 @@ void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo)
 		for ( individ_id = population->slice_a; individ_id < population->slice_b; individ_id++ ) {
 			g_thread_pool_push (hdeepinfo->gthreadpool, GINT_TO_POINTER(individ_id + 1), &gerror);
 			if ( gerror != NULL ) {
-				g_error(gerror->message);
+				g_error("%s", gerror->message);
 			}
 		}
         while(g_thread_pool_unprocessed (hdeepinfo->gthreadpool) > 0) {

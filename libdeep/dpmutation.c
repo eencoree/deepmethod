@@ -41,6 +41,7 @@ void dp_individ_mutation(DpMutationControl*control, GRand*hrand, DpIndivid*indiv
 			for ( i = start_index; i < end_index; i++ ) {
 				y = individ->y[i];
 				individ->z[i] = y;
+/* FIXME */
 //				x1 = g_rand_gauss(hrand, 0, 1);
 //				x2 = g_rand_gauss(hrand, 0, 1);
 				y = y * exp( control->tau_2 * x1 + control->tau_1 * x2 );

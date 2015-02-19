@@ -214,6 +214,7 @@ int dp_population_target_compare(gconstpointer a, gconstpointer b, gpointer user
 	DpPopulation*popunion = (DpPopulation*)user_data;
 	DpIndivid*i1 = popunion->individ[(*ia)];
 	DpIndivid*i2 = popunion->individ[(*ib)];
+	target_index = popunion->target_index;
 	need_swap = 0;
 	if ( i1->targets[target_index] > i2->targets[target_index] ) {
 		need_swap = 1;
@@ -227,8 +228,8 @@ void dp_population_cr2cost(DpPopulation*pop)
 {
     GArray*curr_front;
     int i, curr_ind, j, k;
-    int ntargets = pop->individ[j]->ntargets;
-    double tmax, tmin, trange, crdist;
+    int ntargets = pop->individ[0]->ntargets;
+    double tmax, tmin, trange;
     DpIndivid* individ, *individ_l, *individ_r;
     for ( k = 0; k < pop->fronts->len; k++ ) {
         curr_front = g_array_index (pop->fronts, GArray*, k);
@@ -300,10 +301,10 @@ int dp_individ_cost_ascending(void *p1, void *p2, void *user_data)
 
 void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 {
+#ifdef MPIZE
 	int dest;
 	int source = 0;
-	int ind_index, dest_index, ind_per_node, ind_per_last_node, number_of_comm_lines;
-#ifdef MPIZE
+	int ind_index, dest_index, ind_per_node, ind_per_last_node, number_of_comm_lines; 
 	MPI_Status *status;       /* status array of the MPI_Waitall function */
 	MPI_Request *request;           /* handle array for receiving messages */
 	ind_per_node = (int)ceil(pop->size / mpi_nnodes);

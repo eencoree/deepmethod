@@ -42,6 +42,7 @@
 #include "xmtranslate.h"
 
 static char*default_name;
+static char*hopt_filename;
 static char*model_file;
 static char*model_group;
 static char*settings_file;
@@ -122,6 +123,7 @@ int main(int argc, char **argv)
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
 #endif
+	hopt_filename = NULL;
 	if (!GLIB_CHECK_VERSION (2, 36, 0)) {
         g_thread_init (NULL);
         g_type_init();
@@ -164,7 +166,10 @@ int main(int argc, char **argv)
 			g_error(_("%s called with wrong options for output"), g_get_prgname());
 		} else {
 			output_file = g_strdup_printf("%s-deep-output", default_name);
+			hopt_filename = g_strdup(default_name);
 		}
+	} else {
+		hopt_filename = g_strdup(output_file);
 	}
 	if ( operation == NULL ) {
 		if ( default_name == NULL ) {
@@ -190,10 +195,10 @@ int main(int argc, char **argv)
 		htarget = dp_target_new();
 		dp_settings_target_init(target_file, target_group, htarget, &gerror);
 		if ( gerror != NULL ) {
-			g_error(gerror->message);
+			g_error("%s", gerror->message);
 		}
 		xm_translate_score(htarget, xmmodel);
-		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
+		hopt = dp_opt_init(heval, htarget, world_id, world_count, hopt_filename, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
 		dp_settings_process_run(dpsettings, hopt, world_id, heval, htarget, &gerror);
 		if ( gerror != NULL ) {
 			g_error(_("Settings process init:%s"), gerror->message);
@@ -204,10 +209,10 @@ int main(int argc, char **argv)
 		htarget = dp_target_new();
 		dp_settings_target_init(target_file, target_group, htarget, &gerror);
 		if ( gerror != NULL ) {
-			g_error(gerror->message);
+			g_error("%s", gerror->message);
 		}
 		xm_translate_score(htarget, xmmodel);
-		hopt = dp_opt_init(heval, htarget, world_id, world_count, settings_file, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
+		hopt = dp_opt_init(heval, htarget, world_id, world_count, hopt_filename, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
 		dp_opt_monitor(hopt, monitor, &gerror);
 		if ( gerror != NULL ) {
 			g_error(_("Monitor error:%s"), gerror->message);
