@@ -140,6 +140,8 @@ DpLoopExitCode dp_opt_permute(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_duplicate(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_opt_substold(DpLoop*hloop, gpointer user_data);
+
 DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_deep_update(DpLoop*hloop, gpointer user_data);

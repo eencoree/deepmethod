@@ -43,6 +43,7 @@ typedef struct DpDeepInfo {
 	double recombination_prob;
 	double recombination_gamma;
 	int es_lambda;
+	int es_cutoff;
 	int selection_done;
 	double noglobal_eps;
 	DpPopulation*trial;
@@ -55,9 +56,9 @@ typedef struct DpDeepInfo {
 	gboolean exclusive;
 } DpDeepInfo;
 
-DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy, int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, double es_lambda, double noglobal_eps, DpRecombinationStrategy recomb_strategy, gint max_threads);
+DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy, int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, int es_lambda, int es_cutoff, double noglobal_eps, DpRecombinationStrategy recomb_strategy, gint max_threads);
 
-DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, double es_lambda, double noglobal_eps, gint max_threads);
+DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, int es_lambda, int es_cutoff, double noglobal_eps, gint max_threads);
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo);
 

@@ -100,6 +100,8 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 				dp_opt_add_func(hopt, dp_opt_duplicate, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "substitute") ) {
 				dp_opt_add_func(hopt, dp_opt_substitute, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "substold") ) {
+				dp_opt_add_func(hopt, dp_opt_substold, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "optpost") ) {
 				dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "optposteval") ) {
@@ -537,6 +539,33 @@ DpLoopExitCode dp_opt_duplicate(DpLoop*hloop, gpointer user_data)
             for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
                 src_ind = hdeepinfo->population->cost_ascending[i];
                 dst_ind = hdeepinfo->population->ages_descending[i];
+                if ( dst_ind != hdeepinfo->population->imin ) {
+                    dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
+                }
+			}
+			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
+		break;
+	}
+	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_substold(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	int stop_flag = ( hloop->stop_flag == DP_LOOP_EXIT_SUCCESS ) ? 1 : 0;
+	int src_ind, dst_ind, i;
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, hdeepinfo->population);
+			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
+			for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
+                src_ind = hdeepinfo->population->cost_ascending[i];
+                dst_ind = hdeepinfo->population->ages_descending[i];
+				if ( hdeepinfo->population->individ[dst_ind]->age < hdeepinfo->es_cutoff ) break;
                 if ( dst_ind != hdeepinfo->population->imin ) {
                     dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
                 }

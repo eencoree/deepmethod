@@ -28,7 +28,7 @@
 #include <math.h>
 #include "dpdeep.h"
 
-DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, double es_lambda, double noglobal_eps, gint max_threads)
+DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, int es_lambda, int es_cutoff, double noglobal_eps, gint max_threads)
 {
 	DpDeepInfo*hdeepinfo;
 	hdeepinfo = (DpDeepInfo*)malloc(sizeof(DpDeepInfo));
@@ -37,6 +37,7 @@ DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, 
 	hdeepinfo->recombination_prob = recombination_prob;
 	hdeepinfo->recombination_gamma = recombination_gamma;
 	hdeepinfo->es_lambda = es_lambda;
+	hdeepinfo->es_cutoff = es_cutoff;
 	hdeepinfo->noglobal_eps = noglobal_eps;
 	hdeepinfo->exclusive = FALSE;
 	hdeepinfo->max_threads = max_threads;
@@ -49,12 +50,12 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
                               double gamma_init, double roundoff_error,
                               DpEvaluationStrategy eval_strategy, int population_size,
                               double recombination_weight, double recombination_prob,
-                              double recombination_gamma, double es_lambda, double noglobal_eps,
+                              double recombination_gamma, int es_lambda, int es_cutoff, double noglobal_eps,
                               DpRecombinationStrategy recomb_strategy, gint max_threads)
 {
 	GError *gerror = NULL;
 	int i;
-	DpDeepInfo*hdeepinfo = dp_deep_info_new(population_size, recombination_weight, recombination_prob, recombination_gamma, es_lambda, noglobal_eps, max_threads);
+	DpDeepInfo*hdeepinfo = dp_deep_info_new(population_size, recombination_weight, recombination_prob, recombination_gamma, es_lambda, es_cutoff, noglobal_eps, max_threads);
 	DpRecombinationStrategy strategy;
 	hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, seed, gamma_init, roundoff_error, max_threads, eval_strategy);
 	hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->size, hdeepinfo->hevalctrl->eval_target->precond_size, hdeepinfo->hevalctrl->seed + hdeepinfo->hevalctrl->yoffset);

@@ -48,6 +48,7 @@ typedef struct DpSettings {
 	double recombination_prob;
 	double recombination_gamma;
 	int es_lambda;
+	int es_cutoff;
 	double noglobal_eps;
 	DpEvaluationStrategy eval_strategy;
 	double gamma_init;
