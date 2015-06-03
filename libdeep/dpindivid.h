@@ -51,6 +51,10 @@ typedef struct DpIndivid {
 	int nprecond;
 	GRand*hrand;
 	int invalid;
+	int r1;
+	int r2;
+	int r3;
+	int r4;
 	gpointer user_data;
 } DpIndivid;
 

@@ -98,6 +98,30 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 				}
 			}
 		break;
+		case DE_3_bin_self:
+			i = start_index;
+			for ( L = 0; L < end_index; L++ ) {
+				if ( g_rand_double(hrand) < control->p[i] || L == 0 ) {
+					individ->x[i] = individ->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+				}
+				i++;
+				if ( i > end_index - 1 ) {
+					i = 0;
+				}
+			}
+		break;
+		case DE_3_exp_self:
+			i = start_index;
+			for ( L = 0; L < end_index; L++ ) {
+				individ->x[i] = individ->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+				if ( g_rand_double(hrand) > control->p[i] )
+					break;
+				i++;
+				if ( i > end_index - 1 ) {
+					i = 0;
+				}
+			}
+		break;
 		case DE_3_bin_T:
 			i = start_index;
 			for ( L = 0; L < end_index; L++ ) {
@@ -140,6 +164,28 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 				}
 			}
 		break;
+		case DE_3_bin_self_T:
+			i = start_index;
+			for ( L = 0; L < end_index; L++ ) {
+				u = g_rand_double(hrand);
+				if ( u < control->p[i] ) {
+					individ->x[i] = individ->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+				} else if ( u < 1 - control->p[i] ) {
+					double indx = individ->x[i];
+					phi = individ->cost + input_2->cost + input_3->cost;
+					individ->x[i] = ( input_2->cost - individ->cost ) * ( indx - input_2->x[i] );
+					individ->x[i] += ( input_3->cost - input_2->cost ) * ( input_2->x[i] - input_3->x[i] );
+					individ->x[i] += ( individ->cost - input_3->cost ) * ( input_3->x[i] - indx );
+					phi = ( phi <  0 ) ? -phi : phi;
+                    individ->x[i] = ( phi ==  0 ) ? individ->x[i] : individ->x[i]/phi;
+					individ->x[i] += ( indx + input_2->x[i] + input_3->x[i] ) / 3.0;
+				}
+				i++;
+				if ( i > end_index - 1 ) {
+					i = 0;
+				}
+			}
+		break;					
 		case DE_3_exp_T:
 			i = start_index;
 			flag = 1;
@@ -179,6 +225,30 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					phi = ( phi <  0 ) ? -phi : phi;
                     individ->x[i] = ( phi ==  0 ) ? individ->x[i] : individ->x[i]/phi;
 					individ->x[i] += ( input_4->x[i] + input_2->x[i] + input_3->x[i] ) / 3.0;
+				}
+				i++;
+				if ( i > end_index - 1 ) {
+					i = 0;
+				}
+			}
+		break;
+		case DE_3_exp_self_T:
+			i = start_index;
+			flag = 1;
+			for ( L = 0; L < end_index; L++ ) {
+				if ( flag == 1 ) {
+					individ->x[i] = individ->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+					if ( g_rand_double(hrand) > control->p[i] )
+						flag = 0;
+				} else {
+					double indx = individ->x[i];
+					phi = individ->cost + input_2->cost + input_3->cost;
+					individ->x[i] = ( input_2->cost - individ->cost ) * ( indx - input_2->x[i] );
+					individ->x[i] += ( input_3->cost - input_2->cost ) * ( input_2->x[i] - input_3->x[i] );
+					individ->x[i] += ( individ->cost - input_3->cost ) * ( input_3->x[i] - indx );
+					phi = ( phi <  0 ) ? -phi : phi;
+                    individ->x[i] = ( phi ==  0 ) ? individ->x[i] : individ->x[i]/phi;
+					individ->x[i] += ( indx + input_2->x[i] + input_3->x[i] ) / 3.0;
 				}
 				i++;
 				if ( i > end_index - 1 ) {

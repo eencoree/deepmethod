@@ -40,8 +40,12 @@ typedef enum DpRecombinationStrategy {
 	DE_3_exp_T,
 	DE_3_bin_rand,
 	DE_3_exp_rand,
+	DE_3_bin_self,
+	DE_3_exp_self,
 	DE_3_bin_rand_T,
 	DE_3_exp_rand_T,
+	DE_3_bin_self_T,
+	DE_3_exp_self_T,
 	MaxStrategy
 } DpRecombinationStrategy;
 
