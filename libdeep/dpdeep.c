@@ -315,7 +315,7 @@ void dp_deep_select_step(DpDeepInfo*hdeepinfo)
 	trial->iter = population->iter + 1;
 	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 		int r4 = trial->individ[individ_id]->r4; 
-		if (trial->individ[individ_id]->age > 0 && trial->individ[r4]->age > 0) {
+		if (r4 > -1 && trial->individ[individ_id]->age > 0 && trial->individ[r4]->age > 0) {
 			trial->individ[r4]->failures++;
 		}
 	}
