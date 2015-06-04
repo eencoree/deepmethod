@@ -55,6 +55,9 @@ typedef struct DpIndivid {
 	int r2;
 	int r3;
 	int r4;
+	int moves;
+	int failures;
+	int grads;
 	gpointer user_data;
 } DpIndivid;
 

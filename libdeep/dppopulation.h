@@ -63,6 +63,8 @@ void dp_population_update(DpPopulation*pop, int start_index, int end_index);
 
 int dp_individ_ages_descending(void *p1, void *p2, void *user_data);
 
+int dp_individ_failures_descending(void *p1, void *p2, void *user_data);
+
 int dp_individ_cost_ascending(void *p1, void *p2, void *user_data);
 
 void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes);

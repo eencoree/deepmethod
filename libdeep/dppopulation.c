@@ -284,6 +284,21 @@ int dp_individ_ages_descending(void *p1, void *p2, void *user_data)
 	return 0;
 }
 
+int dp_individ_failures_descending(void *p1, void *p2, void *user_data)
+{
+	DpPopulation*population = (DpPopulation*)user_data;
+	int*i1 = (int*)p1;
+	int*i2 = (int*)p2;
+	DpIndivid*individ_1 = population->individ[(*i1)];
+	DpIndivid*individ_2 = population->individ[(*i2)];
+	if ( individ_1->failures < individ_2->failures ) {
+		return 1;
+	} else if ( individ_1->failures > individ_2->failures ) {
+		return -1;
+	}
+	return 0;
+}
+
 int dp_individ_cost_ascending(void *p1, void *p2, void *user_data)
 {
 	DpPopulation*population = (DpPopulation*)user_data;

@@ -47,6 +47,13 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 	individ->nprecond = precond_size;
 	individ->hrand = g_rand_new_with_seed ((guint32)seed);
 	individ->age = 0;
+	individ->r1 = -1;
+	individ->r2 = -1;
+	individ->r3 = -1;
+	individ->r4 = -1;
+	individ->moves = 0;
+	individ->failures = 0;
+	individ->grads = 0;
 	individ->pareto_front = -1;
 	individ->dom_count = 0;
 	individ->user_data = NULL;
@@ -71,6 +78,13 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 	int i;
 	individ->cost = trial->cost;
 	individ->age = trial->age;
+	individ->r1 = trial->r1;
+	individ->r2 = trial->r2;
+	individ->r3 = trial->r3;
+	individ->r4 = trial->r4;
+	individ->moves = trial->moves;
+	individ->failures = trial->failures;
+	individ->grads = trial->grads;
 	individ->pareto_front = trial->pareto_front;
 	individ->dom_count = trial->dom_count;
 	individ->crdist = trial->crdist;
@@ -93,6 +107,13 @@ void dp_individ_save(FILE*fp, DpIndivid*individ)
 	int i;
 	fprintf(fp, "%13.9f\n", individ->cost);
 	fprintf(fp, "%d\n", individ->age);
+	fprintf(fp, "%d\n", individ->r1);
+	fprintf(fp, "%d\n", individ->r2);
+	fprintf(fp, "%d\n", individ->r3);
+	fprintf(fp, "%d\n", individ->r4);
+	fprintf(fp, "%d\n", individ->moves);
+	fprintf(fp, "%d\n", individ->failures);
+	fprintf(fp, "%d\n", individ->grads); 
 	for ( i = 0; i < individ->size; i++ ) {
 	  fprintf(fp, "%13.9f ", individ->x[i]);
 	}
@@ -121,6 +142,13 @@ void dp_individ_load(FILE*fp, DpIndivid*individ)
 	int i;
 	fscanf(fp, "%lf", &(individ->cost));
 	fscanf(fp, "%d", &(individ->age));
+	fprintf(fp, "%d", &(individ->r1));
+	fprintf(fp, "%d", &(individ->r2));
+	fprintf(fp, "%d", &(individ->r3));
+	fprintf(fp, "%d", &(individ->r4));
+	fprintf(fp, "%d", &(individ->moves));
+	fprintf(fp, "%d", &(individ->failures));
+	fprintf(fp, "%d", &(individ->grads));
 	for ( i = 0; i < individ->size; i++ ) {
 	  fscanf(fp, "%lf", &(individ->x[i]));
 	}

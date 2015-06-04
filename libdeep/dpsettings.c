@@ -448,6 +448,10 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
 				dp_opt_add_func(hopt, dp_opt_substold, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "substfailed") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_substfailed, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "dpupdate") ) {
 				opt_type = H_OPT_NONE;
 				method_info = NULL;

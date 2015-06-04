@@ -119,6 +119,13 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	end_index = population->ind_size;
 	dp_individ_copy_values(my_trial, my_individ);
 	my_trial->age = 0;
+	my_trial->r1 = r1;
+	my_trial->r2 = r2;
+	my_trial->r3 = r3;
+	my_trial->r4 = r4;
+	my_trial->moves = 0;
+	my_trial->failures = 0;
+	my_trial->grads = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
 	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu, my_id, my_tabu->cost);
 	if ( ignore_cost == 0 && my_id == population->imin ) {
@@ -196,6 +203,13 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
 	end_index = population->ind_size;
 	dp_individ_copy_values(my_trial, my_individ);
 	my_trial->age = 0;
+	my_trial->r1 = r1;
+	my_trial->r2 = r2;
+	my_trial->r3 = r3;
+	my_trial->r4 = r4;
+	my_trial->moves = 0;
+	my_trial->failures = 0;
+	my_trial->grads = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
 }
 
@@ -237,12 +251,12 @@ void dp_deep_select_func (gpointer data, gpointer user_data)
 		if ( my_trial->cost >= my_individ->cost ) {
 			population->individ[my_id] = my_trial;
 			trial->individ[my_id] = my_individ;
-			my_trial->age++;
+			my_individ->age++;
 		}
 	} else if ( 1 != dp_evaluation_individ_compare((const void *)(&my_individ), (const void *)(&my_trial), (void*)(hdeepinfo->hevalctrl)) ) {
 		population->individ[my_id] = my_trial;
 		trial->individ[my_id] = my_individ;
-		my_trial->age++;
+		my_individ->age++;
 	}
 }
 
@@ -299,6 +313,12 @@ void dp_deep_select_step(DpDeepInfo*hdeepinfo)
 	}
 	dp_population_update(trial, 0, trial->size);
 	trial->iter = population->iter + 1;
+	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+		int r4 = trial->individ[individ_id]->r4; 
+		if (trial->individ[individ_id]->age > 0 && trial->individ[r4]->age > 0) {
+			trial->individ[r4]->failures++;
+		}
+	}
 	hdeepinfo->population = trial;
 	hdeepinfo->trial = population;
 }

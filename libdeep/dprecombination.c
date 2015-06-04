@@ -49,6 +49,8 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_1->moves++;
+			input_2->moves++;
 		break;
 		case DE_3_bin:
 			i = start_index;
@@ -61,6 +63,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_1->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_exp:
 			i = start_index;
@@ -73,6 +78,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_1->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_bin_rand:
 			i = start_index;
@@ -85,6 +93,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_4->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_exp_rand:
 			i = start_index;
@@ -97,6 +108,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_4->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_bin_self:
 			i = start_index;
@@ -109,6 +123,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			individ->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_exp_self:
 			i = start_index;
@@ -121,6 +138,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			individ->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_bin_T:
 			i = start_index;
@@ -142,6 +162,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_1->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_bin_rand_T:
 			i = start_index;
@@ -163,6 +186,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_4->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_bin_self_T:
 			i = start_index;
@@ -185,6 +211,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			individ->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;					
 		case DE_3_exp_T:
 			i = start_index;
@@ -208,6 +237,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_1->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_exp_rand_T:
 			i = start_index;
@@ -231,6 +263,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			input_4->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		case DE_3_exp_self_T:
 			i = start_index;
@@ -255,6 +290,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
+			individ->moves++;
+			input_2->grads++;
+			input_3->grads++;
 		break;
 		default:
 			fprintf(stderr, "\ndp_individ_recombination: unknown type %d\n", control->strategy);
