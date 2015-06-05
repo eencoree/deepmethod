@@ -42,6 +42,7 @@ DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, 
 	hdeepinfo->exclusive = FALSE;
 	hdeepinfo->max_threads = max_threads;
 	hdeepinfo->selection_done = 0;
+	hdeepinfo->debug = 0;
     hdeepinfo->gthreadpool = NULL;
 	return hdeepinfo;
 }

@@ -38,6 +38,7 @@ extern "C"
 #include "dpevaluation.h"
 
 typedef struct DpDeepInfo {
+	int debug;
 	int population_size;
 	double recombination_weight;
 	double recombination_prob;

@@ -122,3 +122,6 @@ msgstr "Ошибка монитора:%s"
 #: ../tools/deepmethod.c:209
 msgid "Loop finished with an unknown error.\nOutput not produced."
 msgstr "Цикл завершился с неизвестной ошибкой.\nРезультаты не достигнуты."
+
+msgid "Print out run-time info"
+msgstr "Выводить информацию о выполнении"

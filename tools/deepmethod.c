@@ -52,6 +52,7 @@ static char*target_group;
 static char*output_file;
 static char*operation;
 static int monitor;
+static int hoptdebug;
 
 /*
  * Standard gettext macros.
@@ -99,6 +100,7 @@ static GOptionEntry entries[] =
 	{ "output-file", 0, 0, G_OPTION_ARG_STRING, &output_file, N_("File name to write"), N_("FILENAME") },
 	{ "operation", 0, 0, G_OPTION_ARG_STRING, &operation, N_("What to do"), N_("OPERATION") },
 	{ "monitor", 0, 0, G_OPTION_ARG_INT, &monitor, N_("Extract line from log"), N_("NUMBER") },
+	{ "debug", 0, 0, G_OPTION_ARG_INT, &hoptdebug, N_("Print out run-time info"), N_("NUMBER") },
 	{ "version", 0, G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, option_version_cb, NULL, NULL },
 	{ NULL }
 };
@@ -198,6 +200,7 @@ int main(int argc, char **argv)
 		}
 		xm_translate_score(htarget, xmmodel);
 		hopt = dp_opt_init(heval, htarget, world_id, world_count, hopt_filename, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
+		hopt->debug = hoptdebug;
 		dp_settings_process_run(dpsettings, hopt, world_id, heval, htarget, &gerror);
 		if ( gerror != NULL ) {
 			g_error(_("Settings process init:%s"), gerror->message);
@@ -212,6 +215,7 @@ int main(int argc, char **argv)
 		}
 		xm_translate_score(htarget, xmmodel);
 		hopt = dp_opt_init(heval, htarget, world_id, world_count, hopt_filename, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
+		hopt->debug = hoptdebug;
 		dp_opt_monitor(hopt, monitor, &gerror);
 		if ( gerror != NULL ) {
 			g_error(_("Monitor error:%s"), gerror->message);
