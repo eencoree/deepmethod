@@ -117,8 +117,8 @@ void dp_loop_run(DpLoop*hloop)
 {
 	g_list_foreach(hloop->run_once_before, dp_loop_run_once_func, (gpointer)hloop);
 	while ( hloop->stop_flag == DP_LOOP_EXIT_NOEXIT ) {
-		g_list_foreach(hloop->funcs, dp_loop_run_func, (gpointer)hloop);
 		hloop->tau_counter++;
+		g_list_foreach(hloop->funcs, dp_loop_run_func, (gpointer)hloop);
 #if defined(__MINGW32__)
 
 #else
