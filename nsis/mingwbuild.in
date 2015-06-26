@@ -1,0 +1,23 @@
+#!/bin/bash -x
+
+set -e
+
+NAME="deepmethod-@PACKAGE_VERSION@"
+ROOT=`pwd`
+BUILDROOT="buildroot"
+BUILD="build"
+
+rm -fr $BUILD/$NAME
+tar zxvf $NAME.tar.gz
+cd $BUILD/$NAME
+
+autoreconf -fi
+if [ -e Makefile ]; then make distclean; fi
+DESTDIR=$ROOT/$BUILDROOT mingw32-configure
+DESTDIR=$ROOT/$BUILDROOT mingw32-make
+DESTDIR=$ROOT/$BUILDROOT mingw32-make install
+
+cd $ROOT
+
+makensis DEEPMETHOD.nsis
+

@@ -86,5 +86,7 @@ libxmod/Makefile
 libxmod/libxmod-1.0.pc
 tools/Makefile
 doc/Makefile
+nsis/mingwbuild
+nsis/DEEPMETHOD.nsis
 ])
 
