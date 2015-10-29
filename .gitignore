@@ -1,3 +1,4 @@
+# For C project
 # Object files
 *.o
 *.ko
@@ -30,3 +31,8 @@
 
 # Debug files
 *.dSYM/
+
+# For Anjuta project
+# Local configuration folder and symbol database
+/.anjuta/
+/.anjuta_sym_db.db
