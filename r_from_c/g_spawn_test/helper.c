@@ -16,7 +16,9 @@ int main( int argc, char **argv ){
 
         sleep( 1 );
         fprintf( stdout, "%s\n", stdout_string );
+        fflush(stdout);
         sleep( 1 );
+        fflush(stderr);
         fprintf( stderr, "%s\n", stderr_string );
     }
 
