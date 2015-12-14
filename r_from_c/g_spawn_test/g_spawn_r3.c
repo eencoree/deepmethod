@@ -1,4 +1,5 @@
 #include<glib.h>
+#include<glib/gprintf.h>
 #include<stdio.h>
 
 static void cb_child_watch( GPid  pid,
@@ -21,7 +22,7 @@ static gboolean cb_out_watch( GIOChannel   *channel,
     }
 
     g_io_channel_read_line( channel, &string, &size, NULL, NULL );
-    g_print("%s", string);
+    g_print("Out: %s", string);
     g_free( string );
 
     return( TRUE );
@@ -40,7 +41,7 @@ static gboolean cb_err_watch( GIOChannel   *channel,
     }
 
     g_io_channel_read_line( channel, &string, &size, NULL, NULL );
-    g_print("%s", string);
+    g_print("Err: %s", string);
     g_free( string );
 
     return( TRUE );
@@ -48,10 +49,10 @@ static gboolean cb_err_watch( GIOChannel   *channel,
 
 void init(void){
     GPid        pid;
-    gchar      *argv[] = { "R", "--no-save", NULL };
-    //gchar      *argv[] = { "R", "--no-save", "--silent", NULL };
+    //gchar      *argv[] = { "R", "--no-save", NULL };
+    gchar      *argv[] = { "R", "--no-save", "--silent", NULL };
     GSpawnFlags flags = G_SPAWN_DO_NOT_REAP_CHILD |
-                        G_SPAWN_SEARCH_PATH;
+        G_SPAWN_SEARCH_PATH;
     gint        in,
                 out,
                 err;
@@ -81,28 +82,39 @@ void init(void){
     g_io_add_watch( out_ch, G_IO_IN | G_IO_HUP, (GIOFunc)cb_out_watch, NULL);
     g_io_add_watch( err_ch, G_IO_IN | G_IO_HUP, (GIOFunc)cb_err_watch, NULL);
 
-    GString * cmd = g_string_new("5\n");
+    GString * cmd = g_string_new("q <- 5\r\ncat(q,'\\n')\r\nflush.console()\r\n");
     GError * error = NULL;
     gsize bytes_written;
-    printf("Launching date in bash: %s\n", cmd->str);
+    //printf("Command sent: %s\n", cmd->str);
     g_io_channel_write_chars( in_ch,
             cmd->str,
             cmd->len,
             &bytes_written,
             &error);
-    if (error != NULL)
+    /*if (error != NULL)
     {
         printf("%s\n", error->message);
     }else{
         printf("bytes: %u\n", bytes_written);
-    }
+    }*/
+
+    g_io_channel_flush(in_ch, &error);
+    /*if (error != NULL)
+    {
+        printf("%s\n", error->message);
+    }else{
+        printf("bytes after flush: %u\n", bytes_written);
+    }*/
+
 }
 
 int main()
 {
     GMainLoop *loop = g_main_loop_new (NULL, FALSE);
     init();
+    g_printf("Starting loop\n");
     g_main_loop_run (loop);
+    g_printf("Stopping loop");
 
     return 0;
 }
