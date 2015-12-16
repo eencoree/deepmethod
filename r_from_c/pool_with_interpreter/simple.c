@@ -1,7 +1,6 @@
 #include<glib.h>
 #include<unistd.h>
-
-#include<stdlib.h>
+#include<stdio.h>
 
 struct interpreter{
     GIOChannel *in,
@@ -18,6 +17,16 @@ void write_to_interpreter(GIOChannel* in, GString* msg){
     g_io_channel_flush(in, NULL);
 }
 
+GString * create_command(int n){
+    GString * cmd = g_string_new("q <- ");
+    char number[30];
+    sprintf(number, "%d", n);
+    cmd = g_string_append(cmd, number);
+    g_print("VALUE: %s\n", cmd->str);
+    cmd = g_string_append(cmd, "\r\na <- q + 1\r\ncat(a,'\\n')\r\nflush.console()\r\n");
+    return cmd;
+}
+
 gpointer pool_func(gpointer data, gpointer user_data){
     GAsyncQueue * queue = (GAsyncQueue*)user_data;
 
@@ -25,10 +34,7 @@ gpointer pool_func(gpointer data, gpointer user_data){
     int val = *((int*)data);
 
     g_print("interpreter = %d, data = %d\n", intprt, val);
-    GString * cmd = g_string_new("q <- ");
-    cmd = g_string_append_c(cmd, '0' + val);
-    cmd = g_string_append(cmd, "\r\na <- q + 1\r\ncat(a,'\\n')\r\nflush.console()\r\n");
-
+    GString * cmd = create_command(val);
     write_to_interpreter(intprt->in, cmd);
 
     g_async_queue_push(queue, (gpointer)intprt);
@@ -105,16 +111,19 @@ struct interpreter* init_interpreter(void){
 
 
 int main(){
-    srand(0);
-
     int i;
+    int num_processors = g_get_num_processors();
+    g_print("Number processors: %d\n", num_processors);
 
     g_print("Create queue\n");
     GAsyncQueue *q = g_async_queue_new();
 
     g_print("Push interpreters to queue\n");
-    struct interpreter* intprt = init_interpreter();
-    g_async_queue_push(q, (gpointer)intprt);
+    struct interpreter* intprt;
+    for(i = 0; i < num_processors; i++){
+        intprt = init_interpreter();
+        g_async_queue_push(q, (gpointer)intprt);
+    }
     g_print("Number tasks in queue: %d\n", g_async_queue_length(q));
 
     g_print("Create pool\n");
@@ -124,19 +133,16 @@ int main(){
             g_get_num_processors(),
             TRUE, NULL);
 
-    int vals[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-    for(i = 0; i < 8; i++){
-        g_thread_pool_push (pool, (gpointer)(vals+i), NULL);
+    g_print("Push tasks to pool\n");
+    int num_tasks = 2 * num_processors;
+    int* tasks = g_new(int, num_tasks);
+    for(i = 0; i < num_tasks; i++){
+        tasks[i] = i;
+        g_thread_pool_push (pool, (gpointer)(tasks+i), NULL);
     }
 
     GMainLoop *loop = g_main_loop_new (NULL, FALSE);
     g_main_loop_run (loop);
-
-    /*g_thread_pool_free(pool, FALSE, TRUE);
-    g_print("Free pool\n");
-
-    g_async_queue_unref(q);
-    g_print("Unref queue\n");*/
 
     g_print("End main\n");
     return 0;
