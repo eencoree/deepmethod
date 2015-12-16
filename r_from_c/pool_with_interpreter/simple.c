@@ -55,6 +55,7 @@ static gboolean out_watch( GIOChannel   *channel,
 
     g_io_channel_read_line( channel, &string, &size, NULL, NULL );
     g_print("Out: %s", string);
+    g_io_channel_flush(channel, NULL);
     g_free( string );
 
     return TRUE;
@@ -74,13 +75,14 @@ static gboolean err_watch( GIOChannel   *channel,
 
     g_io_channel_read_line( channel, &string, &size, NULL, NULL );
     g_print("Err: %s", string);
+    g_io_channel_flush(channel, NULL);
     g_free( string );
 
     return TRUE;
 }
 
 struct interpreter* init_interpreter(void){
-    gchar      *argv[] = { "R", "--no-save", "--silent", NULL };
+    gchar      *argv[] = { "R", "--silent", "--vanilla", NULL };
     gint        in,
                 out,
                 err;
