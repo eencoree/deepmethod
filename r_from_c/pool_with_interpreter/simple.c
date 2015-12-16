@@ -10,27 +10,12 @@ struct interpreter{
 };
 
 void write_to_interpreter(GIOChannel* in, GString* msg){
-    GError * error = NULL;
-    gsize bytes_written;
     g_io_channel_write_chars( in,
             msg->str,
             msg->len,
-            &bytes_written,
-            &error);
-    if (error != NULL)
-    {
-        printf("%s\n", error->message);
-    }else{
-        printf("bytes: %u\n", bytes_written);
-    }
-
-    g_io_channel_flush(in, &error);
-    if (error != NULL)
-    {
-        printf("%s\n", error->message);
-    }else{
-        printf("bytes after flush: %u\n", bytes_written);
-    }
+            NULL,
+            NULL);
+    g_io_channel_flush(in, NULL);
 }
 
 gpointer pool_func(gpointer data, gpointer user_data){
@@ -40,12 +25,13 @@ gpointer pool_func(gpointer data, gpointer user_data){
     int val = *((int*)data);
 
     g_print("interpreter = %d, data = %d\n", intprt, val);
-    GString * cmd = g_string_new(
-            "q <- 5\r\ncat(q,'\\n')\r\nflush.console()\r\n"
-    );
+    GString * cmd = g_string_new("q <- ");
+    cmd = g_string_append_c(cmd, '0' + val);
+    cmd = g_string_append(cmd, "\r\na <- q + 1\r\ncat(a,'\\n')\r\nflush.console()\r\n");
+
     write_to_interpreter(intprt->in, cmd);
 
-    //g_async_queue_push(queue, (gpointer)intprt);
+    g_async_queue_push(queue, (gpointer)intprt);
     return 0;
 }
 
@@ -88,7 +74,7 @@ static gboolean err_watch( GIOChannel   *channel,
 }
 
 struct interpreter* init_interpreter(void){
-    gchar      *argv[] = { "R", "--no-save", NULL };
+    gchar      *argv[] = { "R", "--no-save", "--silent", NULL };
     gint        in,
                 out,
                 err;
@@ -143,14 +129,14 @@ int main(){
         g_thread_pool_push (pool, (gpointer)(vals+i), NULL);
     }
 
-    g_thread_pool_free(pool, FALSE, TRUE);
+    GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+    g_main_loop_run (loop);
+
+    /*g_thread_pool_free(pool, FALSE, TRUE);
     g_print("Free pool\n");
 
     g_async_queue_unref(q);
-    g_print("Unref queue\n");
-
-    GMainLoop *loop = g_main_loop_new (NULL, FALSE);
-    g_main_loop_run (loop);
+    g_print("Unref queue\n");*/
 
     g_print("End main\n");
     return 0;
