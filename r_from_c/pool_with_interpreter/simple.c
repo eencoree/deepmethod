@@ -27,6 +27,21 @@ GString * create_command(int n){
     return cmd;
 }
 
+gchar * read_from_interpreter(GIOChannel* out){
+    static const int check_delay = 1000;
+    GIOCondition cond = g_io_channel_get_buffer_condition(out);
+    while(G_IO_IN != cond){
+        g_usleep(check_delay);
+        cond = g_io_channel_get_buffer_condition(out);
+        g_print("G_IO_IN != cond");
+    }
+    g_print("G_IO_IN == cond");
+
+    gchar *string;
+    g_io_channel_read_line( out, &string, NULL, NULL, NULL );
+    return string;
+}
+
 gpointer pool_func(gpointer data, gpointer user_data){
     GAsyncQueue * queue = (GAsyncQueue*)user_data;
 
@@ -37,11 +52,15 @@ gpointer pool_func(gpointer data, gpointer user_data){
     GString * cmd = create_command(val);
     write_to_interpreter(intprt->in, cmd);
 
+    gchar * result_str = read_from_interpreter(intprt->out);
+    g_print("Out: %s", result_str);
+    g_free(result_str);
+
     g_async_queue_push(queue, (gpointer)intprt);
     return 0;
 }
 
-static gboolean out_watch( GIOChannel   *channel,
+/*static gboolean out_watch( GIOChannel   *channel,
         GIOCondition  cond, gpointer data)
 {
     gchar *string;
@@ -79,10 +98,10 @@ static gboolean err_watch( GIOChannel   *channel,
     g_free( string );
 
     return TRUE;
-}
+}*/
 
 struct interpreter* init_interpreter(void){
-    gchar      *argv[] = { "R", "--silent", "--vanilla", NULL };
+    gchar      *argv[] = { "R", "--vanilla", NULL };
     gint        in,
                 out,
                 err;
@@ -105,8 +124,8 @@ struct interpreter* init_interpreter(void){
     intprt->err = g_io_channel_unix_new( err );
 
     /* Add watches to channels */
-    g_io_add_watch( intprt->out, G_IO_IN | G_IO_HUP, (GIOFunc)out_watch, NULL);
-    g_io_add_watch( intprt->err, G_IO_IN | G_IO_HUP, (GIOFunc)err_watch, NULL);
+    //g_io_add_watch( intprt->out, G_IO_IN | G_IO_HUP, (GIOFunc)out_watch, NULL);
+    //g_io_add_watch( intprt->err, G_IO_IN | G_IO_HUP, (GIOFunc)err_watch, NULL);
 
     return intprt;
 }
@@ -114,7 +133,7 @@ struct interpreter* init_interpreter(void){
 
 int main(){
     int i;
-    int num_processors = g_get_num_processors();
+    int num_processors = 1;//g_get_num_processors();
     g_print("Number processors: %d\n", num_processors);
 
     g_print("Create queue\n");
@@ -126,7 +145,7 @@ int main(){
         intprt = init_interpreter();
         g_async_queue_push(q, (gpointer)intprt);
     }
-    g_print("Number tasks in queue: %d\n", g_async_queue_length(q));
+    g_print("Number interpreters in queue: %d\n", g_async_queue_length(q));
 
     g_print("Create pool\n");
     GThreadPool *pool = g_thread_pool_new(
