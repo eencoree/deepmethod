@@ -22,23 +22,33 @@ GString * create_command(int n){
     char number[30];
     sprintf(number, "%d", n);
     cmd = g_string_append(cmd, number);
-    g_print("VALUE: %s\n", cmd->str);
     cmd = g_string_append(cmd, "\r\na <- q + 1\r\ncat(a,'\\n')\r\nflush.console()\r\n");
+    g_print("VALUE: %s\n", cmd->str);
     return cmd;
 }
 
 gchar * read_from_interpreter(GIOChannel* out){
-    static const int check_delay = 1000;
+    GMainContext * loop = g_main_context_default();
+
+    static const int check_delay = 50000;
     GIOCondition cond = g_io_channel_get_buffer_condition(out);
+    g_print("cond: %d\n", cond);
     while(G_IO_IN != cond){
+        g_main_context_iteration(loop, FALSE);
         g_usleep(check_delay);
         cond = g_io_channel_get_buffer_condition(out);
-        g_print("G_IO_IN != cond");
+        g_print("G_IO_IN != cond\n");
     }
-    g_print("G_IO_IN == cond");
+    g_print("G_IO_IN == cond\n");
 
     gchar *string;
-    g_io_channel_read_line( out, &string, NULL, NULL, NULL );
+    gsize size;
+    GError *error = NULL;
+    GIOStatus ret = g_io_channel_read_to_end( out, &string, &size, &error );
+    g_print("ret: %d\n", ret);
+    if(error != NULL)
+        g_print("error: %s\n", error->message);
+    g_print("size: %u\n", size);
     return string;
 }
 
@@ -54,6 +64,7 @@ gpointer pool_func(gpointer data, gpointer user_data){
 
     gchar * result_str = read_from_interpreter(intprt->out);
     g_print("Out: %s", result_str);
+    fflush(stdout);
     g_free(result_str);
 
     g_async_queue_push(queue, (gpointer)intprt);
@@ -151,20 +162,20 @@ int main(){
     GThreadPool *pool = g_thread_pool_new(
             (GFunc)pool_func,
             (gpointer)q,
-            g_get_num_processors(),
+            num_processors,
             TRUE, NULL);
 
     g_print("Push tasks to pool\n");
-    int num_tasks = 2 * num_processors;
+    int num_tasks = 1;//2 * num_processors;
+    g_print("Max number tasks in queue: %d\n", num_tasks);
     int* tasks = g_new(int, num_tasks);
     for(i = 0; i < num_tasks; i++){
         tasks[i] = i;
         g_thread_pool_push (pool, (gpointer)(tasks+i), NULL);
     }
+    g_print("Number tasks in queue: %d\n", g_thread_pool_get_num_unused_threads());
 
-    GMainLoop *loop = g_main_loop_new (NULL, FALSE);
-    g_main_loop_run (loop);
-
+    g_thread_pool_free(pool, FALSE, TRUE);
     g_print("End main\n");
     return 0;
 }
