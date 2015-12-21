@@ -250,7 +250,6 @@ int xm_model_run(XmModel *xmmodel)
 /*	flaggs |= G_SPAWN_STDERR_TO_DEV_NULL; */
 	flaggs = G_SPAWN_SEARCH_PATH;
 
-	/*
 	GAsyncQueue * queue = (GAsyncQueue*)user_data;
     struct interpreter* intprt = (struct interpreter*)g_async_queue_pop(queue);
     struct task *t = (struct task *)data;
@@ -281,7 +280,6 @@ int xm_model_run(XmModel *xmmodel)
     g_mutex_unlock (&(t->m));
 
     g_async_queue_push(queue, (gpointer)intprt);
-	*/
 	
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
@@ -898,6 +896,82 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	}
 	g_key_file_free(gkf);
 	return retval;
+}
+
+static gboolean out_watch( GIOChannel   *channel,
+        GIOCondition  cond, gpointer data)
+{
+    GString *response = g_string_new("");
+    gsize size;
+    GError *gerror = NULL;
+    struct interpreter *intprt = (struct interpreter*)data;
+
+    if( cond == G_IO_HUP ){
+        g_print("Cond is G_IO_HUP %d\n", (int)cond);
+        g_io_channel_unref( channel );
+        return( FALSE );
+    } else if( cond == G_IO_IN ) {
+#ifdef DEBUG
+        g_print("Cond is G_IO_IN %d\n", (int)cond);
+        fflush(stdout);
+#endif
+    } else if( cond == G_IO_OUT ) {
+#ifdef DEBUG
+        g_print("Cond is G_IO_OUT %d\n", (int)cond);
+        fflush(stdout);
+#endif
+    }
+
+    GIOStatus status = G_IO_STATUS_NORMAL;
+    gchar *response_line = NULL;
+    gboolean is_done = FALSE;
+    do{
+        status = g_io_channel_read_line( channel, &response_line, &size, NULL, NULL );
+        response = g_string_append(response, response_line);
+        is_done = g_str_has_suffix(response_line, "done\n");
+        g_free(response_line);
+    } while( !is_done );
+
+    if (status != G_IO_STATUS_NORMAL) {
+        g_print("Status is not NORMAL %d\n", status);
+    } else {
+#ifdef DEBUG
+        g_print("Status is NORMAL %d\n", status);
+#endif
+    }
+    fflush(stdout);
+
+    if (gerror != NULL) {
+        g_print("%s", gerror->message);
+        g_error_free(gerror);
+    }
+
+    g_mutex_lock( &(intprt->m) );
+    intprt->response = g_string_free(response, FALSE);
+    g_cond_signal( &(intprt->cond) );
+    g_mutex_unlock( &(intprt->m) );
+
+    return TRUE;
+}
+
+static gboolean err_watch( GIOChannel   *channel,
+        GIOCondition  cond, gpointer data)
+{
+    gchar *string;
+    gsize  size;
+
+    if( cond == G_IO_HUP )
+    {
+        g_io_channel_unref( channel );
+        return( FALSE );
+    }
+
+    g_io_channel_read_line( channel, &string, &size, NULL, NULL );
+    g_print("Err: %s", string);
+    g_io_channel_flush(channel, NULL);
+    g_free( string );
+
+    return TRUE;
 }
 
 Interpreter* init_interpreter(GAsyncQueue * queue){
