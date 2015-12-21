@@ -36,18 +36,6 @@ extern "C"
 #include "dppopulation.h"
 #include "dprecombination.h"
 #include "dpevaluation.h"
-
-/*здесь определяем стурктуру интерпретатора*/
-typedef struct Interpreter{
-	GIOChannel *in,
-               *out,
-               *err;
-	GAsyncQueue * queue;
-	GMutex m;
-	GCond cond;
-	gchar *response;
-} Interpreter;
-/*End здесь определяем стурктуру интерпретатора*/
 	
 typedef struct DpDeepInfo {
 	int debug;

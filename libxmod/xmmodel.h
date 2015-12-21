@@ -94,6 +94,7 @@ typedef struct XmModel {
 	int ref_counter;
 	int copy_val_parms;
 	int copy_counter;
+	// for synch parallel exec xmlmodel
 	GMutex m;
 } XmModel;
 

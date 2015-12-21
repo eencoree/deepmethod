@@ -47,42 +47,6 @@ DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, 
 	return hdeepinfo;
 }
 
-/*Здесь определяем функцию инициализации интерпретатора*/
-Interpreter * init_interpreter(GAsyncQueue * queue){
-    gchar      *argvr[] = { "R", "--no-save", "--silent", "--vanilla", NULL };
-    gint        in,
-                out,
-                err;
-    gboolean    ret;
-
-    /* Spawn child process */
-    ret = g_spawn_async_with_pipes( NULL, argvr, NULL,
-            G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
-            NULL, NULL,
-            &in, &out, &err, NULL );
-    if( ! ret ){
-        g_error( "SPAWN FAILED" );
-        return NULL;
-    }
-
-    Interpreter * intprt = g_new(Interpreter, 1);
-    intprt->in = g_io_channel_unix_new( in );
-    intprt->out = g_io_channel_unix_new( out );
-    intprt->err = g_io_channel_unix_new( err );
-    intprt->queue = queue;
-
-    g_mutex_init( &(intprt->m) );
-    g_cond_init( &(intprt->cond) );
-    intprt->response = NULL;
-
-    /* Add watches to channels */
-    g_io_add_watch( intprt->out, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)out_watch, intprt);
-    g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch, intprt);
-
-    return intprt;
-}
-/*End Здесь определяем функцию инициализации интерпретатора*/
-
 DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed,
                               double gamma_init, double roundoff_error,
                               DpEvaluationStrategy eval_strategy, int population_size,
@@ -100,17 +64,6 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 	hdeepinfo->recombination_control = dp_recombination_control_init(recomb_strategy, hdeepinfo->population, hdeepinfo->population->individ[0]->hrand, hdeepinfo->recombination_weight, hdeepinfo->recombination_prob, hdeepinfo->recombination_gamma);
 	hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
 	if ( hdeepinfo->max_threads > 0 ) {
-		/*Здесь создаём очередь интерпретаторов и пулл задач (индивидов)*/
-		GAsyncQueue *q = g_async_queue_new();
-
-		Interpreter* intprt;
-		for(i = 0; i < hdeepinfo->max_threads; i++){
-    		intprt = init_interpreter(q);
-    		g_async_queue_push(q, (gpointer)intprt);
-		}
-		
-		/*End Здесь создаём очередь интерпретаторов и пулл задач (индивидов)*/
-		
         hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_evaluate_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
 		if ( gerror != NULL ) {
 			g_error("%s", gerror->message);
