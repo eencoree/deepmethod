@@ -78,6 +78,7 @@ XmModel*xm_model_new()
 	xmmodel->ref_counter = 0;
 	xmmodel->copy_val_parms = 0;
 	xmmodel->copy_counter = 0;
+	
 	return xmmodel;
 }
 
@@ -168,6 +169,9 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->copy_val_parms = src->copy_val_parms;
 	xmmodel->copy_counter = 0;
 	src->copy_counter++;
+
+	// скопировать указатель на очередь
+	
 	return xmmodel;
 }
 
@@ -191,6 +195,10 @@ void xm_model_set_dparms(XmModel *xmmodel, double*x)
 		xmmodel->dparms[index] = x[i];
 	}
 }
+
+/* - вставить структуру интерпретатора
+ * 
+ */
 
 int xm_model_run(XmModel *xmmodel)
 {
@@ -221,7 +229,7 @@ int xm_model_run(XmModel *xmmodel)
         GString *params = g_string_new("");
         for ( i = 0; i < xmmodel->size; i++ ) {
             g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
-        }
+        } // func( %f, %f, %f) = xmmodel->dparms[0]* xmmodel->dparms[0]+xmmodel->dparms[1]*xmmodel->dparms[1]
 		g_string_append_printf(command, " %s", params->str);
         g_string_free(params, TRUE);
 	}
@@ -234,11 +242,49 @@ int xm_model_run(XmModel *xmmodel)
 /*	flaggs = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL; */
 /*	flaggs |= G_SPAWN_STDERR_TO_DEV_NULL; */
 	flaggs = G_SPAWN_SEARCH_PATH;
+
+	// удалить
 	if ( !g_spawn_sync (NULL, margv, NULL, (GSpawnFlags)flaggs, NULL, NULL, &standard_output, &standard_error, &child_exit_status, &gerror) ) {
 		if ( gerror ) {
 			g_error("g_spawn_sync failed for %s\nwith %s", margv[0], gerror->message);
 		}
 	}
+
+/*
+	 * GAsyncQueue * queue = (GAsyncQueue*)user_data;
+ 44     struct interpreter* intprt = (struct interpreter*)g_async_queue_pop(queue);
+ 45     struct task *t = (struct task *)data;
+ 46     int val = t->data;
+ 47     gchar *string;
+ 48 
+ 49     g_print("interpreter = %d, data = %d\n", intprt, val);
+ 50     fflush(stdout);
+ 51 
+ 52     GString * cmd = create_command_r(val);
+ 53     write_to_interpreter(intprt->in, cmd);
+ 54 
+ 55     g_usleep(200);
+ 56     g_mutex_lock( &(intprt->m) );
+ 57 
+ 58     while( !(intprt->response) ){
+ 59         g_cond_wait( &(intprt->cond), &(intprt->m) );
+ 60     }
+ 61 
+ 62     string = g_strdup( intprt->response );
+ 63     g_free( intprt->response );
+ 64     intprt->response = NULL;
+ 65 
+ 66     g_mutex_unlock (&(intprt->m));
+ 67 
+ 68     g_mutex_lock (&(t->m));
+ 69     t->result = string;
+ 70     g_mutex_unlock (&(t->m));
+ 71 
+ 72     g_async_queue_push(queue, (gpointer)intprt);
+ 73 
+ 74     return 0;
+	 * /
+	
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	if ( strlen(standard_output) > 0 && result != NULL ) {
@@ -856,6 +902,43 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	return retval;
 }
 
+
+/*
+ * struct interpreter* init_interpreter(GAsyncQueue * queue){
+154     gchar      *argvr[] = { "R", "--no-save", "--silent", "--vanilla", NULL };
+155     gint        in,
+156                 out,
+157                 err;
+158     gboolean    ret;
+159 
+160     /* Spawn child process */
+161     ret = g_spawn_async_with_pipes( NULL, argvr, NULL,
+162             G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
+163             NULL, NULL,
+164             &in, &out, &err, NULL );
+165     if( ! ret ){
+166         g_error( "SPAWN FAILED" );
+167         return NULL;
+168     }
+169 
+170     struct interpreter* intprt = g_new(struct interpreter, 1);
+171     intprt->in = g_io_channel_unix_new( in );
+172     intprt->out = g_io_channel_unix_new( out );
+173     intprt->err = g_io_channel_unix_new( err );
+174     intprt->queue = queue;
+175 
+176     g_mutex_init( &(intprt->m) );
+177     g_cond_init( &(intprt->cond) );
+178     intprt->response = NULL;
+179 
+180     /* Add watches to channels */
+181     g_io_add_watch( intprt->out, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)out_watch,     intprt);
+182     g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch,     intprt);
+183 
+184     return intprt;
+185 }
+ * /
+
 int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err)
 {
 	int ret_val = 0;
@@ -873,6 +956,19 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 		ret_val = 1;
 	}
 	g_free(data);
+
+	// создание очереди интерпретаторов и их инициализация
+	/*g_print("Create queue\n");
+196     GAsyncQueue *q = g_async_queue_new();
+197 
+198     g_print("Push interpreters to queue\n");
+199     struct interpreter* intprt;
+200     for(i = 0; i < num_processors; i++){
+201         intprt = init_interpreter(q);
+202         g_async_queue_push(q, (gpointer)intprt);
+203     }
+	 * 
+	 * /
 	return ret_val;
 }
 

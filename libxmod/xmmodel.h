@@ -94,6 +94,7 @@ typedef struct XmModel {
 	int ref_counter;
 	int copy_val_parms;
 	int copy_counter;
+	GMutex m;
 } XmModel;
 
 XmModel*xm_model_new();
