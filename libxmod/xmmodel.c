@@ -169,8 +169,7 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->copy_val_parms = src->copy_val_parms;
 	xmmodel->copy_counter = 0;
 	src->copy_counter++;
-
-	// скопировать указатель на очередь
+	xmmodel->queue_intprts = src->queue_intprts;
 	
 	return xmmodel;
 }
@@ -207,6 +206,15 @@ typedef struct Interpreter{
 	gchar *response;
 } Interpreter;
 
+void write_to_interpreter(GIOChannel* in, GString* msg){
+    g_io_channel_write_chars( in,
+            msg->str,
+            msg->len,
+            NULL,
+            NULL);
+    g_io_channel_flush(in, NULL);
+}
+
 int xm_model_run(XmModel *xmmodel)
 {
 	gchar**result;
@@ -214,74 +222,36 @@ int xm_model_run(XmModel *xmmodel)
 	int argcp, i, j;
 	GString *command;
 	GError*gerror = NULL;
-	int flaggs, child_exit_status;
+	// посмотреть откуда взять статус
+	int flaggs, child_exit_status = 0;
 	gchar *standard_output;
 	gchar *standard_error;
 	gchar*conversion;
 	double max_value = G_MAXDOUBLE;
+
+	GAsyncQueue * queue = (GAsyncQueue*)xmmodel->queue_intprts;
+    Interpreter * intprt = (Interpreter*)g_async_queue_pop(queue);
+
+	// create command
 	command = g_string_new(xmmodel->command);
-	if ( xmmodel->convert != NULL ) {
-		if ( ( conversion = xmmodel->converter((gpointer)xmmodel, &gerror) ) == NULL ) {
-			g_string_free(command, TRUE);
-			for ( i = 0; i < xmmodel->num_values; i++ ) {
-				xmmodel->array[i] = G_MAXDOUBLE;
-			}
-			return child_exit_status;
-		}
-		if ( gerror ) {
-			g_error("converter failed for %s", gerror->message);
-		}
-		g_string_append_printf(command, " %s", conversion);
-	} else {
-        GString *params = g_string_new("");
-        for ( i = 0; i < xmmodel->size; i++ ) {
-            g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
-        } // func( %f, %f, %f) = xmmodel->dparms[0]* xmmodel->dparms[0]+xmmodel->dparms[1]*xmmodel->dparms[1]
-		g_string_append_printf(command, " %s", params->str);
-        g_string_free(params, TRUE);
-	}
-	if ( !g_shell_parse_argv(command->str, &argcp, &margv, &gerror) ) {
-		if ( gerror ) {
-			g_error("g_shell_parse failed for %s\nwith %s", command->str, gerror->message);
-		}
-	}
-	g_string_free(command, TRUE);
-/*	flaggs = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL; */
-/*	flaggs |= G_SPAWN_STDERR_TO_DEV_NULL; */
-	flaggs = G_SPAWN_SEARCH_PATH;
+	double x = xmmodel->dparms[0];
+	double y = xmmodel->dparms[1];
+	g_string_append_printf(command, "%f*%f + %f*%f", 
+		                   			  x, x,   y, y);
 
-	GAsyncQueue * queue = (GAsyncQueue*)user_data;
-    struct interpreter* intprt = (struct interpreter*)g_async_queue_pop(queue);
-    struct task *t = (struct task *)data;
-    int val = t->data;
-    gchar *string;
+    write_to_interpreter(intprt->in, command);
 
-    g_print("interpreter = %d, data = %d\n", intprt, val);
-    fflush(stdout);
-
-    GString * cmd = create_command_r(val);
-    write_to_interpreter(intprt->in, cmd);
-
-    g_usleep(200);
     g_mutex_lock( &(intprt->m) );
-
     while( !(intprt->response) ){
         g_cond_wait( &(intprt->cond), &(intprt->m) );
     }
 
-    string = g_strdup( intprt->response );
+    standard_output = g_strdup( intprt->response );
     g_free( intprt->response );
     intprt->response = NULL;
-
     g_mutex_unlock (&(intprt->m));
 
-    g_mutex_lock (&(t->m));
-    t->result = string;
-    g_mutex_unlock (&(t->m));
-
-    g_async_queue_push(queue, (gpointer)intprt);
-	
-	g_strfreev(margv);
+	// заменить потом делиметр
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	if ( strlen(standard_output) > 0 && result != NULL ) {
 		if ( xmmodel->debug == 1 ) {
@@ -307,11 +277,14 @@ int xm_model_run(XmModel *xmmodel)
 	}
 	g_strfreev(result);
 	g_free(standard_output);
-	g_free(standard_error);
 	if ( xmmodel->convert != NULL ) {
 		g_unlink(conversion);
 	}
     xmmodel->copy_val_parms = 0;
+
+	// return interpreter to queue
+	g_async_queue_push(queue, (gpointer)intprt);
+	
 	return child_exit_status;
 }
 
@@ -904,7 +877,7 @@ static gboolean out_watch( GIOChannel   *channel,
     GString *response = g_string_new("");
     gsize size;
     GError *gerror = NULL;
-    struct interpreter *intprt = (struct interpreter*)data;
+    Interpreter *intprt = (Interpreter*)data;
 
     if( cond == G_IO_HUP ){
         g_print("Cond is G_IO_HUP %d\n", (int)cond);
@@ -1027,12 +1000,16 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 	g_free(data);
 
 	// create queue with interpreters
-	GAsyncQueue *q = g_async_queue_new()
-    Interpreter* intprt;
-    for(i = 0; i < num_processors; i++){
+	xmmodel->queue_intprts = g_async_queue_new();
+	GAsyncQueue *q = xmmodel->queue_intprts;
+	int i;
+	Interpreter* intprt;
+    for(i = 0; i < xmmodel->num_threads; i++){
         intprt = init_interpreter(q);
         g_async_queue_push(q, (gpointer)intprt);
     }
+	// TODO: hardcode num_threads - need read from settings.ini
+	xmmodel->num_threads = 2;
 	
 	return ret_val;
 }

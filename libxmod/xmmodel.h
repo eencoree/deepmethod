@@ -34,7 +34,7 @@ extern "C"
 #include <stdlib.h>
 
 typedef gchar* (*XmParmsConvert)(gpointer *user_data, GError **err);
-
+	
 typedef struct XmModelConn {
 	int source;
 	int source_conn;
@@ -96,6 +96,8 @@ typedef struct XmModel {
 	int copy_counter;
 	// for synch parallel exec xmlmodel
 	GMutex m;
+	GAsyncQueue *queue_intprts;
+	int num_threads;
 } XmModel;
 
 XmModel*xm_model_new();
