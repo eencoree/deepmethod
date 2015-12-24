@@ -815,6 +815,12 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_threads", &gerror) ) != 0  || gerror == NULL ) {
+		xmmodel->num_threads = ii;
+	} else {
+		g_warning ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "prime_delimiters", &gerror) ) != NULL ) {
 		xmmodel->prime_delimiters = str;
 	} else {
@@ -1005,8 +1011,6 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 	GAsyncQueue *q = xmmodel->queue_intprts;
 	int i;
 	Interpreter* intprt;
-	// TODO: hardcode num_threads - need read from settings.ini
-	xmmodel->num_threads = 2;
     for(i = 0; i < xmmodel->num_threads; i++){
         intprt = init_interpreter(q);
         g_async_queue_push(q, (gpointer)intprt);
