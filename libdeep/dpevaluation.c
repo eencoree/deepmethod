@@ -102,6 +102,7 @@ void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 	dp_evaluation_individ_prepare(hevalctrl, individ);
 	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
 	max_value_flag = dp_target_eval (hevalctrl->eval_target, individ->z, &(individ->invalid), &(individ->cost), individ->targets, individ->precond, individ->user_data, index, cost);
+	g_print("cost = %f\n", individ->cost);
 }
 
 void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
@@ -391,18 +392,24 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 {
 	DpPopulation*pop;
 	int i, istart = 0;
-	gboolean immediate_stop = FALSE;
-	gboolean wait_finish = TRUE;
+	//gboolean immediate_stop = FALSE;
+	gboolean immediate_stop = TRUE;
+	//gboolean wait_finish = TRUE;
+	gboolean wait_finish = FALSE;
 	GError *gerror = NULL;
+	GMainContext *gcontext = g_main_context_default();
+	gulong microseconds = G_USEC_PER_SEC / 1000;
 	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed);
 	if ( noglobal_eps == 0 ) {
 		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 		pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		istart = 1;
+		pop->individ[0]->cost = G_MAXDOUBLE;
 	}
 	for ( i = istart; i < size; i++) {
 		dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
 		pop->individ[i]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
+		pop->individ[i]->cost = G_MAXDOUBLE;
 	}
 #ifdef MPIZE
 /* MPI initialization steps */
@@ -424,6 +431,10 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 				g_error("%s", gerror->message);
 			}
 		}
+		while(g_thread_pool_unprocessed (hevalctrl->gthreadpool) > 0) {
+			g_main_context_iteration(gcontext, FALSE);
+            g_usleep (microseconds);
+        }
 		g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
 	} else {
 		for ( i = pop->slice_a; i < pop->slice_b; i++) {

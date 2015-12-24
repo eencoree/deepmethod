@@ -212,6 +212,7 @@ void write_to_interpreter(GIOChannel* in, GString* msg){
             msg->len,
             NULL,
             NULL);
+	//g_printf(msg->str);
     g_io_channel_flush(in, NULL);
 }
 
@@ -236,7 +237,7 @@ int xm_model_run(XmModel *xmmodel)
 	command = g_string_new("");
 	double x = xmmodel->dparms[0];
 	double y = xmmodel->dparms[1];
-	g_string_append_printf(command, "%f*%f + %f*%f\r\n", 
+	g_string_append_printf(command, "(%f)*(%f) + (%f)*(%f)\r\nflush.console()\r\ncat('\\ndone\\n')\r\n", 
 		                   			  x, x,   y, y);
 
     write_to_interpreter(intprt->in, command);
@@ -251,7 +252,6 @@ int xm_model_run(XmModel *xmmodel)
     intprt->response = NULL;
     g_mutex_unlock (&(intprt->m));
 
-	// заменить потом делиметр
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	if ( strlen(standard_output) > 0 && result != NULL ) {
 		if ( xmmodel->debug == 1 ) {
@@ -897,6 +897,10 @@ static gboolean out_watch( GIOChannel   *channel,
     gboolean is_done = FALSE;
     do{
         status = g_io_channel_read_line( channel, &response_line, &size, NULL, NULL );
+		if (status != G_IO_STATUS_NORMAL) {
+    		g_print("Status is not NORMAL %d\n", status);
+			break;
+		}
         response = g_string_append(response, response_line);
         is_done = g_str_has_suffix(response_line, "done\n");
         g_free(response_line);

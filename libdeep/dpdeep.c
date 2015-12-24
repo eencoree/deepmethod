@@ -212,6 +212,7 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
 	my_trial->failures = 0;
 	my_trial->grads = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+	my_trial->cost = G_MAXDOUBLE;
 }
 
 void dp_deep_evaluate_func (gpointer data, gpointer user_data)
