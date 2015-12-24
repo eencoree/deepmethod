@@ -233,10 +233,10 @@ int xm_model_run(XmModel *xmmodel)
     Interpreter * intprt = (Interpreter*)g_async_queue_pop(queue);
 
 	// create command
-	command = g_string_new(xmmodel->command);
+	command = g_string_new("");
 	double x = xmmodel->dparms[0];
 	double y = xmmodel->dparms[1];
-	g_string_append_printf(command, "%f*%f + %f*%f", 
+	g_string_append_printf(command, "%f*%f + %f*%f\r\n", 
 		                   			  x, x,   y, y);
 
     write_to_interpreter(intprt->in, command);
@@ -277,9 +277,6 @@ int xm_model_run(XmModel *xmmodel)
 	}
 	g_strfreev(result);
 	g_free(standard_output);
-	if ( xmmodel->convert != NULL ) {
-		g_unlink(conversion);
-	}
     xmmodel->copy_val_parms = 0;
 
 	// return interpreter to queue
@@ -1004,12 +1001,12 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 	GAsyncQueue *q = xmmodel->queue_intprts;
 	int i;
 	Interpreter* intprt;
+	// TODO: hardcode num_threads - need read from settings.ini
+	xmmodel->num_threads = 2;
     for(i = 0; i < xmmodel->num_threads; i++){
         intprt = init_interpreter(q);
         g_async_queue_push(q, (gpointer)intprt);
     }
-	// TODO: hardcode num_threads - need read from settings.ini
-	xmmodel->num_threads = 2;
 	
 	return ret_val;
 }
