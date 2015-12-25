@@ -218,7 +218,11 @@ GString * create_command(double * params, int params_size){
 	GString * command = g_string_new("func(");
 	int i;
 	for(i = 0; i < params_size - 1; i++){
-		g_string_append_printf(command, "%f, ", params[i]);
+		if(params[i] != params[i]){ // is NaN
+			g_string_append_printf(command, "\"nan\", ");
+		} else{
+			g_string_append_printf(command, "%f, ", params[i]);
+		}
     }
 	g_string_append_printf(command,
 	                       "%f)\r\ncat('\\ndone\\n')\r\nflush.console()\r\n",
