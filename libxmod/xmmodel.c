@@ -200,7 +200,6 @@ typedef struct Interpreter{
 	GIOChannel *in,
                *out,
                *err;
-	GAsyncQueue * queue;
 	GMutex m;
 	GCond cond;
 	gchar *response;
@@ -212,8 +211,19 @@ void write_to_interpreter(GIOChannel* in, GString* msg){
             msg->len,
             NULL,
             NULL);
-	//g_printf(msg->str);
     g_io_channel_flush(in, NULL);
+}
+
+GString * create_command(double * params, int params_size){
+	GString * command = g_string_new("func(");
+	int i;
+	for(i = 0; i < params_size - 1; i++){
+		g_string_append_printf(command, "%f, ", params[i]);
+    }
+	g_string_append_printf(command,
+	                       "%f)\r\ncat('\\ndone\\n')\r\nflush.console()\r\n",
+	                       params[params_size - 1]);
+	return command;
 }
 
 int xm_model_run(XmModel *xmmodel)
@@ -234,12 +244,7 @@ int xm_model_run(XmModel *xmmodel)
     Interpreter * intprt = (Interpreter*)g_async_queue_pop(queue);
 
 	// create command
-	command = g_string_new("");
-	double x = xmmodel->dparms[0];
-	double y = xmmodel->dparms[1];
-	g_string_append_printf(command, "(%f)*(%f) + (%f)*(%f)\r\nflush.console()\r\ncat('\\ndone\\n')\r\n", 
-		                   			  x, x,   y, y);
-
+	command = create_command(xmmodel->dparms, xmmodel->size);
     write_to_interpreter(intprt->in, command);
 
     g_mutex_lock( &(intprt->m) );
@@ -954,7 +959,14 @@ static gboolean err_watch( GIOChannel   *channel,
     return TRUE;
 }
 
-Interpreter* init_interpreter(GAsyncQueue * queue){
+void init_source_to_interpreter(GIOChannel * intprt_in, gchar * source_path){
+	gchar * command = g_string_new("source(\'");
+	g_string_append_printf(command, "%s\')\r\n", source_path);
+	
+	write_to_interpreter(intprt_in, command);
+}
+
+Interpreter* init_interpreter(XmModel * xmmodel){
     gchar      *argvr[] = { "R", "--no-save", "--silent", "--vanilla", NULL };
     gint        in,
                 out,
@@ -975,7 +987,6 @@ Interpreter* init_interpreter(GAsyncQueue * queue){
     intprt->in = g_io_channel_unix_new( in );
     intprt->out = g_io_channel_unix_new( out );
     intprt->err = g_io_channel_unix_new( err );
-    intprt->queue = queue;
 
     g_mutex_init( &(intprt->m) );
     g_cond_init( &(intprt->cond) );
@@ -985,6 +996,8 @@ Interpreter* init_interpreter(GAsyncQueue * queue){
     g_io_add_watch( intprt->out, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)out_watch, intprt);
     g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch, intprt);
 
+	init_source_to_interpreter(intprt->in, xmmodel->command);
+	
     return intprt;
 }
 
@@ -1012,7 +1025,7 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 	int i;
 	Interpreter* intprt;
     for(i = 0; i < xmmodel->num_threads; i++){
-        intprt = init_interpreter(q);
+        intprt = init_interpreter(xmmodel);
         g_async_queue_push(q, (gpointer)intprt);
     }
 	
