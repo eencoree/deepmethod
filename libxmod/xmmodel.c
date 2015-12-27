@@ -78,7 +78,7 @@ XmModel*xm_model_new()
 	xmmodel->ref_counter = 0;
 	xmmodel->copy_val_parms = 0;
 	xmmodel->copy_counter = 0;
-	
+	xmmodel->type = XmModelNone;
 	return xmmodel;
 }
 
@@ -170,7 +170,7 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->copy_counter = 0;
 	src->copy_counter++;
 	xmmodel->queue_intprts = src->queue_intprts;
-	
+	xmmodel->type = src->type;
 	return xmmodel;
 }
 
@@ -230,7 +230,7 @@ GString * create_command(double * params, int params_size){
 	return command;
 }
 
-int xm_model_run(XmModel *xmmodel)
+int xm_model_run_interpreter(XmModel *xmmodel)
 {
 	gchar**result;
 	gchar**margv;
@@ -292,6 +292,97 @@ int xm_model_run(XmModel *xmmodel)
 	g_async_queue_push(queue, (gpointer)intprt);
 	
 	return child_exit_status;
+}
+
+int xm_model_run_command(XmModel *xmmodel)
+{
+	gchar**result;
+	gchar**margv;
+	int argcp, i, j;
+	GString *command;
+	GError*gerror = NULL;
+	int flaggs, child_exit_status;
+	gchar *standard_output;
+	gchar *standard_error;
+	gchar*conversion;
+	double max_value = G_MAXDOUBLE;
+	command = g_string_new(xmmodel->command);
+	if ( xmmodel->convert != NULL ) {
+		if ( ( conversion = xmmodel->converter((gpointer)xmmodel, &gerror) ) == NULL ) {
+			g_string_free(command, TRUE);
+			for ( i = 0; i < xmmodel->num_values; i++ ) {
+				xmmodel->array[i] = G_MAXDOUBLE;
+			}
+			return child_exit_status;
+		}
+		if ( gerror ) {
+			g_error("converter failed for %s", gerror->message);
+		}
+		g_string_append_printf(command, " %s", conversion);
+	} else {
+        GString *params = g_string_new("");
+        for ( i = 0; i < xmmodel->size; i++ ) {
+            g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
+        }
+		g_string_append_printf(command, " %s", params->str);
+        g_string_free(params, TRUE);
+	}
+	if ( !g_shell_parse_argv(command->str, &argcp, &margv, &gerror) ) {
+		if ( gerror ) {
+			g_error("g_shell_parse failed for %s\nwith %s", command->str, gerror->message);
+		}
+	}
+	g_string_free(command, TRUE);
+/*	flaggs = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL; */
+/*	flaggs |= G_SPAWN_STDERR_TO_DEV_NULL; */
+	flaggs = G_SPAWN_SEARCH_PATH;
+	if ( !g_spawn_sync (NULL, margv, NULL, (GSpawnFlags)flaggs, NULL, NULL, &standard_output, &standard_error, &child_exit_status, &gerror) ) {
+		if ( gerror ) {
+			g_error("g_spawn_sync failed for %s\nwith %s", margv[0], gerror->message);
+		}
+	}
+	g_strfreev(margv);
+	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
+	if ( strlen(standard_output) > 0 && result != NULL ) {
+		if ( xmmodel->debug == 1 ) {
+			int result_length = g_strv_length(result);
+			g_printf("result_length = %d;\n", result_length);
+			for ( j = 0; j < result_length; j++ ) {
+				g_printf("result[%d] = %s;\n", j, result[j]);
+			}
+		}
+		for ( i = 0; i < xmmodel->num_keys; i++ ) {
+			if ( result[xmmodel->keys[i]] != NULL ) {
+				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
+			} else {
+				g_warning ( "result[%d] doesn't exist", xmmodel->keys[i]);
+			}
+		}
+	} else {
+		g_warning ( "Couldn't parse output: %s", standard_output);
+		g_warning ( "Standard error: %s", standard_error);
+		for ( i = 0; i < xmmodel->num_keys; i++ ) {
+			xmmodel->array[i] = max_value;
+		}
+	}
+	g_strfreev(result);
+	g_free(standard_output);
+	g_free(standard_error);
+	if ( xmmodel->convert != NULL ) {
+		g_unlink(conversion);
+	}
+    xmmodel->copy_val_parms = 0;
+	return child_exit_status;
+}
+
+int xm_model_run(XmModel *xmmodel) {
+	int retval;
+	if (xmmodel->type == XmModelCommand) {
+		retval = xm_model_run_command(xmmodel);
+	} else if (xmmodel->type == XmModelIntprt) {
+		retval = xm_model_run_interpreter (xmmodel);
+	}
+	return (retval);
 }
 
 int xm_model_run_prime(XmModel *xmmodel)
@@ -879,6 +970,17 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "type", &gerror) ) != NULL ) {
+		if ( !g_strcmp0 ( str, "command" ) ) {
+			xmmodel->type = XmModelCommand;
+		} else if ( !g_strcmp0 ( str, "interpreter" ) ) {
+			xmmodel->type = XmModelIntprt;
+		}
+		g_free(str);
+	} else {
+		g_warning ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	g_key_file_free(gkf);
 	return retval;
 }
@@ -964,7 +1066,7 @@ static gboolean err_watch( GIOChannel   *channel,
 }
 
 void init_source_to_interpreter(GIOChannel * intprt_in, gchar * source_path){
-	gchar * command = g_string_new("source(\'");
+	GString * command = g_string_new("source(\'");
 	g_string_append_printf(command, "%s\')\r\n", source_path);
 	
 	write_to_interpreter(intprt_in, command);
@@ -1022,17 +1124,17 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 		ret_val = 1;
 	}
 	g_free(data);
-
+	if (xmmodel->type == XmModelIntprt) {
 	// create queue with interpreters
-	xmmodel->queue_intprts = g_async_queue_new();
-	GAsyncQueue *q = xmmodel->queue_intprts;
-	int i;
-	Interpreter* intprt;
-    for(i = 0; i < xmmodel->num_threads; i++){
-        intprt = init_interpreter(xmmodel);
-        g_async_queue_push(q, (gpointer)intprt);
-    }
-	
+		xmmodel->queue_intprts = g_async_queue_new();
+		GAsyncQueue *q = xmmodel->queue_intprts;
+		int i;
+		Interpreter* intprt;
+		for(i = 0; i < xmmodel->num_threads; i++){
+	        intprt = init_interpreter(xmmodel);
+    		g_async_queue_push(q, (gpointer)intprt);
+		}
+	}	
 	return ret_val;
 }
 

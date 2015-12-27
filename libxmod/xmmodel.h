@@ -34,7 +34,13 @@ extern "C"
 #include <stdlib.h>
 
 typedef gchar* (*XmParmsConvert)(gpointer *user_data, GError **err);
-	
+
+typedef enum XmModelType {
+	XmModelCommand = (1 << 0),
+	XmModelIntprt  = (1 << 1),
+	XmModelNone = (1 << 2)
+} XmModelType;
+	 
 typedef struct XmModelConn {
 	int source;
 	int source_conn;
@@ -52,6 +58,7 @@ typedef struct XmModelPart {
 } XmModelPart;
 
 typedef struct XmModel {
+	XmModelType type;
 	int debug;
 	int size;
 	int *parms;
