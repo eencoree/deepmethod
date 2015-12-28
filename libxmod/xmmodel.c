@@ -219,6 +219,8 @@ GString * create_command(double * params, int params_size){
 	int i;
 	for(i = 0; i < params_size - 1; i++){
 		if(params[i] != params[i]){ // is NaN
+			g_string_free (command, TRUE);
+			return NULL;
 			g_string_append_printf(command, "\"nan\", ");
 		} else{
 			g_string_append_printf(command, "%f, ", params[i]);
@@ -249,6 +251,18 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 
 	// create command
 	command = create_command(xmmodel->dparms, xmmodel->size);
+	if (command == NULL) {
+		g_warning ( "Couldn't create command with NaN" );
+		for ( i = 0; i < xmmodel->num_keys; i++ ) {
+			xmmodel->array[i] = max_value;
+		}
+		g_strfreev(result);
+		g_free(standard_output);
+		xmmodel->copy_val_parms = 0;
+// return interpreter to queue
+		g_async_queue_push(queue, (gpointer)intprt);
+		return child_exit_status;
+	}
     write_to_interpreter(intprt->in, command);
 
     g_mutex_lock( &(intprt->m) );
