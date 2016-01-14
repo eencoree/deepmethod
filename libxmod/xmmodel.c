@@ -256,10 +256,8 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
-		g_strfreev(result);
-		g_free(standard_output);
 		xmmodel->copy_val_parms = 0;
-// return interpreter to queue
+		// return interpreter to queue
 		g_async_queue_push(queue, (gpointer)intprt);
 		return child_exit_status;
 	}
