@@ -80,7 +80,7 @@ void dp_evaluation_individ_evaluate_prime(DpEvaluationCtrl*hevalctrl, DpIndivid*
 
 void dp_evaluation_individ_copy(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost);
 
-void dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
+int dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ);
 
 int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_data);
 

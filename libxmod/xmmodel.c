@@ -78,7 +78,7 @@ XmModel*xm_model_new()
 	xmmodel->ref_counter = 0;
 	xmmodel->copy_val_parms = 0;
 	xmmodel->copy_counter = 0;
-	xmmodel->type = XmModelNone;
+	xmmodel->type = XmModelCommand;
 	return xmmodel;
 }
 

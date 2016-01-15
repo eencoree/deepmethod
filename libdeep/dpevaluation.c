@@ -99,7 +99,10 @@ void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 {
 	int max_value_flag = 0;
 	individ->invalid = 1;
-	dp_evaluation_individ_prepare(hevalctrl, individ);
+	max_value_flag = dp_evaluation_individ_prepare(hevalctrl, individ);
+	if (max_value_flag == 1) {
+		return;
+	}
 	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
 	max_value_flag = dp_target_eval (hevalctrl->eval_target, individ->z, &(individ->invalid), &(individ->cost), individ->targets, individ->precond, individ->user_data, index, cost);
 }
@@ -223,7 +226,7 @@ double dp_rand_gauss(GRand*hrand, double mean, double dev)
 	return Z;
 }
 
-void dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ)
+int dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ)
 {
 	int i;
 	double y;
@@ -253,7 +256,11 @@ void dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ
 		} else {
 			individ->z[i] = individ->x[i] / hevalctrl->eval->points[i]->scale;
 		}
+		if (individ->z[i] != individ->z[i]){ // is NaN
+			return 1;
+		}
 	}
+	return 0;
 }
 
 void dp_evaluation_copy_to_grad(DpEvaluationCtrl*hevalctrl, double*x)
