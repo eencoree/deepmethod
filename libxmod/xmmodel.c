@@ -415,6 +415,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		kill_interpreter(intprt);
 		intprt = init_interpreter(xmmodel);
 		g_async_queue_push(queue, (gpointer)intprt);
+		g_printf("Re-added intprt\n");
 		return child_exit_status;
 	}
     standard_output = g_strdup( intprt->response );
