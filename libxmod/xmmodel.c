@@ -379,8 +379,17 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 	int nsec = xmmodel->timeoutsec;/* wait for command completion that number of seconds*/
 	gboolean failed = FALSE;
 	GAsyncQueue * queue = (GAsyncQueue*)xmmodel->queue_intprts;
-    Interpreter * intprt = (Interpreter*)g_async_queue_pop(queue);
-
+	end_time = g_get_monotonic_time () + nsec * G_TIME_SPAN_SECOND;
+	Interpreter * intprt = NULL;
+	intprt = (Interpreter*)g_async_queue_timeout_pop(queue, end_time);
+	if (intprt == NULL) {
+		g_warning ( "Couldn't get interpreter" );
+		for ( i = 0; i < xmmodel->num_keys; i++ ) {
+			xmmodel->array[i] = max_value;
+		}
+		xmmodel->copy_val_parms = 0;
+		return child_exit_status;
+	}
 	// create command
 	command = create_command(xmmodel->dparms, xmmodel->size);
 	if (command == NULL) {
@@ -394,7 +403,6 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		return child_exit_status;
 	}
     write_to_interpreter(intprt->in, command);
-	end_time = g_get_monotonic_time () + nsec * G_TIME_SPAN_SECOND;
 	failed = FALSE;
     g_mutex_lock( &(intprt->m) );
     while( !(intprt->response) && !failed ){
