@@ -26,10 +26,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
-#if defined(__MINGW32__)
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
-#endif
 #ifdef GIO_STANDALONE_SOURCE
 #include <gio/gfile.h>
 #else
@@ -79,6 +77,7 @@ XmModel*xm_model_new()
 	xmmodel->copy_val_parms = 0;
 	xmmodel->copy_counter = 0;
 	xmmodel->type = XmModelCommand;
+	xmmodel->timeoutsec = 600;
 	return xmmodel;
 }
 
@@ -171,6 +170,7 @@ gpointer xm_model_copy_values(gpointer psrc)
 	src->copy_counter++;
 	xmmodel->queue_intprts = src->queue_intprts;
 	xmmodel->type = src->type;
+	xmmodel->timeoutsec = src->timeoutsec;
 	return xmmodel;
 }
 
@@ -203,7 +203,86 @@ typedef struct Interpreter{
 	GMutex m;
 	GCond cond;
 	gchar *response;
+	GPid child_pid;
 } Interpreter;
+
+static gboolean out_watch( GIOChannel   *channel,
+        GIOCondition  cond, gpointer data)
+{
+    GString *response = g_string_new("");
+    gsize size;
+    GError *gerror = NULL;
+    Interpreter *intprt = (Interpreter*)data;
+
+    if( cond == G_IO_HUP ){
+        g_print("Cond is G_IO_HUP %d\n", (int)cond);
+        g_io_channel_unref( channel );
+        return( FALSE );
+    } else if( cond == G_IO_IN ) {
+#ifdef DEBUG
+        g_print("Cond is G_IO_IN %d\n", (int)cond);
+        fflush(stdout);
+#endif
+    } else if( cond == G_IO_OUT ) {
+#ifdef DEBUG
+        g_print("Cond is G_IO_OUT %d\n", (int)cond);
+        fflush(stdout);
+#endif
+    }
+
+    GIOStatus status = G_IO_STATUS_NORMAL;
+    gchar *response_line = NULL;
+    gboolean is_done = FALSE;
+    do{
+        status = g_io_channel_read_line( channel, &response_line, &size, NULL, NULL );
+		if (status != G_IO_STATUS_NORMAL) {
+    		g_print("Status is not NORMAL %d\n", status);
+			break;
+		}
+        response = g_string_append(response, response_line);
+        is_done = g_str_has_suffix(response_line, "done\n");
+        g_free(response_line);
+    } while( !is_done );
+
+    if (status != G_IO_STATUS_NORMAL) {
+        g_print("Status is not NORMAL %d\n", status);
+    } else {
+#ifdef DEBUG
+        g_print("Status is NORMAL %d\n", status);
+#endif
+    }
+    fflush(stdout);
+
+    if (gerror != NULL) {
+        g_print("%s", gerror->message);
+        g_error_free(gerror);
+    }
+
+    g_mutex_lock( &(intprt->m) );
+    intprt->response = g_string_free(response, FALSE);
+    g_cond_signal( &(intprt->cond) );
+    g_mutex_unlock( &(intprt->m) );
+
+    return TRUE;
+}
+
+static gboolean err_watch( GIOChannel   *channel,
+        GIOCondition  cond, gpointer data)
+{
+    gchar *string;
+    gsize  size;
+
+    if( cond == G_IO_HUP ) {
+        g_io_channel_unref( channel );
+        return( FALSE );
+    }
+
+    g_io_channel_read_line( channel, &string, &size, NULL, NULL );
+    g_print("Err: %s", string);
+    g_free( string );
+
+    return TRUE;
+}
 
 void write_to_interpreter(GIOChannel* in, GString* msg){
     g_io_channel_write_chars( in,
@@ -214,6 +293,60 @@ void write_to_interpreter(GIOChannel* in, GString* msg){
     g_io_channel_flush(in, NULL);
 }
 
+void init_source_to_interpreter(GIOChannel * intprt_in, gchar * source_path){
+	GString * command = g_string_new("source(\'");
+	g_string_append_printf(command, "%s\')\r\n", source_path);
+	
+	write_to_interpreter(intprt_in, command);
+}
+
+Interpreter* init_interpreter(XmModel * xmmodel){
+    gchar      *argvr[] = { "R", "--no-save", "--silent", "--vanilla", NULL };
+    gint        in,
+                out,
+                err;
+    gboolean    ret;
+	GPid child_pid;
+
+    /* Spawn child process */
+    ret = g_spawn_async_with_pipes( NULL, argvr, NULL,
+            G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
+            NULL, &child_pid,
+            &in, &out, &err, NULL );
+    if( ! ret ){
+        g_error( "SPAWN FAILED" );
+        return NULL;
+    }
+
+    Interpreter* intprt = g_new(Interpreter, 1);
+    intprt->in = g_io_channel_unix_new( in );
+    intprt->out = g_io_channel_unix_new( out );
+    intprt->err = g_io_channel_unix_new( err );
+	intprt->child_pid = child_pid;
+
+    g_mutex_init( &(intprt->m) );
+    g_cond_init( &(intprt->cond) );
+    intprt->response = NULL;
+
+    /* Add watches to channels */
+    g_io_add_watch( intprt->out, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)out_watch, intprt);
+    g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch, intprt);
+
+	init_source_to_interpreter(intprt->in, xmmodel->command);
+	
+    return intprt;
+}
+
+void kill_interpreter(Interpreter* intprt)
+{
+	kill(intprt->child_pid, SIGKILL);
+	g_object_unref (intprt->out);
+	g_object_unref (intprt->err);
+	g_mutex_clear (&(intprt->m));
+	g_cond_clear (&(intprt->cond));
+	g_free(intprt);
+}
+
 GString * create_command(double * params, int params_size){
 	GString * command = g_string_new("func(");
 	int i;
@@ -221,14 +354,12 @@ GString * create_command(double * params, int params_size){
 		if(params[i] != params[i]){ // is NaN
 			g_string_free (command, TRUE);
 			return NULL;
-			g_string_append_printf(command, "\"nan\", ");
 		} else{
 			g_string_append_printf(command, "%f, ", params[i]);
 		}
     }
 	g_string_append_printf(command,
-	                       "%f)\r\ncat('\\ndone\\n')\r\nflush.console()\r\n",
-	                       params[params_size - 1]);
+	                       "%f)\r\ncat('\\ndone\\n')\r\nflush.console()\r\n", params[params_size - 1]);
 	return command;
 }
 
@@ -242,10 +373,11 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 	// посмотреть откуда взять статус
 	int flaggs, child_exit_status = 0;
 	gchar *standard_output;
-	gchar *standard_error;
 	gchar*conversion;
 	double max_value = G_MAXDOUBLE;
-
+	gint64 end_time; 
+	int nsec = xmmodel->timeoutsec;/* wait for command completion that number of seconds*/
+	gboolean failed = FALSE;
 	GAsyncQueue * queue = (GAsyncQueue*)xmmodel->queue_intprts;
     Interpreter * intprt = (Interpreter*)g_async_queue_pop(queue);
 
@@ -262,12 +394,29 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		return child_exit_status;
 	}
     write_to_interpreter(intprt->in, command);
-
+	end_time = g_get_monotonic_time () + nsec * G_TIME_SPAN_SECOND;
+	failed = FALSE;
     g_mutex_lock( &(intprt->m) );
-    while( !(intprt->response) ){
-        g_cond_wait( &(intprt->cond), &(intprt->m) );
+    while( !(intprt->response) && !failed ){
+		if (!g_cond_wait_until (&(intprt->cond), &(intprt->m), end_time)) {
+			      // timeout has passed.
+//			g_mutex_unlock (&data_mutex);
+//			return NULL;
+			failed = TRUE;
+		}
     }
-
+	if (failed) {
+		g_mutex_unlock (&(intprt->m));
+		g_warning ( "Interpreter timed out");
+		for ( i = 0; i < xmmodel->num_keys; i++ ) {
+			xmmodel->array[i] = max_value;
+		}
+		xmmodel->copy_val_parms = 0;
+		kill_interpreter(intprt);
+		intprt = init_interpreter(xmmodel);
+		g_async_queue_push(queue, (gpointer)intprt);
+		return child_exit_status;
+	}
     standard_output = g_strdup( intprt->response );
     g_free( intprt->response );
     intprt->response = NULL;
@@ -290,8 +439,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 			}
 		}
 	} else {
-		g_warning ( "Couldn't parse output: %s", standard_output);
-		g_warning ( "Standard error: %s", standard_error);
+		g_warning ( "Couldn't parse interpreter output: %s", standard_output);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
@@ -993,130 +1141,14 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_warning ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "timeoutsec", &gerror) ) != 0  || gerror == NULL ) {
+		xmmodel->timeoutsec = ii;
+	} else {
+		g_warning ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	g_key_file_free(gkf);
 	return retval;
-}
-
-static gboolean out_watch( GIOChannel   *channel,
-        GIOCondition  cond, gpointer data)
-{
-    GString *response = g_string_new("");
-    gsize size;
-    GError *gerror = NULL;
-    Interpreter *intprt = (Interpreter*)data;
-
-    if( cond == G_IO_HUP ){
-        g_print("Cond is G_IO_HUP %d\n", (int)cond);
-        g_io_channel_unref( channel );
-        return( FALSE );
-    } else if( cond == G_IO_IN ) {
-#ifdef DEBUG
-        g_print("Cond is G_IO_IN %d\n", (int)cond);
-        fflush(stdout);
-#endif
-    } else if( cond == G_IO_OUT ) {
-#ifdef DEBUG
-        g_print("Cond is G_IO_OUT %d\n", (int)cond);
-        fflush(stdout);
-#endif
-    }
-
-    GIOStatus status = G_IO_STATUS_NORMAL;
-    gchar *response_line = NULL;
-    gboolean is_done = FALSE;
-    do{
-        status = g_io_channel_read_line( channel, &response_line, &size, NULL, NULL );
-		if (status != G_IO_STATUS_NORMAL) {
-    		g_print("Status is not NORMAL %d\n", status);
-			break;
-		}
-        response = g_string_append(response, response_line);
-        is_done = g_str_has_suffix(response_line, "done\n");
-        g_free(response_line);
-    } while( !is_done );
-
-    if (status != G_IO_STATUS_NORMAL) {
-        g_print("Status is not NORMAL %d\n", status);
-    } else {
-#ifdef DEBUG
-        g_print("Status is NORMAL %d\n", status);
-#endif
-    }
-    fflush(stdout);
-
-    if (gerror != NULL) {
-        g_print("%s", gerror->message);
-        g_error_free(gerror);
-    }
-
-    g_mutex_lock( &(intprt->m) );
-    intprt->response = g_string_free(response, FALSE);
-    g_cond_signal( &(intprt->cond) );
-    g_mutex_unlock( &(intprt->m) );
-
-    return TRUE;
-}
-
-static gboolean err_watch( GIOChannel   *channel,
-        GIOCondition  cond, gpointer data)
-{
-    gchar *string;
-    gsize  size;
-
-    if( cond == G_IO_HUP )
-    {
-        g_io_channel_unref( channel );
-        return( FALSE );
-    }
-
-    g_io_channel_read_line( channel, &string, &size, NULL, NULL );
-    g_print("Err: %s", string);
-    g_io_channel_flush(channel, NULL);
-    g_free( string );
-
-    return TRUE;
-}
-
-void init_source_to_interpreter(GIOChannel * intprt_in, gchar * source_path){
-	GString * command = g_string_new("source(\'");
-	g_string_append_printf(command, "%s\')\r\n", source_path);
-	
-	write_to_interpreter(intprt_in, command);
-}
-
-Interpreter* init_interpreter(XmModel * xmmodel){
-    gchar      *argvr[] = { "R", "--no-save", "--silent", "--vanilla", NULL };
-    gint        in,
-                out,
-                err;
-    gboolean    ret;
-
-    /* Spawn child process */
-    ret = g_spawn_async_with_pipes( NULL, argvr, NULL,
-            G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
-            NULL, NULL,
-            &in, &out, &err, NULL );
-    if( ! ret ){
-        g_error( "SPAWN FAILED" );
-        return NULL;
-    }
-
-    Interpreter* intprt = g_new(Interpreter, 1);
-    intprt->in = g_io_channel_unix_new( in );
-    intprt->out = g_io_channel_unix_new( out );
-    intprt->err = g_io_channel_unix_new( err );
-
-    g_mutex_init( &(intprt->m) );
-    g_cond_init( &(intprt->cond) );
-    intprt->response = NULL;
-
-    /* Add watches to channels */
-    g_io_add_watch( intprt->out, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)out_watch, intprt);
-    g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch, intprt);
-
-	init_source_to_interpreter(intprt->in, xmmodel->command);
-	
-    return intprt;
 }
 
 int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err)

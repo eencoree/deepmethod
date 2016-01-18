@@ -105,6 +105,7 @@ typedef struct XmModel {
 	GMutex m;
 	GAsyncQueue *queue_intprts;
 	int num_threads;
+	int timeoutsec;
 } XmModel;
 
 XmModel*xm_model_new();
@@ -116,6 +117,8 @@ double xm_model_score(gpointer user_data);
 double xm_model_parms_double_to_int(gpointer user_data, double*x);
 
 double xm_model_dparms_to_int(gpointer user_data);
+
+double xm_model_dparms_to_index(gpointer user_data);
 
 double xm_model_parms_double_to_index(gpointer user_data, double*x);
 
