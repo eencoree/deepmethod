@@ -95,6 +95,8 @@ void dp_opt_monitor(DpOpt *hopt, int monitor, GError**gerror);
 
 DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_print_log(DpLoop*hloop, gpointer user_data);
+
 DpLoopExitCode dp_write_state(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_read_state(DpLoop*hloop, gpointer user_data);

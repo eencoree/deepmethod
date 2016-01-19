@@ -400,6 +400,10 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
 				dp_opt_add_func(hopt, dp_write_log, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "printlog") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_print_log, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "writestate") ) {
 				opt_type = H_OPT_NONE;
 				method_info = NULL;

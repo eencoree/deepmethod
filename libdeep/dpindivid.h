@@ -59,6 +59,8 @@ typedef struct DpIndivid {
 	int failures;
 	int grads;
 	gpointer user_data;
+	GMutex m;
+	int status;
 } DpIndivid;
 
 DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed);

@@ -93,6 +93,8 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 				dp_opt_add_func(hopt, dp_write_log, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "writestate") ) {
 					dp_opt_add_func(hopt, dp_write_state, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "printlog") ) {
+					dp_opt_add_func(hopt, dp_print_log, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "readstate") ) {
 				dp_opt_add_func(hopt, dp_read_state, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "writetst") ) {
@@ -336,6 +338,38 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 	}
 	fprintf(fp, "\n");
 	fclose(fp);
+	return ret_val;
+}
+
+DpLoopExitCode dp_print_log(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
+	DpTarget*htarget = (DpTarget*)(hopt->htarget);
+	DpDeepInfo*hdeepinfo;
+	DpOsdaInfo*hosdainfo;
+	FILE*fp;
+	int i;
+	int precision = hopt->precision;
+	fprintf(stdout, "wtime:%e tau:%d", hloop->w_time, hloop->tau_counter);
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+            DpIndivid* individ = hdeepinfo->population->individ[hdeepinfo->population->imin];
+            fprintf(stdout, " cost:%.*f", precision, individ->cost);
+            for( i = 0; i < individ->ntargets; i++) {
+                fprintf(stdout, " target[%i]:%.*f", i, precision, individ->targets[i]);
+            }
+		break;
+		case H_OPT_OSDA:
+			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
+		break;
+	}
+	for ( i = 0; i < heval->size; i++) {
+		fprintf(stdout, " p[%d]:%.*f", heval->points[i]->index, precision, *(heval->points[i]->param));
+	}
+	fprintf(stdout, "\n");
 	return ret_val;
 }
 
@@ -618,7 +652,7 @@ DpLoopExitCode dp_opt_substfailed(DpLoop*hloop, gpointer user_data)
 	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
 	return ret_val;
 }
-				
+
 DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;

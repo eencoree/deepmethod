@@ -59,6 +59,8 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 	individ->user_data = NULL;
 	individ->dominated = NULL;
 	individ->crdist = 0;
+	g_mutex_init( &(individ->m) );
+	individ->status = 0;
 	return individ;
 }
 
@@ -69,6 +71,7 @@ void dp_individ_delete(DpIndivid*individ)
 	free(individ->z);
 	free(individ->targets);
 	free(individ->precond);
+	g_mutex_clear (&(individ->m));
 	g_rand_free(individ->hrand);
 	free(individ);
 }

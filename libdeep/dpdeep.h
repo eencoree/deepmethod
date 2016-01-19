@@ -87,6 +87,8 @@ void dp_deep_evaluate_func (gpointer data, gpointer user_data);
 
 void dp_deep_select_func (gpointer data, gpointer user_data);
 
+void dp_deep_info_load(FILE*fp, DpDeepInfo *hdeepinfo);
+
 #ifdef __cplusplus
 }
 #endif

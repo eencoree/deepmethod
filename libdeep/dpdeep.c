@@ -65,6 +65,7 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 	hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
 	if ( hdeepinfo->max_threads > 0 ) {
         hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_evaluate_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
+		g_thread_pool_set_max_unused_threads (-1);
 		if ( gerror != NULL ) {
 			g_error("%s", gerror->message);
 		}
@@ -231,9 +232,31 @@ void dp_deep_evaluate_func (gpointer data, gpointer user_data)
 	r1 = population->imin;
 	my_tabu = population->individ[r1];
 	my_trial->age = 0;
+	g_mutex_lock( &(my_trial->m) );
+	my_trial->status = 1;
+	g_mutex_unlock( &(my_trial->m) );
 	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu, my_id, my_tabu->cost);
+	g_mutex_lock( &(my_trial->m) );
+	my_trial->status = 0;
+	g_mutex_unlock( &(my_trial->m) );
 }
 
+int dp_deep_evaluate_status (gpointer data, gpointer user_data)
+{
+	DpIndivid*my_tabu;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
+	int my_id = GPOINTER_TO_INT(data) - 1, s;
+	DpPopulation*trial = hdeepinfo->trial;
+	DpIndivid*my_trial = trial->individ[my_id];
+	DpPopulation*population = hdeepinfo->population;
+	DpIndivid*my_individ = population->individ[my_id];
+	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+	g_mutex_lock( &(my_trial->m) );
+	s = my_trial->status;
+	g_mutex_unlock( &(my_trial->m) );
+	return s;
+}
+	
 void dp_deep_select_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;
@@ -285,6 +308,7 @@ void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo)
 	DpPopulation*trial = hdeepinfo->trial;
 	GError *gerror = NULL;
 	gulong microseconds = G_USEC_PER_SEC / 1000;
+	int notdone, currstatus;
 	if ( hdeepinfo->max_threads > 0 ) {
 		for ( individ_id = population->slice_a; individ_id < population->slice_b; individ_id++ ) {
 			g_thread_pool_push (hdeepinfo->gthreadpool, GINT_TO_POINTER(individ_id + 1), &gerror);
@@ -292,9 +316,18 @@ void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo)
 				g_error("%s", gerror->message);
 			}
 		}
-        while(g_thread_pool_unprocessed (hdeepinfo->gthreadpool) > 0) {
+		notdone = 1;
+//        while(g_thread_pool_unprocessed (hdeepinfo->gthreadpool) > 0) {
+		while(notdone == 1 && g_thread_pool_unprocessed (hdeepinfo->gthreadpool) > 0) {
 			g_main_context_iteration(gcontext, FALSE);
             g_usleep (microseconds);
+			notdone = 0;
+			for ( individ_id = population->slice_a; individ_id < population->slice_b; individ_id++ ) {
+				currstatus = dp_deep_evaluate_status (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
+				if ( currstatus == 1 ) {
+					notdone = 1;
+				}
+			}
         }
 	} else {
 		for ( individ_id = population->slice_a; individ_id < population->slice_b; individ_id++ ) {

@@ -61,22 +61,22 @@ DpLoop *dp_loop_new(GList *before_funcs, GList *funcs, GList *after_funcs)
 	return hloop;
 }
 
-void dp_loop_add_func(DpLoop*hloop, DpLoopFunc func)
+void dp_loop_add_func(DpLoop*hloop, DpLoopRunFunc *func)
 {
 	hloop->funcs = g_list_append(hloop->funcs, (gpointer) func);
 }
 
-void dp_loop_del_func(DpLoop*hloop, DpLoopFunc func)
+void dp_loop_del_func(DpLoop*hloop, DpLoopRunFunc *func)
 {
 	hloop->funcs = g_list_remove_all(hloop->funcs, (gconstpointer) func);
 }
 
-void dp_loop_add_func_after(DpLoop*hloop, DpLoopFunc func)
+void dp_loop_add_func_after(DpLoop*hloop, DpLoopRunFunc *func)
 {
 	hloop->run_once_after = g_list_append(hloop->run_once_after, (gpointer) func);
 }
 
-void dp_loop_add_func_before(DpLoop*hloop, DpLoopFunc func)
+void dp_loop_add_func_before(DpLoop*hloop, DpLoopRunFunc *func)
 {
 	hloop->run_once_before = g_list_append(hloop->run_once_before, (gpointer) func);
 }
