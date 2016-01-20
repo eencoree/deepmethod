@@ -205,17 +205,52 @@ typedef struct Interpreter{
 	gchar *response;
 	GPid child_pid;
 	int debug;
+	GMutex mstatus;
+	int status;
 } Interpreter;
+
+GString *interpreter_recieve_response(GIOChannel*out, int debug)
+{
+	GString *response = g_string_new("");
+	GIOStatus status = G_IO_STATUS_NORMAL;
+    gchar *response_line = NULL;
+    gboolean is_done = FALSE;
+    gsize size;
+    GError *gerror = NULL;
+    int j = 0;
+    do{
+        status = g_io_channel_read_line( out, &response_line, &size, NULL, &gerror );
+		if (status != G_IO_STATUS_NORMAL) {
+			if ( debug == 1 ) {
+				g_print("Status is not NORMAL %d\n", status);
+				fflush(stdout);
+			}
+			if (gerror != NULL) {
+				g_print("%s", gerror->message);
+				g_error_free(gerror);
+			}
+			break;
+		}
+        response = g_string_append(response, response_line);
+        is_done = g_str_has_suffix(response->str, "flush.console()\n");
+		if ( debug == 1 ) {
+			g_printf("line [%d] '%s' last=%d '%s' %d\n", j, response_line, is_done, response->str, status);
+			fflush(stdout);
+		}
+        j++;
+        g_free(response_line);
+    } while( !is_done );
+    return response;
+}
 
 static gboolean out_watch( GIOChannel   *channel,
         GIOCondition  cond, gpointer data)
 {
-    GString *response = g_string_new("");
+    GString *response;
     gsize size;
-    int maxsize = -1, currsize;
-    GError *gerror = NULL;
+    int currstatus, wrongstart;
     Interpreter *intprt = (Interpreter*)data;
-
+	wrongstart = 0;
     if( cond == G_IO_HUP ){
         g_print("Cond %d is G_IO_HUP %d\n", intprt->child_pid, (int)cond);
         g_io_channel_unref( channel );
@@ -231,56 +266,44 @@ static gboolean out_watch( GIOChannel   *channel,
 			g_print("Cond %d is G_IO_OUT %d\n", intprt->child_pid, (int)cond);
 			fflush(stdout);
 		}
+		wrongstart = 1;
+    }
+/* status:
+ * 0 - interpreter waits for command
+ * 1 - command was sent to interpreter
+ * 2 - we want to read the command output
+ */
+	g_mutex_lock( &(intprt->mstatus) );
+	currstatus = intprt->status;
+	g_mutex_unlock( &(intprt->mstatus) );
+	if (currstatus == 0 || currstatus == 2) {
+		wrongstart = 1;
+	}
+	if (wrongstart == 1) {
+		if ( intprt->debug == 1 ) {
+			g_print("Cond %d is G_IO_IN %d but status %d\n", intprt->child_pid, (int)cond, currstatus);
+			fflush(stdout);
+		}
 		g_string_free(response, TRUE);
 		return TRUE;
-    }
-
-    GIOStatus status = G_IO_STATUS_NORMAL;
-/*    int gsz = 2;
-    gchar *response_line = g_new0(gchar, gsz);*/
-    gchar *response_line = NULL;
-    gboolean is_done = FALSE;
-    int j = 0;
-    do{
-		if ( intprt->debug == 1 ) {
-			g_printf("Interpreter [%d]:", intprt->child_pid);
-			fflush(stdout);
-		}
-        status = g_io_channel_read_line( channel, &response_line, &size, NULL, &gerror );
-//        status = g_io_channel_read_chars( channel, response_line, gsz - 1, &size, &gerror );
-		if (status != G_IO_STATUS_NORMAL) {
-    		g_print("Status is not NORMAL %d\n", status);
-			break;
-		}
-        response = g_string_append(response, response_line);
-        is_done = g_str_has_suffix(response->str, "flush.console()\n");
-//			is_done = ( g_strrstr (response->str, "flush.console()\n") == NULL ) ? 0 : 1;
-		if ( intprt->debug == 1 ) {
-			g_printf("line [%d] '%s' last=%d '%s' %d\n", j, response_line, is_done, response->str, status);
-			fflush(stdout);
-		}
-        j++;
-        g_free(response_line);
-    } while( !is_done );
-//	g_free(response_line);
-    if (status != G_IO_STATUS_NORMAL) {
-        g_print("Status is not NORMAL %d\n", status);
-    } else {
-#ifdef DEBUG
-        g_print("Status is NORMAL %d\n", status);
-#endif
-    }
-    fflush(stdout);
-
-    if (gerror != NULL) {
-        g_print("%s", gerror->message);
-        g_error_free(gerror);
-    }
+	}
+/* status was 1 - let's change it to 2 */
+	g_mutex_lock( &(intprt->mstatus) );
+	intprt->status = 2;
+	g_mutex_unlock( &(intprt->mstatus) );
+	if ( intprt->debug == 1 ) {
+		g_printf("Interpreter out [%d]:", intprt->child_pid);
+		fflush(stdout);
+	}
+    response = interpreter_recieve_response(channel, intprt->debug);
+/* read info - "free" interpreter */
+    g_mutex_lock( &(intprt->mstatus) );
+	intprt->status = 2;
+	g_mutex_unlock( &(intprt->mstatus) );
     g_mutex_lock( &(intprt->m) );
     intprt->response = g_string_free(response, FALSE);
     g_cond_signal( &(intprt->cond) );
     g_mutex_unlock( &(intprt->m) );
-
     return TRUE;
 }
 
@@ -341,7 +364,8 @@ Interpreter* init_interpreter(XmModel * xmmodel){
     intprt->out = g_io_channel_unix_new( out );
     intprt->err = g_io_channel_unix_new( err );
 	intprt->child_pid = child_pid;
-
+	intprt->status = 0;
+	g_mutex_init( &(intprt->mstatus) );
     g_mutex_init( &(intprt->m) );
     g_cond_init( &(intprt->cond) );
     intprt->response = NULL;
@@ -351,23 +375,11 @@ Interpreter* init_interpreter(XmModel * xmmodel){
     g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch, intprt);
 
 	init_source_to_interpreter(intprt->in, xmmodel->command);
-
-	GString *response = g_string_new("");
-	GIOStatus status = G_IO_STATUS_NORMAL;
-    gchar *response_line = NULL;
-    gboolean is_done = FALSE;
-    gsize size;
-    GError *gerror = NULL;
-    do{
-        status = g_io_channel_read_line( intprt->out, &response_line, &size, NULL, &gerror );
-		if (status != G_IO_STATUS_NORMAL) {
-    		g_print("Status is not NORMAL %d\n", status);
-			break;
-		}
-        response = g_string_append(response, response_line);
-        is_done = g_str_has_suffix(response->str, "flush.console()\n");
-        g_free(response_line);
-    } while( !is_done );
+	if ( intprt->debug == 1 ) {
+		g_printf("Interpreter init [%d]:", intprt->child_pid);
+		fflush(stdout);
+	}
+	GString *response = interpreter_recieve_response(intprt->out, intprt->debug);
 	g_string_free(response, TRUE);
     return intprt;
 }
@@ -437,6 +449,9 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		g_async_queue_push(queue, (gpointer)intprt);
 		return child_exit_status;
 	}
+	g_mutex_lock( &(intprt->mstatus) );
+	intprt->status = 1;
+	g_mutex_unlock( &(intprt->mstatus) );
     write_to_interpreter(intprt->in, command);
 	failed = FALSE;
     g_mutex_lock( &(intprt->m) );
@@ -465,7 +480,9 @@ int xm_model_run_interpreter(XmModel *xmmodel)
     g_free( intprt->response );
     intprt->response = NULL;
     g_mutex_unlock (&(intprt->m));
-
+	g_mutex_lock( &(intprt->mstatus) );
+	intprt->status = 0;
+	g_mutex_unlock( &(intprt->mstatus) );
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	if ( strlen(standard_output) > 0 && result != NULL ) {
 		if ( xmmodel->debug == 1 ) {
