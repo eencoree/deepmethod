@@ -68,6 +68,8 @@ DpFunc xm_translate_get_score_func_by_name ( char*name )
 		return (DpFunc)xm_model_score_int;
 	} else if ( !g_strcmp0(name, "scoredouble") ) {
 		return (DpFunc)xm_model_score_double;
+	} else if ( !g_strcmp0(name, "scoredouble") ) {
+		return (DpFunc)xm_model_objfunc;
 	} else if ( !g_strcmp0(name, "readpenalty") ) {
 		return (DpFunc)xm_model_read_penalty;
 	} else if ( !g_strcmp0(name, "barrier") ) {

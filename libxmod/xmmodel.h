@@ -40,7 +40,7 @@ typedef enum XmModelType {
 	XmModelIntprt  = (1 << 1),
 	XmModelNone = (1 << 2)
 } XmModelType;
-	 
+
 typedef struct XmModelConn {
 	int source;
 	int source_conn;
@@ -64,6 +64,11 @@ typedef struct XmModel {
 	int *parms;
 	int *iparms;
 	int *mask;
+	int *param_type; /* 0 - double, 1 - index, 2 - round, 3 - fixed */
+	int *has_params;
+	int *subsubset;
+	int **type_index;
+	int **index_type;
 	int *limited;
 	int *index;
 	int *tweak_index;
@@ -123,6 +128,8 @@ double xm_model_dparms_to_index(gpointer user_data);
 double xm_model_parms_double_to_index(gpointer user_data, double*x);
 
 double xm_model_score_double(gpointer user_data, double*x);
+
+double xm_model_objfunc(gpointer user_data, double*x);
 
 double xm_model_score_int(gpointer user_data, double*x);
 
@@ -185,6 +192,8 @@ double xm_model_prime_int(gpointer user_data, double*x);
 GString *xm_model_score_int_to_string(gpointer user_data, double*x);
 
 GString *xm_model_score_double_to_string(gpointer user_data, double*x);
+
+void xm_model_convert_param_type(XmModel *xmmodel);
 
 #ifdef __cplusplus
 }
