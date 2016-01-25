@@ -349,10 +349,12 @@ DpLoopExitCode dp_print_log(DpLoop*hloop, gpointer user_data)
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);
 	DpDeepInfo*hdeepinfo;
 	DpOsdaInfo*hosdainfo;
+	char*msg = g_path_get_basename(hopt->logname);
 	FILE*fp;
 	int i;
 	int precision = hopt->precision;
-	fprintf(stdout, "wtime:%e tau:%d", hloop->w_time, hloop->tau_counter);
+	fprintf(stdout, "%s wtime:%e tau:%d", msg, hloop->w_time, hloop->tau_counter);
+	g_free(msg);
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);

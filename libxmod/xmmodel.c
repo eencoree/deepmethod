@@ -227,6 +227,13 @@ void xm_model_set_dparms(XmModel *xmmodel, double*x)
 	}
 }
 
+typedef struct API {
+	gchar*file_cmd;
+	gchar*source_cmd;
+	gchar*fflush_cmd;
+	gchar*func_cmd;
+} API;
+
 // interpreter with io channels
 typedef struct Interpreter{
 	GIOChannel *in,
@@ -239,17 +246,19 @@ typedef struct Interpreter{
 	int debug;
 	GMutex mstatus;
 	int status;
+	API *api;
 } Interpreter;
 
-GString *interpreter_recieve_response(GIOChannel*out, int debug)
+GString *interpreter_recieve_response(GIOChannel*out, int debug, API*api)
 {
 	GString *response = g_string_new("");
 	GIOStatus status = G_IO_STATUS_NORMAL;
-    gchar *response_line = NULL;
+    gchar *response_line = NULL, *suffix;
     gboolean is_done = FALSE;
     gsize size;
     GError *gerror = NULL;
     int j = 0;
+    suffix = g_strdup_printf("%s\n", api->fflush_cmd);
     do{
         status = g_io_channel_read_line( out, &response_line, &size, NULL, &gerror );
 		if (status != G_IO_STATUS_NORMAL) {
@@ -264,7 +273,7 @@ GString *interpreter_recieve_response(GIOChannel*out, int debug)
 			break;
 		}
         response = g_string_append(response, response_line);
-        is_done = g_str_has_suffix(response->str, "flush.console()\n");
+        is_done = g_str_has_suffix(response->str, suffix);
 		if ( debug == 1 ) {
 			g_printf("line [%d] '%s' last=%d '%s' %d\n", j, response_line, is_done, response->str, status);
 			fflush(stdout);
@@ -272,6 +281,7 @@ GString *interpreter_recieve_response(GIOChannel*out, int debug)
         j++;
         g_free(response_line);
     } while( !is_done );
+    g_free(suffix);
     return response;
 }
 
@@ -286,7 +296,6 @@ static gboolean out_watch( GIOChannel   *channel,
     if( cond == G_IO_HUP ){
         g_print("Cond %d is G_IO_HUP %d\n", intprt->child_pid, (int)cond);
         g_io_channel_unref( channel );
-        g_string_free(response, TRUE);
         return( FALSE );
     } else if( cond == G_IO_IN ) {
 		if ( intprt->debug == 1 ) {
@@ -327,7 +336,7 @@ static gboolean out_watch( GIOChannel   *channel,
 		g_printf("Interpreter out [%d]:", intprt->child_pid);
 		fflush(stdout);
 	}
-    response = interpreter_recieve_response(channel, intprt->debug);
+    response = interpreter_recieve_response(channel, intprt->debug, intprt->api);
 /* read info - "free" interpreter */
     g_mutex_lock( &(intprt->mstatus) );
 	intprt->status = 2;
@@ -366,23 +375,46 @@ void write_to_interpreter(GIOChannel* in, GString* msg){
     g_io_channel_flush(in, NULL);
 }
 
-void init_source_to_interpreter(GIOChannel * intprt_in, gchar * source_path){
-	GString * command = g_string_new("source(\'");
-	g_string_append_printf(command, "%s\')\r\nflush.console()\r\n", source_path);
-
-	write_to_interpreter(intprt_in, command);
+void init_source_to_interpreter(GIOChannel * intprt_in, API*api){
+	if (strlen(api->source_cmd) > 0) {
+		GString * command = g_string_new(api->source_cmd);
+		g_string_append_printf(command, "(\'%s\')\r\n%s\r\n", api->file_cmd, api->fflush_cmd);
+		write_to_interpreter(intprt_in, command);
+	}
 }
 
 Interpreter* init_interpreter(XmModel * xmmodel){
-    gchar      *argvr[] = { "R", "--no-save", "--silent", "--vanilla", NULL };
+/*    gchar      *argvr[] = { "R", "--no-save", "--silent", "--vanilla", NULL };
+ * { "R", "--no-save", "--silent", "--vanilla", "script.R", "source", "func", "flush.console()", NULL } */
+	gchar      **args;
     gint        in,
                 out,
                 err;
     gboolean    ret;
 	GPid child_pid;
-
+	GError*gerror = NULL;
+	int length;
+	if ( !g_shell_parse_argv(xmmodel->command, &length, &args, &gerror) ) {
+		if ( gerror ) {
+			g_error("g_shell_parse failed for %s\nwith %s", xmmodel->command, gerror->message);
+		}
+	}
+/* remove and parse extra args */
+    API* api = g_new(API, 1);
+    api->file_cmd = g_strdup(args[length - 4]);
+    g_free(args[length - 4]);
+    args[length - 4] = NULL;
+    api->source_cmd = g_strdup(args[length - 3]);
+    g_free(args[length - 3]);
+    args[length - 3] = NULL;
+    api->func_cmd = g_strdup(args[length - 2]);
+    g_free(args[length - 2]);
+    args[length - 2] = NULL;
+    api->fflush_cmd = g_strdup(args[length - 1]);
+    g_free(args[length - 1]);
+    args[length - 1] = NULL;
     /* Spawn child process */
-    ret = g_spawn_async_with_pipes( NULL, argvr, NULL,
+    ret = g_spawn_async_with_pipes( NULL, args, NULL,
             G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
             NULL, &child_pid,
             &in, &out, &err, NULL );
@@ -390,7 +422,6 @@ Interpreter* init_interpreter(XmModel * xmmodel){
         g_error( "SPAWN FAILED" );
         return NULL;
     }
-
     Interpreter* intprt = g_new(Interpreter, 1);
     intprt->in = g_io_channel_unix_new( in );
     intprt->out = g_io_channel_unix_new( out );
@@ -402,18 +433,28 @@ Interpreter* init_interpreter(XmModel * xmmodel){
     g_cond_init( &(intprt->cond) );
     intprt->response = NULL;
 	intprt->debug = xmmodel->debug;
+	intprt->api = api;
     /* Add watches to channels */
     g_io_add_watch( intprt->out, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)out_watch, intprt);
     g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch, intprt);
 
-	init_source_to_interpreter(intprt->in, xmmodel->command);
+	init_source_to_interpreter(intprt->in, intprt->api);
 	if ( intprt->debug == 1 ) {
 		g_printf("Interpreter init [%d]:", intprt->child_pid);
 		fflush(stdout);
 	}
-	GString *response = interpreter_recieve_response(intprt->out, intprt->debug);
+	GString *response = interpreter_recieve_response(intprt->out, intprt->debug, intprt->api);
 	g_string_free(response, TRUE);
     return intprt;
+}
+
+void api_free(API*api)
+{
+	g_free(api->file_cmd);
+	g_free(api->source_cmd);
+	g_free(api->func_cmd);
+	g_free(api->fflush_cmd);
+	g_free(api);
 }
 
 void kill_interpreter(Interpreter* intprt)
@@ -423,13 +464,21 @@ void kill_interpreter(Interpreter* intprt)
 	g_object_unref (intprt->err);
 	g_mutex_clear (&(intprt->m));
 	g_cond_clear (&(intprt->cond));
+	api_free(intprt->api);
 	g_free(intprt);
 }
 
-GString * create_command(double * params, int params_size, int b_precision){
-	GString * command = g_string_new("func(");
-	int i;
-	for(i = 0; i < params_size - 1; i++){
+GString * create_command(double * params, int params_size, int b_precision, API*api){
+/*	GString * command = g_string_new("func(");*/
+	GString * command = g_string_new(api->func_cmd);
+	int i = 0;
+	if(params[i] != params[i]){ // is NaN
+		g_string_free (command, TRUE);
+		return NULL;
+	} else{
+		g_string_append_printf(command, "(%.*f, ", b_precision, params[i]);
+	}
+	for(i = 1; i < params_size - 1; i++){
 		if(params[i] != params[i]){ // is NaN
 			g_string_free (command, TRUE);
 			return NULL;
@@ -437,8 +486,13 @@ GString * create_command(double * params, int params_size, int b_precision){
 			g_string_append_printf(command, "%.*f, ", b_precision, params[i]);
 		}
     }
-	g_string_append_printf(command,
-	                       "%.*f)\r\nflush.console()\r\n", b_precision, params[params_size - 1]);
+    if(params[params_size - 1] != params[params_size - 1]){ // is NaN
+		g_string_free (command, TRUE);
+		return NULL;
+	} else {
+		g_string_append_printf(command,
+	                       "%.*f)\r\n%s\r\n", b_precision, params[params_size - 1], api->fflush_cmd);
+	}
 	return command;
 }
 
@@ -470,7 +524,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		return child_exit_status;
 	}
 	// create command
-	command = create_command(xmmodel->dparms, xmmodel->size, xmmodel->b_precision);
+	command = create_command(xmmodel->dparms, xmmodel->size, xmmodel->b_precision, intprt->api);
 	if (command == NULL) {
 		g_warning ( "Couldn't create command with NaN" );
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
@@ -1337,7 +1391,7 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 	gchar*data = NULL;
 	gsize size;
 	GError *gerror = NULL;
-	int t0, t1, t2, t3, j;
+	int t0, t1, t2, t3, j, k;
 	g_return_val_if_fail (err == NULL || *err == NULL, 1);
 	if ( ( data = xm_model_read(filename, &size, &gerror) ) == NULL ) {
 		g_propagate_error (err, gerror);
@@ -1406,22 +1460,33 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 		for ( t0 = 0; t0 < xmmodel->has_params[0]; t0++ ) {
 			xmmodel->type_index[0][t0] = j;
 			xmmodel->param_type[j] = 0;
+			xmmodel->tweak[j] = 1;
 			j++;
 		}
 		for ( t1 = 0; t1 < xmmodel->has_params[1]; t1++ ) {
 			xmmodel->type_index[1][t1] = j;
 			xmmodel->param_type[j] = 1;
+			xmmodel->tweak[j] = 1;
 			j++;
 		}
 		for ( t2 = 0; t2 < xmmodel->has_params[2]; t2++ ) {
 			xmmodel->type_index[2][t2] = j;
 			xmmodel->param_type[j] = 2;
+			xmmodel->tweak[j] = 1;
 			j++;
 		}
 		for ( t3 = 0; t3 < xmmodel->has_params[3]; t3++ ) {
 			xmmodel->type_index[3][t3] = j;
 			xmmodel->param_type[j] = 3;
+			xmmodel->tweak[j] = 0;
 			j++;
+		}
+		k = 0;
+		for ( j = 0; j < xmmodel->size; j++) {
+			if ( xmmodel->tweak[j] == 1 ) {
+				xmmodel->tweak_index[k] = j;
+				k++;
+			}
 		}
 	}
 	if (xmmodel->type == XmModelIntprt) {

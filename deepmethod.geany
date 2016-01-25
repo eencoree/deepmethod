@@ -27,15 +27,12 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=1
-FILE_NAME_0=3380;C;0;EUTF-8;1;1;1;%2Fhome%2Fother1%2Ffreya%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
-FILE_NAME_1=29141;C;0;EUTF-8;1;1;1;%2Fhome%2Fother1%2Ffreya%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
-FILE_NAME_2=1773;C;0;EUTF-8;1;1;1;%2Fhome%2Fother1%2Ffreya%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.h;0;4
-FILE_NAME_3=2566;C;0;EUTF-8;1;1;1;%2Fhome%2Fother1%2Ffreya%2Fc_projects%2Fdeepmethod%2Ftools%2Fxmtranslate.c;0;4
-FILE_NAME_4=19191;C;0;EUTF-8;1;1;1;%2Fhome%2Fother1%2Ffreya%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpsettings.c;0;4
+current_page=0
+FILE_NAME_0=9984;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
+FILE_NAME_1=12470;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
 
 [VTE]
-last_dir=/home/other1
+last_dir=/home
 
 [prjorg]
 source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;
