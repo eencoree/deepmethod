@@ -177,10 +177,10 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->type = src->type;
 	xmmodel->timeoutsec = src->timeoutsec;
 	xmmodel->has_params = g_new0(int, 4);
-	xmmodel->has_params[0] = xmmodel->has_params[0];
-	xmmodel->has_params[1] = xmmodel->has_params[1];
-	xmmodel->has_params[2] = xmmodel->has_params[2];
-	xmmodel->has_params[3] = xmmodel->has_params[3];
+	xmmodel->has_params[0] = src->has_params[0];
+	xmmodel->has_params[1] = src->has_params[1];
+	xmmodel->has_params[2] = src->has_params[2];
+	xmmodel->has_params[3] = src->has_params[3];
 	xmmodel->index_type = g_new0(int*, 4);
 	xmmodel->type_index = g_new0(int*, 4);
 	xmmodel->index_type[0] = g_new0(int, xmmodel->has_params[0]);
@@ -225,6 +225,29 @@ void xm_model_set_dparms(XmModel *xmmodel, double*x)
 		index = xmmodel->tweak_index[i];
 		xmmodel->dparms[index] = x[i];
 	}
+}
+
+gchar*param2str(XmModel*xmmodel, int i)
+{
+	gchar*str = NULL;
+	if (xmmodel->dparms[i] != xmmodel->dparms[i]) { // is NaN
+		if ( xmmodel->debug == 1 ) {
+			g_printf("p[%d] = %.13f is nan\n", i, xmmodel->dparms[i]);
+			fflush(stdout);
+		}
+		return NULL;
+	} else {
+		if (xmmodel->param_type[i] == 0) {
+			str = g_strdup_printf("%.*f", xmmodel->b_precision, xmmodel->dparms[i]);
+		} else if (xmmodel->param_type[i] == 1) {
+			str = g_strdup_printf("%d", xmmodel->parms[i]);
+		} else if (xmmodel->param_type[i] == 2) {
+			str = g_strdup_printf("%d", xmmodel->parms[i]);
+		} else if (xmmodel->param_type[i] == 3) {
+			str = g_strdup_printf("%.*f", xmmodel->b_precision, xmmodel->dparms[i]);
+		}
+	}
+	return str;
 }
 
 typedef struct API {
@@ -468,31 +491,29 @@ void kill_interpreter(Interpreter* intprt)
 	g_free(intprt);
 }
 
-GString * create_command(double * params, int params_size, int b_precision, API*api){
-/*	GString * command = g_string_new("func(");*/
-	GString * command = g_string_new(api->func_cmd);
+GString *create_command(XmModel*xmmodel, API*api)
+{
+	GString *command = g_string_new(api->func_cmd);
+	gchar*buf;
 	int i = 0;
-	if(params[i] != params[i]){ // is NaN
-		g_string_free (command, TRUE);
-		return NULL;
-	} else{
-		g_string_append_printf(command, "(%.*f, ", b_precision, params[i]);
-	}
-	for(i = 1; i < params_size - 1; i++){
-		if(params[i] != params[i]){ // is NaN
-			g_string_free (command, TRUE);
+	command = g_string_append_c(command, '(');
+	for(i = 0; i < xmmodel->size - 1; i++) {
+		if ( (buf = param2str(xmmodel, i)) == NULL) {
+			g_string_free(command, TRUE);
 			return NULL;
-		} else{
-			g_string_append_printf(command, "%.*f, ", b_precision, params[i]);
 		}
-    }
-    if(params[params_size - 1] != params[params_size - 1]){ // is NaN
-		g_string_free (command, TRUE);
-		return NULL;
-	} else {
-		g_string_append_printf(command,
-	                       "%.*f)\r\n%s\r\n", b_precision, params[params_size - 1], api->fflush_cmd);
+		command = g_string_append(command, buf);
+		g_free(buf);
+		command = g_string_append_c(command, ',');
 	}
+	i = xmmodel->size - 1;
+	if ( (buf = param2str(xmmodel, i)) == NULL) {
+		g_string_free(command, TRUE);
+		return NULL;
+	}
+	command = g_string_append(command, buf);
+	g_free(buf);
+	g_string_append_printf(command, ")\r\n%s\r\n", api->fflush_cmd);
 	return command;
 }
 
@@ -504,7 +525,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 	GString *command;
 	GError*gerror = NULL;
 	// посмотреть откуда взять статус
-	int flaggs, child_exit_status = 0;
+	int flaggs, child_exit_status = 1;
 	gchar *standard_output;
 	gchar*conversion;
 	double max_value = G_MAXDOUBLE;
@@ -524,7 +545,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		return child_exit_status;
 	}
 	// create command
-	command = create_command(xmmodel->dparms, xmmodel->size, xmmodel->b_precision, intprt->api);
+	command = create_command(xmmodel, intprt->api);
 	if (command == NULL) {
 		g_warning ( "Couldn't create command with NaN" );
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
@@ -597,7 +618,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 
 	// return interpreter to queue
 	g_async_queue_push(queue, (gpointer)intprt);
-
+	child_exit_status = 0;
 	return child_exit_status;
 }
 
@@ -608,7 +629,7 @@ int xm_model_run_command(XmModel *xmmodel)
 	int argcp, i, j;
 	GString *command;
 	GError*gerror = NULL;
-	int flaggs, child_exit_status;
+	int flaggs, child_exit_status = 1;
 	gchar *standard_output;
 	gchar *standard_error;
 	gchar*conversion;
@@ -618,7 +639,7 @@ int xm_model_run_command(XmModel *xmmodel)
 		if ( ( conversion = xmmodel->converter((gpointer)xmmodel, &gerror) ) == NULL ) {
 			g_string_free(command, TRUE);
 			for ( i = 0; i < xmmodel->num_values; i++ ) {
-				xmmodel->array[i] = G_MAXDOUBLE;
+				xmmodel->array[i] = max_value;
 			}
 			return child_exit_status;
 		}
@@ -628,9 +649,19 @@ int xm_model_run_command(XmModel *xmmodel)
 		g_string_append_printf(command, " %s", conversion);
 	} else {
         GString *params = g_string_new("");
+        gchar*buf;
         for ( i = 0; i < xmmodel->size; i++ ) {
-            g_string_append_printf(params, "%f ", xmmodel->dparms[i]);
-        }
+			if ( (buf = param2str(xmmodel, i)) == NULL) {
+				g_string_free(params, TRUE);
+				for ( i = 0; i < xmmodel->num_values; i++ ) {
+					xmmodel->array[i] = max_value;
+				}
+				return child_exit_status;
+			}
+			params = g_string_append(params, buf);
+			g_free(buf);
+			params = g_string_append_c(params, ' ');
+		}
 		g_string_append_printf(command, " %s", params->str);
         g_string_free(params, TRUE);
 	}
@@ -898,28 +929,33 @@ void xm_model_convert_param_type(XmModel *xmmodel)
 	int alpha;
 	int t1, t2, t3, i, j;
 /* rounded */
-	for ( t1 = 0; t1 < xmmodel->has_params[1]; t1++ ) {
-		i = xmmodel->type_index[1][j];
-		z = xmmodel->dparms[i];
-		alpha = (int)(z + 0.5);
-		beta = alpha - z;
-		xmmodel->parms[i] = ( beta > 0.5 ) ? alpha - 1 : alpha;
+	if (xmmodel->has_params[1] > 0) {
+		for ( t1 = 0; t1 < xmmodel->has_params[1]; t1++ ) {
+			i = xmmodel->type_index[1][t1];
+			z = xmmodel->dparms[i];
+			alpha = (int)(z + 0.5);
+			beta = alpha - z;
+			xmmodel->parms[i] = ( beta > 0.5 ) ? alpha - 1 : alpha;
+		}
 	}
 /* index converted */
-	for ( t2 = 0; t2 < xmmodel->has_params[2]; t2++ ) {
-		xmmodel->index_type[2][t2] = t2;
-	}
-	g_qsort_with_data(xmmodel->index_type[2], xmmodel->has_params[2], sizeof(xmmodel->index_type[2][0]), (GCompareDataFunc)xm_model_type_sort_index_ascending, xmmodel);
-	for ( t2 = 0; t2 < xmmodel->has_params[2]; t2++ ) {
-		i = xmmodel->type_index[2][t2];
-		j = xmmodel->index_type[2][t2];
-		xmmodel->parms[i] = xmmodel->type_index[2][j];
+	if (xmmodel->has_params[2] > 0) {
+		for ( t2 = 0; t2 < xmmodel->has_params[2]; t2++ ) {
+			xmmodel->index_type[2][t2] = t2;
+		}
+		g_qsort_with_data(xmmodel->index_type[2], xmmodel->has_params[2], sizeof(xmmodel->index_type[2][0]), (GCompareDataFunc)xm_model_type_sort_index_ascending, xmmodel);
+		for ( t2 = 0; t2 < xmmodel->has_params[2]; t2++ ) {
+			i = xmmodel->type_index[2][t2];
+			j = xmmodel->index_type[2][t2];
+			xmmodel->parms[i] = xmmodel->type_index[2][j];
+		}
 	}
 /* fixed */
-	xmmodel->parms[i] = xmmodel->iparms[i];
-	for ( t3 = 0; t3 < xmmodel->has_params[3]; t3++ ) {
-		i = xmmodel->type_index[3][t3];
-		xmmodel->parms[i] = xmmodel->iparms[j];
+	if (xmmodel->has_params[3] > 0) {
+		for ( t3 = 0; t3 < xmmodel->has_params[3]; t3++ ) {
+			i = xmmodel->type_index[3][t3];
+			xmmodel->parms[i] = xmmodel->iparms[i];
+		}
 	}
 }
 
@@ -927,12 +963,20 @@ double xm_model_objfunc(gpointer user_data, double*x)
 {
 	XmModel *xmmodel = (XmModel *)user_data;
 	double val = G_MAXDOUBLE;
+	int ret_val;
 	xm_model_set_dparms(xmmodel, x);
 	xm_model_convert_param_type(xmmodel);
-    xm_model_run(xmmodel);
+    ret_val = xm_model_run(xmmodel);
     val = xmmodel->array[xmmodel->mapping[0]];
 	xmmodel->current_penalty_index = 1;
 	xmmodel->current_functional_value = val;
+	if ( xmmodel->debug == 1 ) {
+		if (ret_val != 0 && val == G_MAXDOUBLE) {
+			g_message("Ret val %d val G_MAXDOUBLE", ret_val);
+		} else if (ret_val != 0) {
+			g_message("Ret val %d val %f", ret_val, val);
+		}
+	}
 	return val;
 }
 
@@ -1664,6 +1708,7 @@ fprintf (stderr, "%s", file_contents->str);*/
 GString*xm_model_gcdm_contents(XmModel*xmmodel)
 {
 	GString*file_contents;
+	gchar*buf = NULL;
 	int i, j, k, target;
 	int num_targets, num_regulators;
 	file_contents = g_string_new("");
@@ -1673,7 +1718,13 @@ GString*xm_model_gcdm_contents(XmModel*xmmodel)
 	g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
 	num_targets = xmmodel->part[i].num_parms;
 	for ( j = 0; j < num_targets; j++ ) {
-		g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+		if ( (buf = param2str(xmmodel, k)) == NULL) {
+			g_string_free(file_contents, TRUE);
+			return NULL;
+		}
+		file_contents = g_string_append(file_contents, buf);
+		g_free(buf);
+		file_contents = g_string_append_c(file_contents, ' ');
 		k++;
 	}
 	file_contents = g_string_append_c(file_contents, '\n');
@@ -1683,7 +1734,13 @@ GString*xm_model_gcdm_contents(XmModel*xmmodel)
 			num_regulators = xmmodel->part[i].num_parms / num_targets;
 			for ( target = 0; target < num_targets; target++ ) {
 				for ( j = 0; j < num_regulators; j++ ) {
-					g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+					if ( (buf = param2str(xmmodel, k)) == NULL) {
+						g_string_free(file_contents, TRUE);
+						return NULL;
+					}
+					file_contents = g_string_append(file_contents, buf);
+					g_free(buf);
+					file_contents = g_string_append_c(file_contents, ' ');
 					k++;
 				}
 				file_contents = g_string_append_c(file_contents, '\n');
@@ -1693,7 +1750,13 @@ GString*xm_model_gcdm_contents(XmModel*xmmodel)
 	for ( i = 5; i < xmmodel->num_parts; i++ ) {
 		g_string_append_printf(file_contents, "%s\n", xmmodel->part[i].name);
 		for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
-			g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+			if ( (buf = param2str(xmmodel, k)) == NULL) {
+				g_string_free(file_contents, TRUE);
+				return NULL;
+			}
+			file_contents = g_string_append(file_contents, buf);
+			g_free(buf);
+			file_contents = g_string_append_c(file_contents, ' ');
 			k++;
 		}
 		file_contents = g_string_append_c(file_contents, '\n');
@@ -1996,6 +2059,7 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 	GString*file_contents = NULL;
 	int i;
 	GError*gerror = NULL;
+	xm_model_convert_param_type(xmmodel);
 	if ( !g_strcmp0 ( xmmodel->convert, "sdf" ) ) {
 		if ( ( file_contents = xm_model_sdf_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get sdf contents");

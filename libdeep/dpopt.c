@@ -589,6 +589,10 @@ DpLoopExitCode dp_opt_duplicate(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
+/*
+ * Old are substituted with sorted by cost
+ */
+
 DpLoopExitCode dp_opt_substold(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
@@ -622,6 +626,11 @@ DpLoopExitCode dp_opt_substold(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
+/*
+ * Those that failed more than cutoff are substituted
+ * with sorted by cost
+ */
+
 DpLoopExitCode dp_opt_substfailed(DpLoop*hloop, gpointer user_data)
 {
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
@@ -654,6 +663,11 @@ DpLoopExitCode dp_opt_substfailed(DpLoop*hloop, gpointer user_data)
 	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
 	return ret_val;
 }
+
+/*
+ * Copy the best several times
+ *
+ */
 
 DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 {

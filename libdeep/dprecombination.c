@@ -214,7 +214,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 			individ->moves++;
 			input_2->grads++;
 			input_3->grads++;
-		break;					
+		break;
 		case DE_3_exp_T:
 			i = start_index;
 			flag = 1;
@@ -223,7 +223,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
 					if ( g_rand_double(hrand) > control->p[i] )
 						flag = 0;
-				} else {
+				} else if ( flag == 0 ) {
+					if ( g_rand_double(hrand) > control->p[i] )
+						flag = 2;
 					phi = input_1->cost + input_2->cost + input_3->cost;
 					individ->x[i] = ( input_2->cost - input_1->cost ) * ( input_1->x[i] - input_2->x[i] );
 					individ->x[i] += ( input_3->cost - input_2->cost ) * ( input_2->x[i] - input_3->x[i] );
@@ -249,7 +251,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					individ->x[i] = input_4->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
 					if ( g_rand_double(hrand) > control->p[i] )
 						flag = 0;
-				} else {
+				} else if ( flag == 0 ) {
+					if ( g_rand_double(hrand) > control->p[i] )
+						flag = 2;
 					phi = input_4->cost + input_2->cost + input_3->cost;
 					individ->x[i] = ( input_2->cost - input_4->cost ) * ( input_4->x[i] - input_2->x[i] );
 					individ->x[i] += ( input_3->cost - input_2->cost ) * ( input_2->x[i] - input_3->x[i] );
@@ -275,7 +279,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					individ->x[i] = individ->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
 					if ( g_rand_double(hrand) > control->p[i] )
 						flag = 0;
-				} else {
+				} else if ( flag == 0 ) {
+					if ( g_rand_double(hrand) > control->p[i] )
+						flag = 2;
 					double indx = individ->x[i];
 					phi = individ->cost + input_2->cost + input_3->cost;
 					individ->x[i] = ( input_2->cost - individ->cost ) * ( indx - input_2->x[i] );

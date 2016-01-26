@@ -256,7 +256,7 @@ int dp_deep_evaluate_status (gpointer data, gpointer user_data)
 	g_mutex_unlock( &(my_trial->m) );
 	return s;
 }
-	
+
 void dp_deep_select_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;
@@ -278,9 +278,10 @@ void dp_deep_select_func (gpointer data, gpointer user_data)
 			trial->individ[my_id] = my_individ;
 			my_individ->age++;
 		}
-	} else if ( 1 != dp_evaluation_individ_compare((const void *)(&my_individ), (const void *)(&my_trial), (void*)(hdeepinfo->hevalctrl)) ) {
+	} else if ( -1 != dp_evaluation_individ_compare((const void *)(&my_individ), (const void *)(&my_trial), (void*)(hdeepinfo->hevalctrl)) ) {
+/* individ is accepted if -1 is returned */
 		population->individ[my_id] = my_trial;
-		trial->individ[my_id] = my_individ;
+		trial->individ[my_id] = my_individ; /* accepted */
 		my_individ->age++;
 	}
 }
@@ -351,12 +352,12 @@ void dp_deep_select_step(DpDeepInfo*hdeepinfo)
 	dp_population_update(trial, 0, trial->size);
 	trial->iter = population->iter + 1;
 	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
-		int r4 = trial->individ[individ_id]->r4; 
+		int r4 = trial->individ[individ_id]->r4;
 		if (r4 > -1 && trial->individ[individ_id]->age > 0 && trial->individ[r4]->age > 0) {
 			trial->individ[r4]->failures++;
 		}
 	}
-	hdeepinfo->population = trial;
+	hdeepinfo->population = trial; /* accepted */
 	hdeepinfo->trial = population;
 }
 

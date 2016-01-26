@@ -116,9 +116,14 @@ void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivi
 	max_value_flag = dp_target_eval_precond (hevalctrl->eval_target, individ->z, &(individ->invalid), individ->precond, individ->user_data, index, cost);
 }
 
+/*
+ * if trial is better return 1
+ *
+ */
+
 int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_data)
 {
-	int i, need_swap;
+	int i, select_trial;
 	DpIndivid**i1 = (DpIndivid**)p1;
 	DpIndivid**i2 = (DpIndivid**)p2;
 	DpIndivid*individ = *i1;
@@ -126,23 +131,24 @@ int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_dat
 	DpEvaluationCtrl*hevalctrl = (DpEvaluationCtrl*)user_data;
 	int ignore_cost = hevalctrl->eval_target->ignore_cost;
 	double use_crdist = hevalctrl->eval_target->use_crdist;
-	need_swap = 0;
+	select_trial = 0;
+/* individ is accepted if -1 is returned */
 	if ( individ->invalid == 1 && trial->invalid == 0 ) {
-		need_swap = 1;
-	} else if ( ignore_cost == 0 && trial->cost < individ->cost ) {
-		need_swap = 1;
+		select_trial = 1;
+	} else if ( ignore_cost == 0 && trial->cost > individ->cost ) {
+		select_trial = -1;
 	} else if ( use_crdist > 0 && ( trial->pareto_front < individ->pareto_front || (( trial->pareto_front == individ->pareto_front ) && trial->crdist > individ->crdist) ) && g_rand_double(individ->hrand) < use_crdist ) {
-		need_swap = 1;
+		select_trial = 1;
 	} else {
-		need_swap = -1;
+		select_trial = -1;
 		for ( i = 0; i < hevalctrl->eval_target->size; i++ ) {
 			if ( trial->targets[i] < individ->targets[i] && g_rand_double(individ->hrand) < hevalctrl->eval_target->penalty[i]->rank ) {
-				need_swap = 1;
+				select_trial = 1;
 				break;
 			}
 		}
 	}
-	return need_swap;
+	return select_trial;
 }
 
 int dp_evaluation_cr_compare(gconstpointer a, gconstpointer b, gpointer user_data)
