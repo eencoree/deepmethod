@@ -684,6 +684,7 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
             src_ind = hdeepinfo->population->cost_ascending[0];
             for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
                 dst_ind = hdeepinfo->population->ages_descending[i];
+                if ( hdeepinfo->population->individ[dst_ind]->age < hdeepinfo->es_cutoff ) break;
                 if ( dst_ind != hdeepinfo->population->imin ) {
                     dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
                 }
