@@ -59,9 +59,9 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 	DpDeepInfo*hdeepinfo = dp_deep_info_new(population_size, recombination_weight, recombination_prob, recombination_gamma, es_lambda, es_cutoff, noglobal_eps, max_threads);
 	DpRecombinationStrategy strategy;
 	hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, seed, gamma_init, roundoff_error, max_threads, eval_strategy);
-	hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->size, hdeepinfo->hevalctrl->eval_target->precond_size, hdeepinfo->hevalctrl->seed + hdeepinfo->hevalctrl->yoffset);
+	hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->size, hdeepinfo->hevalctrl->eval_target->precond_size);
 	hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->noglobal_eps);
-	hdeepinfo->recombination_control = dp_recombination_control_init(recomb_strategy, hdeepinfo->population, hdeepinfo->population->individ[0]->hrand, hdeepinfo->recombination_weight, hdeepinfo->recombination_prob, hdeepinfo->recombination_gamma);
+	hdeepinfo->recombination_control = dp_recombination_control_init(recomb_strategy, hdeepinfo->population, hdeepinfo->hevalctrl->hrand, hdeepinfo->recombination_weight, hdeepinfo->recombination_prob, hdeepinfo->recombination_gamma);
 	hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
 	if ( hdeepinfo->max_threads > 0 ) {
         hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_evaluate_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
@@ -104,7 +104,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	DpIndivid*my_individ = population->individ[my_id];
 	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
 	int ignore_cost = hdeepinfo->hevalctrl->eval_target->ignore_cost;
-	GRand*hrand = my_individ->hrand;
+	GRand*hrand = hdeepinfo->hevalctrl->hrand;
 	r1 = ( ignore_cost == 0 ) ? population->imin : -1;
 	do {
 		r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
@@ -135,7 +135,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 			dp_individ_copy_values(my_trial, my_individ);
 			my_trial->age++;
 		}
-	} else if ( 1 != dp_evaluation_individ_compare((const void *)(&my_individ), (const void *)(&my_trial), (void*)(hdeepinfo->hevalctrl)) ) {
+	} else if ( -1 != dp_evaluation_individ_compare((const void *)(&my_individ), (const void *)(&my_trial), (void*)(hdeepinfo->hevalctrl)) ) {
 		dp_individ_copy_values(my_trial, my_individ);
 		my_trial->age++;
 	}
@@ -188,7 +188,7 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
 	DpIndivid*my_individ = population->individ[my_id];
 	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
 	int ignore_cost = hdeepinfo->hevalctrl->eval_target->ignore_cost;
-	GRand*hrand = my_individ->hrand;
+	GRand*hrand = hdeepinfo->hevalctrl->hrand;
 	r1 = ( ignore_cost == 0 ) ? population->imin : -1;
 	do {
 		r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
@@ -381,7 +381,7 @@ void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo)
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo)
 {
-	dp_recombination_control_update(hdeepinfo->recombination_control, hdeepinfo->population->individ[0]->hrand, hdeepinfo->population, 0, hdeepinfo->population->size);
+	dp_recombination_control_update(hdeepinfo->recombination_control, hdeepinfo->hevalctrl->hrand, hdeepinfo->population, 0, hdeepinfo->population->size);
     dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
 }
 

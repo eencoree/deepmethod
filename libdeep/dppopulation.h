@@ -55,7 +55,7 @@ typedef struct DpPopulation {
 	int slice_b;
 } DpPopulation;
 
-DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size, int seed);
+DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size);
 
 void dp_population_delete(DpPopulation*pop);
 

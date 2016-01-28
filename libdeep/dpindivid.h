@@ -49,7 +49,6 @@ typedef struct DpIndivid {
 	int ntargets;
 	double *precond;
 	int nprecond;
-	GRand*hrand;
 	int invalid;
 	int r1;
 	int r2;
@@ -63,7 +62,7 @@ typedef struct DpIndivid {
 	int status;
 } DpIndivid;
 
-DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed);
+DpIndivid*dp_individ_new(int size, int targets_size, int precond_size);
 
 void dp_individ_dump(DpIndivid*individ);
 

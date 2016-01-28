@@ -28,7 +28,7 @@
 #include <math.h>
 #include "dpindivid.h"
 
-DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
+DpIndivid*dp_individ_new(int size, int targets_size, int precond_size)
 {
 	int i;
 	DpIndivid*individ;
@@ -45,7 +45,6 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size, int seed)
 	}
 	individ->precond = (double*)calloc(precond_size, sizeof(double));
 	individ->nprecond = precond_size;
-	individ->hrand = g_rand_new_with_seed ((guint32)seed);
 	individ->age = 0;
 	individ->r1 = -1;
 	individ->r2 = -1;
@@ -72,7 +71,6 @@ void dp_individ_delete(DpIndivid*individ)
 	free(individ->targets);
 	free(individ->precond);
 	g_mutex_clear (&(individ->m));
-	g_rand_free(individ->hrand);
 	free(individ);
 }
 
@@ -116,7 +114,7 @@ void dp_individ_save(FILE*fp, DpIndivid*individ)
 	fprintf(fp, "%d\n", individ->r4);
 	fprintf(fp, "%d\n", individ->moves);
 	fprintf(fp, "%d\n", individ->failures);
-	fprintf(fp, "%d\n", individ->grads); 
+	fprintf(fp, "%d\n", individ->grads);
 	for ( i = 0; i < individ->size; i++ ) {
 	  fprintf(fp, "%13.9f ", individ->x[i]);
 	}
@@ -137,7 +135,6 @@ void dp_individ_save(FILE*fp, DpIndivid*individ)
 	  fprintf(fp, "%13.9f ", individ->precond[i]);
 	}
 	fprintf(fp, "\n");
-	/*	individ->hrand = trial->hrand;*/
 }
 
 void dp_individ_load(FILE*fp, DpIndivid*individ)
@@ -167,7 +164,6 @@ void dp_individ_load(FILE*fp, DpIndivid*individ)
 	for ( i = 0; i < individ->nprecond; i++ ) {
 	  fscanf(fp, "%lf", &(individ->precond[i]));
 	}
-	/*	individ->hrand = trial->hrand;*/
 }
 
 void dp_individ_pack(DpIndivid*individ, double**buffer2send, int*bufferDim)

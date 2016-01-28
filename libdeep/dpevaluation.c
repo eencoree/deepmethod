@@ -52,6 +52,7 @@ DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_ini
 	hevalctrl = dp_evaluation_ctrl_new();
 	hevalctrl->seed = seed;
 	hevalctrl->yoffset = worldid;
+	hevalctrl->hrand = g_rand_new_with_seed ((guint32)(seed + worldid));
 	hevalctrl->gamma_init = gamma_init;
 	hevalctrl->roundoff_error = roundoff_error;
 	hevalctrl->eval_max_threads = eval_max_threads;
@@ -131,18 +132,19 @@ int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_dat
 	DpEvaluationCtrl*hevalctrl = (DpEvaluationCtrl*)user_data;
 	int ignore_cost = hevalctrl->eval_target->ignore_cost;
 	double use_crdist = hevalctrl->eval_target->use_crdist;
+	GRand*hrand = hevalctrl->hrand;
 	select_trial = 0;
 /* individ is accepted if -1 is returned */
 	if ( individ->invalid == 1 && trial->invalid == 0 ) {
 		select_trial = 1;
 	} else if ( ignore_cost == 0 && trial->cost > individ->cost ) {
 		select_trial = -1;
-	} else if ( use_crdist > 0 && ( trial->pareto_front < individ->pareto_front || (( trial->pareto_front == individ->pareto_front ) && trial->crdist > individ->crdist) ) && g_rand_double(individ->hrand) < use_crdist ) {
+	} else if ( use_crdist > 0 && ( trial->pareto_front < individ->pareto_front || (( trial->pareto_front == individ->pareto_front ) && trial->crdist > individ->crdist) ) && g_rand_double(hrand) < use_crdist ) {
 		select_trial = 1;
 	} else {
 		select_trial = -1;
 		for ( i = 0; i < hevalctrl->eval_target->size; i++ ) {
-			if ( trial->targets[i] < individ->targets[i] && g_rand_double(individ->hrand) < hevalctrl->eval_target->penalty[i]->rank ) {
+			if ( trial->targets[i] < individ->targets[i] && g_rand_double(hrand) < hevalctrl->eval_target->penalty[i]->rank ) {
 				select_trial = 1;
 				break;
 			}
@@ -236,6 +238,7 @@ int dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ)
 {
 	int i;
 	double y;
+	GRand*hrand = hevalctrl->hrand;
 	for ( i = 0; i < hevalctrl->eval->size; i++) {
 		if ( hevalctrl->eval->points[i]->limited ) {
 			if ( hevalctrl->eval_strategy == sin_trans_flag ) {
@@ -250,12 +253,12 @@ int dp_evaluation_individ_prepare(DpEvaluationCtrl*hevalctrl, DpIndivid*individ)
 				if ( individ->x[i] > hevalctrl->eval->points[i]->lower && individ->x[i] < hevalctrl->eval->points[i]->upper ) {
 					individ->z[i] = individ->x[i] / hevalctrl->eval->points[i]->scale;
 				} else {
-					individ->x[i] = hevalctrl->eval->points[i]->lower + 2.0 * g_rand_double(individ->hrand) * hevalctrl->eval->points[i]->beta;
+					individ->x[i] = hevalctrl->eval->points[i]->lower + 2.0 * g_rand_double(hrand) * hevalctrl->eval->points[i]->beta;
 					individ->z[i] = individ->x[i] / hevalctrl->eval->points[i]->scale;
 				}
 			} else if ( hevalctrl->eval_strategy == rand_trans_flag ) {
 				while ( individ->x[i] < hevalctrl->eval->points[i]->lower || individ->x[i] > hevalctrl->eval->points[i]->upper ) {
-					individ->x[i] = hevalctrl->eval->points[i]->alpha + dp_rand_gauss(individ->hrand, 0, 1) * hevalctrl->eval->points[i]->beta;
+					individ->x[i] = hevalctrl->eval->points[i]->alpha + dp_rand_gauss(hrand, 0, 1) * hevalctrl->eval->points[i]->beta;
 				}
 				individ->z[i] = individ->x[i] / hevalctrl->eval->points[i]->scale;
 			}
@@ -289,12 +292,13 @@ void dp_evaluation_individ_scramble(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 {
 	int i;
 	double y, z;
+	GRand*hrand = hevalctrl->hrand;
 	for ( i = 0; i < hevalctrl->eval->size; i++) {
 		if ( eps > 0 ) {
 			z = (*(hevalctrl->eval->points[i]->param)) * hevalctrl->eval->points[i]->scale;
-			y = g_rand_double_range(individ->hrand, (1.0 - eps) * z, (1.0 + eps) * z);
+			y = g_rand_double_range(hrand, (1.0 - eps) * z, (1.0 + eps) * z);
 		} else {
-			y = g_rand_double_range(individ->hrand, hevalctrl->eval->points[i]->lower, hevalctrl->eval->points[i]->upper);
+			y = g_rand_double_range(hrand, hevalctrl->eval->points[i]->lower, hevalctrl->eval->points[i]->upper);
 		}
 		if ( hevalctrl->eval->points[i]->limited ) {
 			if ( hevalctrl->eval_strategy == sin_trans_flag )
@@ -380,7 +384,7 @@ DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, in
 {
 	DpPopulation*pop;
 	int i;
-	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
+	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size);
 	dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 	pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, 0);
@@ -411,7 +415,7 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	GError *gerror = NULL;
 	GMainContext *gcontext = g_main_context_default();
 	gulong microseconds = G_USEC_PER_SEC / 1000;
-	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed);
+	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size);
 	if ( noglobal_eps == 0 ) {
 		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 		pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
@@ -463,7 +467,7 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 DpIndivid*dp_evaluation_individ_init(DpEvaluationCtrl*hevalctrl)
 {
 	DpIndivid*individ;
-	individ = dp_individ_new(hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size, hevalctrl->seed + hevalctrl->yoffset);
+	individ = dp_individ_new(hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size);
 	dp_evaluation_individ_set(hevalctrl, individ);
 	individ->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 	dp_evaluation_individ_evaluate(hevalctrl, individ, individ, 0, 0);

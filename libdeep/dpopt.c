@@ -701,10 +701,11 @@ DpLoopExitCode dp_opt_permute(DpLoop*hloop, gpointer user_data)
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 			DpPopulation*pop = hdeepinfo->population;
+			GRand*hrand = hdeepinfo->hevalctrl->hrand;
 			seed_ind = hdeepinfo->es_lambda % pop->size;
 			for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
-                src_ind = g_rand_int_range (pop->individ[seed_ind]->hrand, 0, pop->size);
-                dst_ind = g_rand_int_range (pop->individ[seed_ind]->hrand, 0, pop->size);
+                src_ind = g_rand_int_range (hrand, 0, pop->size);
+                dst_ind = g_rand_int_range (hrand, 0, pop->size);
                 tmp_ind = pop->individ[dst_ind];
                 pop->individ[dst_ind] = pop->individ[src_ind];
                 pop->individ[src_ind] = tmp_ind;

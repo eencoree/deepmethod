@@ -74,6 +74,7 @@ typedef struct DpEvaluationCtrl {
 	double gamma_init;
 	double roundoff_error;
 	DpTarget*eval_target;
+	GRand*hrand;
 } DpEvaluationCtrl;
 
 void dp_evaluation_individ_evaluate_prime(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost);

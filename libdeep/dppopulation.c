@@ -33,7 +33,7 @@
 #include "dpindivid.h"
 #include "dppopulation.h"
 
-DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size, int seed)
+DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size)
 {
 	int i;
 	DpPopulation*pop;
@@ -46,7 +46,7 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int pre
 	pop->ages_descending = (int*)calloc(size, sizeof(int));
 	pop->ind_size = ind_size;
 	for ( i = 0; i < size; i++ ) {
-		pop->individ[i] = dp_individ_new(ind_size, targets_size, precond_size, seed + i);
+		pop->individ[i] = dp_individ_new(ind_size, targets_size, precond_size);
 		pop->cost_ascending[i] = i;
 		pop->ages_descending[i] = i;
 	}
@@ -319,7 +319,7 @@ void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 #ifdef MPIZE
 	int dest;
 	int source = 0;
-	int ind_index, dest_index, ind_per_node, ind_per_last_node, number_of_comm_lines; 
+	int ind_index, dest_index, ind_per_node, ind_per_last_node, number_of_comm_lines;
 	MPI_Status *status;       /* status array of the MPI_Waitall function */
 	MPI_Request *request;           /* handle array for receiving messages */
 	ind_per_node = (int)ceil(pop->size / mpi_nnodes);
@@ -331,13 +331,13 @@ void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 		dest_index = 0;
 		for (dest = 1; dest < mpi_nnodes - 1; dest++) { /* my_id = 0 doesn't send anything */
 			dest_index += ind_per_node;
-			for (ind_index = dest_index; ind_index < dest_index + ind_per_node; ind_index++) { 
+			for (ind_index = dest_index; ind_index < dest_index + ind_per_node; ind_index++) {
 				MPI_Isend(pop->individ[ind_index]->x, pop->ind_size, MPI_DOUBLE, dest, ind_index, MPI_COMM_WORLD, &request[ind_index - ind_per_node]);
 			}
 		}
 		dest_index += ind_per_node;
 		dest = mpi_nnodes - 1;
-		for (ind_index = dest_index; ind_index < dest_index + ind_per_last_node; ind_index++) { 
+		for (ind_index = dest_index; ind_index < dest_index + ind_per_last_node; ind_index++) {
 			MPI_Isend(pop->individ[ind_index]->x, pop->ind_size, MPI_DOUBLE, dest, ind_index, MPI_COMM_WORLD, &request[ind_index - ind_per_node]);
 		}
 		MPI_Waitall(number_of_comm_lines, request, status);
@@ -348,7 +348,7 @@ void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 		request = (MPI_Request *)calloc(number_of_comm_lines, sizeof(MPI_Request));
 		status =  (MPI_Status *)calloc(number_of_comm_lines, sizeof(MPI_Status));
 		dest_index = ind_per_node * mpi_id;
-		for (ind_index = dest_index; ind_index < dest_index + number_of_comm_lines; ind_index++) { 
+		for (ind_index = dest_index; ind_index < dest_index + number_of_comm_lines; ind_index++) {
 			MPI_Irecv(pop->individ[ind_index]->x, pop->ind_size, MPI_DOUBLE, source, ind_index, MPI_COMM_WORLD, &request[ind_index - dest_index]);
 		}
 		MPI_Waitall(number_of_comm_lines, request, status);
@@ -376,7 +376,7 @@ void dp_population_mpi_gather(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 		comm_index = 0;
 		for (dest = 1; dest < mpi_nnodes - 1; dest++) { /* my_id = 0 doesn't send anything */
 			dest_index += ind_per_node;
-			for (ind_index = dest_index; ind_index < dest_index + ind_per_node; ind_index++) { 
+			for (ind_index = dest_index; ind_index < dest_index + ind_per_node; ind_index++) {
 				MPI_Irecv(pop->individ[ind_index]->targets, pop->individ[ind_index]->ntargets, MPI_DOUBLE, dest, 3 * ind_index, MPI_COMM_WORLD, &request[comm_index]);
 				comm_index++;
 				MPI_Irecv(pop->individ[ind_index]->precond, pop->individ[ind_index]->nprecond, MPI_DOUBLE, dest, 3 * ind_index + 1, MPI_COMM_WORLD, &request[comm_index]);
@@ -387,7 +387,7 @@ void dp_population_mpi_gather(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 		}
 		dest_index += ind_per_node;
 		dest = mpi_nnodes - 1;
-		for (ind_index = dest_index; ind_index < dest_index + ind_per_last_node; ind_index++) { 
+		for (ind_index = dest_index; ind_index < dest_index + ind_per_last_node; ind_index++) {
 			MPI_Irecv(pop->individ[ind_index]->targets, pop->individ[ind_index]->ntargets, MPI_DOUBLE, dest, 3 * ind_index, MPI_COMM_WORLD, &request[comm_index]);
 			comm_index++;
 			MPI_Irecv(pop->individ[ind_index]->precond, pop->individ[ind_index]->nprecond, MPI_DOUBLE, dest, 3 * ind_index + 1, MPI_COMM_WORLD, &request[comm_index]);
@@ -403,7 +403,7 @@ void dp_population_mpi_gather(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 		request = (MPI_Request *)calloc(3 * number_of_comm_lines, sizeof(MPI_Request));
 		status =  (MPI_Status *)calloc(3 * number_of_comm_lines, sizeof(MPI_Status));
 		dest_index = ind_per_node * mpi_id;
-		for (ind_index = dest_index; ind_index < dest_index + number_of_comm_lines; ind_index++) { 
+		for (ind_index = dest_index; ind_index < dest_index + number_of_comm_lines; ind_index++) {
 			MPI_Isend(pop->individ[ind_index]->targets, pop->individ[ind_index]->ntargets, MPI_DOUBLE, dest, 3 * ind_index, MPI_COMM_WORLD, &request[3 * (ind_index - dest_index)]);
 			MPI_Isend(pop->individ[ind_index]->precond, pop->individ[ind_index]->nprecond, MPI_DOUBLE, dest, 3 * ind_index + 1, MPI_COMM_WORLD, &request[3 * (ind_index - dest_index) + 1]);
 			MPI_Isend(&(pop->individ[ind_index]->cost), 1, MPI_DOUBLE, dest, 3 * ind_index + 2, MPI_COMM_WORLD, &request[3 * (ind_index - dest_index) + 2]);
