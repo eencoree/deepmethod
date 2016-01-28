@@ -578,7 +578,7 @@ DpLoopExitCode dp_opt_duplicate(DpLoop*hloop, gpointer user_data)
             for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
                 src_ind = hdeepinfo->population->cost_ascending[i];
                 dst_ind = hdeepinfo->population->ages_descending[i];
-                if ( dst_ind != hdeepinfo->population->imin ) {
+                if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
                     dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
                 }
 			}
@@ -608,14 +608,10 @@ DpLoopExitCode dp_opt_substold(DpLoop*hloop, gpointer user_data)
 			for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
                 src_ind = hdeepinfo->population->cost_ascending[i];
                 dst_ind = hdeepinfo->population->ages_descending[i];
-				if (hopt->debug > 1) {
-					g_message ("dp_opt_substold: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
-				}
+				g_debug ("dp_opt_substold: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
 				if ( hdeepinfo->population->individ[dst_ind]->age < hdeepinfo->es_cutoff ) break;
-                if ( dst_ind != hdeepinfo->population->imin ) {
-					if (hopt->debug > 0) {
-						g_message ("dp_opt_substold: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
-					}
+                if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
+					g_debug ("dp_opt_substold: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
                     dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
                 }
 			}
@@ -646,14 +642,10 @@ DpLoopExitCode dp_opt_substfailed(DpLoop*hloop, gpointer user_data)
 			for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
                 src_ind = hdeepinfo->population->cost_ascending[i];
                 dst_ind = hdeepinfo->population->ages_descending[i];
-				if (hopt->debug > 1) {
-					g_message ("dp_opt_subsfailed: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
-				}
+				g_debug ("dp_opt_subsfailed: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
 				if ( hdeepinfo->population->individ[dst_ind]->failures < hdeepinfo->es_cutoff ) break;
-                if ( dst_ind != hdeepinfo->population->imin ) {
-					if (hopt->debug > 0) {
-						g_message ("dp_opt_subsfailed: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
-					}
+                if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
+					g_debug ("dp_opt_subsfailed: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
                     dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
                 }
 			}
@@ -684,8 +676,10 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
             src_ind = hdeepinfo->population->cost_ascending[0];
             for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
                 dst_ind = hdeepinfo->population->ages_descending[i];
+				g_debug ("dp_opt_substitute: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
                 if ( hdeepinfo->population->individ[dst_ind]->age < hdeepinfo->es_cutoff ) break;
-                if ( dst_ind != hdeepinfo->population->imin ) {
+                if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
+					g_debug ("dp_opt_substitute: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
                     dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
                 }
 			}

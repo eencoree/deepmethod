@@ -231,10 +231,7 @@ gchar*param2str(XmModel*xmmodel, int i)
 {
 	gchar*str = NULL;
 	if (xmmodel->dparms[i] != xmmodel->dparms[i]) { // is NaN
-		if ( xmmodel->debug == 1 ) {
-			g_printf("p[%d] = %.13f is nan\n", i, xmmodel->dparms[i]);
-			fflush(stdout);
-		}
+		g_debug("p[%d] = %.13f is nan", i, xmmodel->dparms[i]);
 		return NULL;
 	} else {
 		if (xmmodel->param_type[i] == 0) {
@@ -285,10 +282,7 @@ GString *interpreter_recieve_response(GIOChannel*out, int debug, API*api)
     do{
         status = g_io_channel_read_line( out, &response_line, &size, NULL, &gerror );
 		if (status != G_IO_STATUS_NORMAL) {
-			if ( debug == 1 ) {
-				g_print("Status is not NORMAL %d\n", status);
-				fflush(stdout);
-			}
+			g_debug("Status is not NORMAL %d", status);
 			if (gerror != NULL) {
 				g_print("%s", gerror->message);
 				g_error_free(gerror);
@@ -297,10 +291,7 @@ GString *interpreter_recieve_response(GIOChannel*out, int debug, API*api)
 		}
         response = g_string_append(response, response_line);
         is_done = g_str_has_suffix(response->str, suffix);
-		if ( debug == 1 ) {
-			g_printf("line [%d] '%s' last=%d '%s' %d\n", j, response_line, is_done, response->str, status);
-			fflush(stdout);
-		}
+		g_debug("line [%d] '%s' last=%d '%s' %d\n", j, response_line, is_done, response->str, status);
         j++;
         g_free(response_line);
     } while( !is_done );
@@ -317,19 +308,13 @@ static gboolean out_watch( GIOChannel   *channel,
     Interpreter *intprt = (Interpreter*)data;
 	wrongstart = 0;
     if( cond == G_IO_HUP ){
-        g_print("Cond %d is G_IO_HUP %d\n", intprt->child_pid, (int)cond);
+        g_debug("Cond %d is G_IO_HUP %d", intprt->child_pid, (int)cond);
         g_io_channel_unref( channel );
         return( FALSE );
     } else if( cond == G_IO_IN ) {
-		if ( intprt->debug == 1 ) {
-			g_print("Cond %d is G_IO_IN %d\n", intprt->child_pid, (int)cond);
-			fflush(stdout);
-		}
+		g_debug("Cond %d is G_IO_IN %d", intprt->child_pid, (int)cond);
     } else if( cond == G_IO_OUT ) {
-		if ( intprt->debug == 1 ) {
-			g_print("Cond %d is G_IO_OUT %d\n", intprt->child_pid, (int)cond);
-			fflush(stdout);
-		}
+		g_debug("Cond %d is G_IO_OUT %d", intprt->child_pid, (int)cond);
 		wrongstart = 1;
     }
 /* status:
@@ -344,10 +329,7 @@ static gboolean out_watch( GIOChannel   *channel,
 		wrongstart = 1;
 	}
 	if (wrongstart == 1) {
-		if ( intprt->debug == 1 ) {
-			g_print("Cond %d is G_IO_IN %d but status %d\n", intprt->child_pid, (int)cond, currstatus);
-			fflush(stdout);
-		}
+		g_debug("Cond %d is G_IO_IN %d but status %d", intprt->child_pid, (int)cond, currstatus);
 		g_string_free(response, TRUE);
 		return TRUE;
 	}
@@ -355,10 +337,7 @@ static gboolean out_watch( GIOChannel   *channel,
 	g_mutex_lock( &(intprt->mstatus) );
 	intprt->status = 2;
 	g_mutex_unlock( &(intprt->mstatus) );
-	if ( intprt->debug == 1 ) {
-		g_printf("Interpreter out [%d]:", intprt->child_pid);
-		fflush(stdout);
-	}
+	g_debug("Interpreter out [%d]:", intprt->child_pid);
     response = interpreter_recieve_response(channel, intprt->debug, intprt->api);
 /* read info - "free" interpreter */
     g_mutex_lock( &(intprt->mstatus) );
@@ -462,10 +441,7 @@ Interpreter* init_interpreter(XmModel * xmmodel){
     g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch, intprt);
 
 	init_source_to_interpreter(intprt->in, intprt->api);
-	if ( intprt->debug == 1 ) {
-		g_printf("Interpreter init [%d]:", intprt->child_pid);
-		fflush(stdout);
-	}
+	g_debug("Interpreter init [%d]:", intprt->child_pid);
 	GString *response = interpreter_recieve_response(intprt->out, intprt->debug, intprt->api);
 	g_string_free(response, TRUE);
     return intprt;
@@ -537,7 +513,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 	Interpreter * intprt = NULL;
 	intprt = (Interpreter*)g_async_queue_timeout_pop(queue, end_time);
 	if (intprt == NULL) {
-		g_warning ( "Couldn't get interpreter" );
+		g_debug ( "Couldn't get interpreter" );
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
@@ -547,7 +523,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 	// create command
 	command = create_command(xmmodel, intprt->api);
 	if (command == NULL) {
-		g_warning ( "Couldn't create command with NaN" );
+		g_debug ( "Couldn't create command with NaN" );
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
@@ -572,7 +548,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
     }
 	if (failed) {
 		g_mutex_unlock (&(intprt->m));
-		g_warning ( "Interpreter timed out");
+		g_debug ( "Interpreter timed out");
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
@@ -603,11 +579,11 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 			if ( result[xmmodel->keys[i]] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
 			} else {
-				g_warning ( "result[%d] doesn't exist", xmmodel->keys[i]);
+				g_debug ( "result[%d] doesn't exist", xmmodel->keys[i]);
 			}
 		}
 	} else {
-		g_warning ( "Couldn't parse interpreter output: %s", standard_output);
+		g_debug ( "Couldn't parse interpreter output: %s", standard_output);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
@@ -693,12 +669,12 @@ int xm_model_run_command(XmModel *xmmodel)
 			if ( result[xmmodel->keys[i]] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
 			} else {
-				g_warning ( "result[%d] doesn't exist", xmmodel->keys[i]);
+				g_debug ( "result[%d] doesn't exist", xmmodel->keys[i]);
 			}
 		}
 	} else {
-		g_warning ( "Couldn't parse output: %s", standard_output);
-		g_warning ( "Standard error: %s", standard_error);
+		g_debug ( "Couldn't parse output: %s", standard_output);
+		g_debug ( "Standard error: %s", standard_error);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
@@ -1061,19 +1037,19 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "debug", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->debug = ii;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
     if ( ( ii = g_key_file_get_integer(gkf, groupname, "a_precision", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->a_precision = ii;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
     if ( ( ii = g_key_file_get_integer(gkf, groupname, "b_precision", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->b_precision = ii;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "parms", &length, &gerror) ) != NULL ) {
@@ -1089,7 +1065,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->param_type[j] = 0;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( length = g_key_file_get_integer(gkf, groupname, "numparms", &gerror) ) != 0  || gerror == NULL ) {
@@ -1115,7 +1091,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->scale[j] = 1.0;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "valparms", &length, &gerror) ) != NULL ) {
@@ -1131,7 +1107,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->copy_val_parms = 1;
 		g_free(ilist);
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "partype", &length, &gerror) ) != NULL ) {
@@ -1139,25 +1115,25 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->param_type[j] = ilist[j];
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "subsubset", &length, &gerror) ) != NULL ) {
 		xmmodel->subsubset = ilist;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "hasparams", &length, &gerror) ) != NULL ) {
 		xmmodel->has_params = ilist;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "mask", &length, &gerror) ) != NULL ) {
 		xmmodel->mask = ilist;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( length = g_key_file_get_integer(gkf, groupname, "nummask", &gerror) ) != 0  || gerror == NULL ) {
@@ -1169,7 +1145,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->mask[j] = 0;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "tweak", &length, &gerror) ) != NULL ) {
@@ -1191,7 +1167,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		}
 
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( length = g_key_file_get_integer(gkf, groupname, "numtweak", &gerror) ) != 0  || gerror == NULL ) {
@@ -1207,7 +1183,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->tweak[j] = 0;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "valnotweak", &length, &gerror) ) != NULL ) {
@@ -1232,7 +1208,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		}
 		g_free(ilist);
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "dparms", &length, &gerror) ) != NULL ) {
@@ -1244,7 +1220,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->scale[j] = 1.0;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 /*	if ( ( length = g_key_file_get_integer(gkf, groupname, "numdparms", &gerror) ) != 0  || gerror == NULL ) {
@@ -1257,13 +1233,13 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->scale[j] = 1.0;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}*/
 	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "lbound", &length, &gerror) ) != NULL ) {
 		xmmodel->lbound = dlist;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( dval = g_key_file_get_double(gkf, groupname, "vallbound", &gerror) ) != 0 || gerror == NULL ) {
@@ -1272,13 +1248,13 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->lbound[j] = dval;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "hbound", &length, &gerror) ) != NULL ) {
 		xmmodel->hbound = dlist;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( dval = g_key_file_get_double(gkf, groupname, "valhbound", &gerror) ) != 0  || gerror == NULL ) {
@@ -1287,7 +1263,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->hbound[j] = dval;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "limited", &length, &gerror) ) != NULL ) {
@@ -1295,7 +1271,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->limited[j] = ilist[j];
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 
@@ -1304,14 +1280,14 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->scale[j] = dlist[j];
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "keys", &length, &gerror) ) != NULL ) {
 		xmmodel->keys = ilist;
 		xmmodel->num_keys = length;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "mapping", &length, &gerror) ) != NULL ) {
@@ -1319,56 +1295,56 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->num_values = length;
 		xmmodel->array = g_new0 ( double, length );
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "delimiters", &gerror) ) != NULL ) {
 		xmmodel->delimiters = str;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "command", &gerror) ) != NULL ) {
 		xmmodel->command = str;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "prime_keys", &length, &gerror) ) != NULL ) {
 		xmmodel->prime_keys = ilist;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "prime_mapping", &length, &gerror) ) != NULL ) {
 		xmmodel->prime_mapping = ilist;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_prime_values", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->num_prime_values = ii;
 		xmmodel->prime_array = g_new0 ( double, ii );
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_threads", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->num_threads = ii;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "prime_delimiters", &gerror) ) != NULL ) {
 		xmmodel->prime_delimiters = str;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "prime_command", &gerror) ) != NULL ) {
 		xmmodel->prime_command = str;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "convert", &gerror) ) != NULL ) {
@@ -1387,7 +1363,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->converter = xm_model_convert_parms_to_octave;
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "parts", &length, &gerror) ) != NULL ) {
@@ -1405,7 +1381,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			}
 		}
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "type", &gerror) ) != NULL ) {
@@ -1416,13 +1392,13 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		}
 		g_free(str);
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "timeoutsec", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->timeoutsec = ii;
 	} else {
-		g_warning ("%s", gerror->message );
+		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	g_key_file_free(gkf);
