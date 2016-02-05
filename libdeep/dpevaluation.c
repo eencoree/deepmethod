@@ -57,6 +57,8 @@ DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_ini
 	hevalctrl->roundoff_error = roundoff_error;
 	hevalctrl->eval_max_threads = eval_max_threads;
 	hevalctrl->eval_strategy = eval_strategy;
+	g_mutex_init( &(hevalctrl->m) );
+	hevalctrl->kounter = 0;
 	return hevalctrl;
 }
 
@@ -110,6 +112,9 @@ void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 	}
 	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
 	max_value_flag = dp_target_eval (hevalctrl->eval_target, individ->z, &(individ->invalid), &(individ->cost), individ->targets, individ->precond, individ->user_data, index, cost);
+	g_mutex_lock( &(hevalctrl->m) );
+	hevalctrl->kounter++;
+	g_mutex_unlock( &(hevalctrl->m) );
 }
 
 void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
