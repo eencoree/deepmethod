@@ -99,14 +99,8 @@ void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType
 				dp_opt_add_func(hopt, dp_read_state, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "writetst") ) {
 				dp_opt_add_func(hopt, dp_write_tst, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "duplicate") ) {
-				dp_opt_add_func(hopt, dp_opt_duplicate, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "substitute") ) {
 				dp_opt_add_func(hopt, dp_opt_substitute, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "substold") ) {
-				dp_opt_add_func(hopt, dp_opt_substold, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "substfailed") ) {
-				dp_opt_add_func(hopt, dp_opt_substfailed, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "optpost") ) {
 				dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "optposteval") ) {
@@ -563,99 +557,6 @@ DpLoopExitCode dp_opt_mpi_gather(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
-DpLoopExitCode dp_opt_duplicate(DpLoop*hloop, gpointer user_data)
-{
-	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
-	DpOpt*hopt = (DpOpt*)user_data;
-	DpDeepInfo*hdeepinfo;
-	int stop_flag = ( hloop->stop_flag == DP_LOOP_EXIT_SUCCESS ) ? 1 : 0;
-	int src_ind, dst_ind, i;
-	switch (hopt->opt_type) {
-		case H_OPT_DEEP:
-			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, hdeepinfo->population);
-			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
-            for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
-                src_ind = hdeepinfo->population->cost_ascending[i];
-                dst_ind = hdeepinfo->population->ages_descending[i];
-                if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
-                    dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
-                }
-			}
-			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
-		break;
-	}
-	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
-	return ret_val;
-}
-
-/*
- * Old are substituted with sorted by cost
- */
-
-DpLoopExitCode dp_opt_substold(DpLoop*hloop, gpointer user_data)
-{
-	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
-	DpOpt*hopt = (DpOpt*)user_data;
-	DpDeepInfo*hdeepinfo;
-	int stop_flag = ( hloop->stop_flag == DP_LOOP_EXIT_SUCCESS ) ? 1 : 0;
-	int src_ind, dst_ind, i;
-	switch (hopt->opt_type) {
-		case H_OPT_DEEP:
-			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, hdeepinfo->population);
-			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
-			for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
-                src_ind = hdeepinfo->population->cost_ascending[i];
-                dst_ind = hdeepinfo->population->ages_descending[i];
-				g_debug ("dp_opt_substold: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
-				if ( hdeepinfo->population->individ[dst_ind]->age < hdeepinfo->es_cutoff ) break;
-                if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
-					g_debug ("dp_opt_substold: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
-                    dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
-                }
-			}
-			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
-		break;
-	}
-	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
-	return ret_val;
-}
-
-/*
- * Those that failed more than cutoff are substituted
- * with sorted by cost
- */
-
-DpLoopExitCode dp_opt_substfailed(DpLoop*hloop, gpointer user_data)
-{
-	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
-	DpOpt*hopt = (DpOpt*)user_data;
-	DpDeepInfo*hdeepinfo;
-	int stop_flag = ( hloop->stop_flag == DP_LOOP_EXIT_SUCCESS ) ? 1 : 0;
-	int src_ind, dst_ind, i;
-	switch (hopt->opt_type) {
-		case H_OPT_DEEP:
-			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_failures_descending, hdeepinfo->population);
-			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
-			for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
-                src_ind = hdeepinfo->population->cost_ascending[i];
-                dst_ind = hdeepinfo->population->ages_descending[i];
-				g_debug ("dp_opt_subsfailed: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
-				if ( hdeepinfo->population->individ[dst_ind]->failures < hdeepinfo->es_cutoff ) break;
-                if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
-					g_debug ("dp_opt_subsfailed: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
-                    dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
-                }
-			}
-			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
-		break;
-	}
-	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
-	return ret_val;
-}
-
 /*
  * Copy the best several times
  *
@@ -673,14 +574,28 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, hdeepinfo->population);
 			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
-            src_ind = hdeepinfo->population->cost_ascending[0];
+			if (hdeepinfo->es_kind == 0) {
+				src_ind = hdeepinfo->population->cost_ascending[0];
+			}
             for ( i = 0; i < hdeepinfo->es_lambda; i++ ) {
+				if (hdeepinfo->es_kind == 1) {
+					src_ind = hdeepinfo->population->cost_ascending[i];
+				}
                 dst_ind = hdeepinfo->population->ages_descending[i];
 				g_debug ("dp_opt_substitute: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
                 if ( hdeepinfo->population->individ[dst_ind]->age < hdeepinfo->es_cutoff ) break;
+                if ( hdeepinfo->population->individ[dst_ind]->failures < -hdeepinfo->es_cutoff ) break;
                 if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
 					g_debug ("dp_opt_substitute: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
                     dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
+                    if (hdeepinfo->substeps >= 0) {
+						dp_evaluation_individ_scramble(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], hdeepinfo->substeps);
+						dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[dst_ind], i, 0);
+						hdeepinfo->population->individ[dst_ind]->age = 0;
+						hdeepinfo->population->individ[dst_ind]->moves = 0;
+						hdeepinfo->population->individ[dst_ind]->failures = 0;
+						hdeepinfo->population->individ[dst_ind]->grads = 0;
+					}
                 }
 			}
 			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);

@@ -47,7 +47,7 @@ DpSettings*dp_settings_new()
 	opts->criterion = 1e-5;
 	opts->stop_count = 10;
 	opts->population_size = 5;
-	opts->recombination_strategy = DE_3_bin_T;
+	opts->recombination_strategy = DE_3_bin_rand;
 	opts->recombination_weight = 0;
 	opts->recombination_prob = 0;
 	opts->recombination_gamma = 0.9;
@@ -85,6 +85,7 @@ DpSettings*dp_settings_new()
 	opts->run_after[3] = NULL;
 	opts->pareto_all = -1;
 	opts->precision = 9;
+	opts->substeps = -1;
 	return opts;
 }
 
@@ -212,6 +213,13 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "es_kind", &gerror) ) != NULL ) {
+		hopt->es_kind = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "pareto_all", &gerror) ) != NULL ) {
 		hopt->pareto_all = g_strtod( str , NULL);
 		g_free(str);
@@ -221,6 +229,13 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "noglobal_eps", &gerror) ) != NULL ) {
 		hopt->noglobal_eps = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "substeps", &gerror) ) != NULL ) {
+		hopt->substeps = g_strtod( str , NULL);
 		g_free(str);
 	} else {
 		g_debug ("%s", gerror->message );
@@ -319,6 +334,22 @@ int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, 
 			hopt->recombination_strategy = DE_3_exp_rand_T;
 		} else if ( !g_strcmp0(str, "de_3_bin_rand_T") ) {
 			hopt->recombination_strategy = DE_3_bin_rand_T;
+		} else if ( !g_strcmp0(str, "de_3_exp_rand_phi") ) {
+			hopt->recombination_strategy = DE_3_exp_rand_phi;
+		} else if ( !g_strcmp0(str, "de_3_bin_rand_phi") ) {
+			hopt->recombination_strategy = DE_3_bin_rand_phi;
+		} else if ( !g_strcmp0(str, "de_3_exp_self_phi") ) {
+			hopt->recombination_strategy = DE_3_exp_self_phi;
+		} else if ( !g_strcmp0(str, "de_3_bin_self_phi") ) {
+			hopt->recombination_strategy = DE_3_bin_self_phi;
+		} else if ( !g_strcmp0(str, "de_3_exp_rand_D") ) {
+			hopt->recombination_strategy = DE_3_exp_rand_D;
+		} else if ( !g_strcmp0(str, "de_3_bin_rand_D") ) {
+			hopt->recombination_strategy = DE_3_bin_rand_D;
+		} else if ( !g_strcmp0(str, "de_3_exp_self_D") ) {
+			hopt->recombination_strategy = DE_3_exp_self_D;
+		} else if ( !g_strcmp0(str, "de_3_bin_self_D") ) {
+			hopt->recombination_strategy = DE_3_bin_self_D;
 		} else if ( !g_strcmp0(str, "de_3_exp_self_T") ) {
 			hopt->recombination_strategy = DE_3_exp_self_T;
 		} else if ( !g_strcmp0(str, "de_3_bin_self_T") ) {
@@ -440,22 +471,10 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
 				dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "duplicate") ) {
-				opt_type = H_OPT_NONE;
-				method_info = NULL;
-				dp_opt_add_func(hopt, dp_opt_duplicate, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "substitute") ) {
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
 				dp_opt_add_func(hopt, dp_opt_substitute, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "substold") ) {
-				opt_type = H_OPT_NONE;
-				method_info = NULL;
-				dp_opt_add_func(hopt, dp_opt_substold, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "substfailed") ) {
-				opt_type = H_OPT_NONE;
-				method_info = NULL;
-				dp_opt_add_func(hopt, dp_opt_substfailed, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "dpupdate") ) {
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
@@ -484,12 +503,12 @@ int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, D
 			dp_opt_add_func(hopt, dp_opt_mpi_gather, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "deep") ) {
 			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->es_cutoff, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
+			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->es_cutoff, dpsettings->es_kind, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads, dpsettings->substeps);
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "gdeep") ) {
 			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->es_cutoff, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads);
+			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->population_size, dpsettings->recombination_weight, dpsettings->recombination_prob, dpsettings->recombination_gamma, dpsettings->es_lambda, dpsettings->es_cutoff, dpsettings->es_kind, dpsettings->noglobal_eps, dpsettings->recombination_strategy, dpsettings->max_threads, dpsettings->substeps);
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep_generate, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "edeep") ) {
