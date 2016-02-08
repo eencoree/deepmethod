@@ -53,6 +53,8 @@ DpTarget*dp_target_new()
 	htarget->debug = 0;
 	htarget->ignore_cost = 0;
 	htarget->use_crdist = 0;
+	htarget->penalty_aggr_type = DpTargetAggrSum;
+	htarget->constrain_aggr_type = DpTargetAggrMax;
 	return htarget;
 }
 
@@ -111,7 +113,12 @@ int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double
 			if ( f < max_value ) {
 				penalty[i] = f;
 				f *= htarget->penalty[i]->weight;
-				value += f;
+				if (htarget->penalty_aggr_type == DpTargetAggrSum) {
+					value += f;
+				} else if (htarget->penalty_aggr_type == DpTargetAggrMax) {
+					value = (value > f) ? value : f;
+				}
+
 			} else {
 				max_value_flag = 1;
 				penalty[i] = max_value;
@@ -213,4 +220,101 @@ void dp_target_shift_penalty_ranks (DpTarget*htarget)
 			fprintf(stdout, "%d %13.9f %13.9f\n", i, htarget->penalty[i]->rank, htarget->penalty[i]->weight);
 		}
 	}
+}
+
+
+int dp_target_load(GKeyFile*gkf, gchar*groupname, DpTarget *htarget, GError**err)
+{
+	GError *gerror = NULL;
+	gchar**keys, **array;
+	int retval = 0, i, ii;
+	gsize length, ksize;
+	int index;
+	double dindex;
+	double rank;
+	double weight;
+	if ( ( keys = g_key_file_get_keys(gkf, groupname, &ksize, &gerror) ) == NULL ) {
+		g_propagate_error (err, gerror);
+		return 1;
+	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "debug", &gerror) ) != 0  || gerror == NULL ) {
+		htarget->debug = ii;
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( ii = g_key_file_get_integer(gkf, groupname, "ignore_cost", &gerror) ) != 0  || gerror == NULL ) {
+		htarget->ignore_cost = ii;
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( rank = g_key_file_get_double(gkf, groupname, "use_crdist", &gerror) ) != 0  || gerror == NULL ) {
+		htarget->use_crdist = rank;
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "constrain_aggr", &gerror) ) != NULL ) {
+		if ( !g_strcmp0(str, "max") ) {
+			htarget->constrain_aggr_type = DpTargetAggrMax;
+		} else if ( !g_strcmp0(str, "sum") ) {
+			htarget->constrain_aggr_type = DpTargetAggrSum;
+		}
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "penalty_aggr", &gerror) ) != NULL ) {
+		if ( !g_strcmp0(str, "max") ) {
+			htarget->penalty_aggr_type = DpTargetAggrMax;
+		} else if ( !g_strcmp0(str, "sum") ) {
+			htarget->penalty_aggr_type = DpTargetAggrSum;
+		}
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	for ( i = 0; i < (int)ksize; i++ ) {
+		if ( ( array = g_key_file_get_string_list(gkf, groupname, keys[i], &length, &gerror) ) != NULL ) {
+			if ( length == 4 ) {
+                dindex = g_strtod(array[1], NULL);
+                if ( dindex < 0 ) {
+                    index = (int)( dindex - 0.5 );
+                } else {
+                    index = (int)( dindex + 0.5 );
+                }
+				rank = g_strtod(array[2], NULL);
+				weight = g_strtod(array[3], NULL);
+				dp_target_add_func (htarget, index, weight, rank, array[0]);
+			} else if ( length == 5 ) {
+				index = (int)( g_strtod(array[1], NULL) + 0.5 );
+				rank = g_strtod(array[2], NULL);
+				weight = g_strtod(array[3], NULL);
+				dp_target_insert_prime_func (htarget, index, weight, rank, array[0]);
+			}
+			g_strfreev(array);
+		}
+	}
+	g_strfreev(keys);
+	return retval;
+}
+
+int dp_target_init(gchar*filename, gchar*groupname, DpTarget *htarget, GError**err)
+{
+	int ret_val = 0;;
+	GKeyFile*gkf = NULL;
+	GError *gerror = NULL;
+	if ( ( gkf = dp_read(filename, &gerror) ) == NULL ) {
+		g_propagate_error (err, gerror);
+		return 1;
+	}
+	ret_val = dp_settings_target_load(gkf, groupname, htarget, &gerror);
+	if ( ret_val == 1 ) {
+		g_propagate_error (err, gerror);
+		ret_val = 1;
+	}
+	return ret_val;
 }

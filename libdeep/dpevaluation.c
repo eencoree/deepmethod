@@ -46,27 +46,68 @@ DpEvaluationCtrl*dp_evaluation_ctrl_new()
 	return ec;
 }
 
-DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_init, double roundoff_error, int eval_max_threads, DpEvaluationStrategy eval_strategy)
+DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, GKeyFile*gkf, gchar*groupname)
 {
 	DpEvaluationCtrl*hevalctrl;
 	hevalctrl = dp_evaluation_ctrl_new();
-	hevalctrl->seed = seed;
+	GError *gerror = NULL;
+	gchar*str,**strlist;
+	int retval = 0;
+	if ( ( str = g_key_file_get_string(gkf, groupname, "gamma_init", &gerror) ) != NULL ) {
+		hevalctrl->gamma_init = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "roundoff_error", &gerror) ) != NULL ) {
+		hevalctrl->roundoff_error = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "seed", &gerror) ) != NULL ) {
+		hevalctrl->seed = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "max_threads", &gerror) ) != NULL ) {
+		hevalctrl->eval_max_threads = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "transform", &gerror) ) != NULL ) {
+		if ( !g_strcmp0(str, "tanh") ) {
+			hevalctrl->eval_strategy = tanh_trans_flag;
+		} else if ( !g_strcmp0(str, "sin") ) {
+			hevalctrl->eval_strategy = sin_trans_flag;
+		} else if ( !g_strcmp0(str, "alg") ) {
+			hevalctrl->eval_strategy = alg_trans_flag;
+		} else if ( !g_strcmp0(str, "rand") ) {
+			hevalctrl->eval_strategy = rand_trans_flag;
+		}
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	hevalctrl->yoffset = worldid;
-	hevalctrl->hrand = g_rand_new_with_seed ((guint32)(seed + worldid));
-	hevalctrl->gamma_init = gamma_init;
-	hevalctrl->roundoff_error = roundoff_error;
-	hevalctrl->eval_max_threads = eval_max_threads;
-	hevalctrl->eval_strategy = eval_strategy;
+	hevalctrl->hrand = g_rand_new_with_seed ((guint32)(hevalctrl->seed + worldid));
 	g_mutex_init( &(hevalctrl->m) );
 	hevalctrl->kounter = 0;
 	return hevalctrl;
 }
 
-DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, int eval_max_threads, DpEvaluationStrategy eval_strategy)
+DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int worldid, GKeyFile*gkf, gchar*groupname)
 {
 	int i;
 	DpEvaluationCtrl*hevalctrl;
-	hevalctrl = dp_evaluation_ctrl_init(worldid, seed, gamma_init, roundoff_error, eval_max_threads, eval_strategy);
+	hevalctrl = dp_evaluation_ctrl_init(worldid, gkf, groupname);
 	hevalctrl->eval = heval;
 	hevalctrl->eval_target = htarget;
 	for ( i = 0; i < hevalctrl->eval->size; i++) {

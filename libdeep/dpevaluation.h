@@ -93,7 +93,7 @@ void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 
 void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost);
 
-DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, int eval_max_threads, DpEvaluationStrategy eval_strategy);
+DpEvaluationCtrl*dp_evaluation_init(DpEvaluation*heval, DpTarget*htarget, int worldid, GKeyFile*gkf, gchar*groupname);
 
 DpEvaluationCtrl*dp_evaluation_ctrl_new();
 
@@ -111,7 +111,7 @@ void dp_evaluation_individ_transform_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*
 
 DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps);
 
-DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, int seed, double gamma_init, double roundoff_error, int eval_max_threads, DpEvaluationStrategy eval_strategy);
+DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, GKeyFile*gkf, gchar*groupname);
 
 DpIndivid*dp_evaluation_individ_init(DpEvaluationCtrl*hevalctrl);
 

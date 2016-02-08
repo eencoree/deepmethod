@@ -478,16 +478,91 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 	}
 }
 
-DpRecombinationControl*dp_recombination_control_init(DpRecombinationStrategy strategy, DpPopulation*pop, GRand*hrand, double weight, double prob, double gamma)
+DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*pop, GKeyFile*gkf, gchar*groupname)
 {
 	DpRecombinationControl*rc;
 	int i;
 	rc = (DpRecombinationControl*)malloc(sizeof(DpRecombinationControl));
-	rc->strategy = strategy;
+	GError *gerror = NULL;
+	gchar*str,**strlist;
+	int retval = 0;
+	rc->strategy = DE_3_bin_rand;
+	double weight = 0.3;
+	double prob = 0.3;
+	rc->gamma = 0.9;
+	if ( ( str = g_key_file_get_string(gkf, groupname, "recombination_weight", &gerror) ) != NULL ) {
+		weight = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "recombination_prob", &gerror) ) != NULL ) {
+		prob = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "recombination_gamma", &gerror) ) != NULL ) {
+		rc->gamma = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "recombination_strategy", &gerror) ) != NULL ) {
+		if ( !g_strcmp0(str, "simple") ) {
+			rc->strategy = Simple;
+		} else if ( !g_strcmp0(str, "de_3_bin") ) {
+			rc->strategy = DE_3_bin;
+		} else if ( !g_strcmp0(str, "de_3_exp") ) {
+			rc->strategy = DE_3_exp;
+		} else if ( !g_strcmp0(str, "de_3_exp_T") ) {
+			rc->strategy = DE_3_exp_T;
+		} else if ( !g_strcmp0(str, "de_3_bin_T") ) {
+			rc->strategy = DE_3_bin_T;
+		} else if ( !g_strcmp0(str, "de_3_bin_rand") ) {
+			rc->strategy = DE_3_bin_rand;
+		} else if ( !g_strcmp0(str, "de_3_exp_rand") ) {
+			rc->strategy = DE_3_exp_rand;
+		} else if ( !g_strcmp0(str, "de_3_bin_self") ) {
+			rc->strategy = DE_3_bin_self;
+		} else if ( !g_strcmp0(str, "de_3_exp_self") ) {
+			rc->strategy = DE_3_exp_self;
+		} else if ( !g_strcmp0(str, "de_3_exp_rand_T") ) {
+			rc->strategy = DE_3_exp_rand_T;
+		} else if ( !g_strcmp0(str, "de_3_bin_rand_T") ) {
+			rc->strategy = DE_3_bin_rand_T;
+		} else if ( !g_strcmp0(str, "de_3_exp_rand_phi") ) {
+			rc->strategy = DE_3_exp_rand_phi;
+		} else if ( !g_strcmp0(str, "de_3_bin_rand_phi") ) {
+			rc->strategy = DE_3_bin_rand_phi;
+		} else if ( !g_strcmp0(str, "de_3_exp_self_phi") ) {
+			rc->strategy = DE_3_exp_self_phi;
+		} else if ( !g_strcmp0(str, "de_3_bin_self_phi") ) {
+			rc->strategy = DE_3_bin_self_phi;
+		} else if ( !g_strcmp0(str, "de_3_exp_rand_D") ) {
+			rc->strategy = DE_3_exp_rand_D;
+		} else if ( !g_strcmp0(str, "de_3_bin_rand_D") ) {
+			rc->strategy = DE_3_bin_rand_D;
+		} else if ( !g_strcmp0(str, "de_3_exp_self_D") ) {
+			rc->strategy = DE_3_exp_self_D;
+		} else if ( !g_strcmp0(str, "de_3_bin_self_D") ) {
+			rc->strategy = DE_3_bin_self_D;
+		} else if ( !g_strcmp0(str, "de_3_exp_self_T") ) {
+			rc->strategy = DE_3_exp_self_T;
+		} else if ( !g_strcmp0(str, "de_3_bin_self_T") ) {
+			rc->strategy = DE_3_bin_self_T;
+		}
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	rc->size = pop->ind_size;
 	rc->pop_size = pop->size;
 	rc->toggle = 0;
-	rc->gamma = gamma;
 	rc->p_inf = G_MINDOUBLE;
 	rc->p_supp = 1.0;
 	rc->f_inf = 1.0 / sqrt((double)pop->ind_size);

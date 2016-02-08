@@ -42,20 +42,7 @@ typedef struct DpSettings {
 	DpOptStopType stop_type;
 	double criterion;
 	int stop_count;
-	int population_size;
-	DpRecombinationStrategy recombination_strategy;
-	double recombination_weight;
-	double recombination_prob;
-	double recombination_gamma;
-	int es_lambda;
-	int es_cutoff;
-	int es_kind;
-	double noglobal_eps;
-	double substeps;
-	DpEvaluationStrategy eval_strategy;
-	double gamma_init;
 	double roundoff_error;
-	int seed;
 	double step_parameter;
 	double step_decrement;
 	double derivative_step;
@@ -63,22 +50,19 @@ typedef struct DpSettings {
 	gchar**run_before;
 	gchar**run;
 	gchar**run_after;
-	gint max_threads;
 	int pareto_all;
 	int precision;
 } DpSettings;
 
 DpSettings*dp_settings_new();
 
-gchar*dp_settings_read(gchar*filename, gsize*size, GError**err);
+GKeyFile*dp_settings_read(gchar*filename, GError**err);
 
-int dp_settings_load(gchar*data, gsize size, gchar*groupname, DpSettings *hopt, GError**err);
+int dp_settings_load(GKeyFile*gkf, gchar*groupname, DpSettings *hopt, GError**err);
 
-int dp_settings_init(gchar*filename, gchar*groupname, DpSettings *hopt, GError**err);
+GKeyFile*dp_settings_init(gchar*filename, gchar*groupname, DpSettings *hopt, GError**err);
 
-int dp_settings_process_run(DpSettings *dpsettings, DpOpt *hopt, int world_id, DpEvaluation*heval, DpTarget*htarget, GError**err);
-
-int dp_settings_target_init(gchar*filename, gchar*groupname, DpTarget *htarget, GError**err);
+int dp_settings_process_run(DpSettings *dpsettings, GKeyFile*gkf, gchar*groupname, DpOpt *hopt, int world_id, DpEvaluation*heval, DpTarget*htarget, GError**err);
 
 #ifdef __cplusplus
 }

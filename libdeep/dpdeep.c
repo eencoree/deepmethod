@@ -28,43 +28,93 @@
 #include <math.h>
 #include "dpdeep.h"
 
-DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, int es_lambda, int es_cutoff, int es_kind, double noglobal_eps, gint max_threads, double substeps)
+DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname)
 {
 	DpDeepInfo*hdeepinfo;
 	hdeepinfo = (DpDeepInfo*)malloc(sizeof(DpDeepInfo));
-	hdeepinfo->population_size = population_size;
-	hdeepinfo->recombination_weight = recombination_weight;
-	hdeepinfo->recombination_prob = recombination_prob;
-	hdeepinfo->recombination_gamma = recombination_gamma;
-	hdeepinfo->es_lambda = es_lambda;
-	hdeepinfo->es_cutoff = es_cutoff;
-	hdeepinfo->noglobal_eps = noglobal_eps;
+	GError *gerror = NULL;
+	gchar*str,**strlist;
+	int retval = 0;
+	hdeepinfo->population_size = 5;
+	hdeepinfo->es_lambda = 2;
+	hdeepinfo->es_cutoff = 2;
+	hdeepinfo->es_kind = 0;
+	hdeepinfo->noglobal_eps = 0;
+	hdeepinfo->substeps = 0;
+	hdeepinfo->substieps = 0;
+	if ( ( str = g_key_file_get_string(gkf, groupname, "population_size", &gerror) ) != NULL ) {
+		hdeepinfo->population_size = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "es_lambda", &gerror) ) != NULL ) {
+		hdeepinfo->es_lambda = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "es_cutoff", &gerror) ) != NULL ) {
+		hdeepinfo->es_cutoff = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "es_kind", &gerror) ) != NULL ) {
+		hdeepinfo->es_kind = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "noglobal_eps", &gerror) ) != NULL ) {
+		hdeepinfo->noglobal_eps = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "substeps", &gerror) ) != NULL ) {
+		hdeepinfo->substeps = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "substieps", &gerror) ) != NULL ) {
+		hdeepinfo->substieps = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "max_threads", &gerror) ) != NULL ) {
+		hdeepinfo->max_threads = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	hdeepinfo->exclusive = FALSE;
-	hdeepinfo->max_threads = max_threads;
 	hdeepinfo->selection_done = 0;
 	hdeepinfo->debug = 0;
     hdeepinfo->gthreadpool = NULL;
-    hdeepinfo->substeps = substeps;
-    hdeepinfo->es_kind = es_kind;
 	return hdeepinfo;
 }
 
-DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed,
-                              double gamma_init, double roundoff_error,
-                              DpEvaluationStrategy eval_strategy, int population_size,
-                              double recombination_weight, double recombination_prob,
-                              double recombination_gamma, int es_lambda, int es_cutoff, int es_kind,
-                              double noglobal_eps,
-                              DpRecombinationStrategy recomb_strategy, gint max_threads, double substeps)
+DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, GKeyFile*gkf, gchar*groupname)
 {
 	GError *gerror = NULL;
 	int i;
-	DpDeepInfo*hdeepinfo = dp_deep_info_new(population_size, recombination_weight, recombination_prob, recombination_gamma, es_lambda, es_cutoff, es_kind, noglobal_eps, max_threads, substeps);
+	DpDeepInfo*hdeepinfo = dp_deep_info_new(gkf, groupname);
 	DpRecombinationStrategy strategy;
-	hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, seed, gamma_init, roundoff_error, max_threads, eval_strategy);
+	hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, gkf, groupname);
 	hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->size, hdeepinfo->hevalctrl->eval_target->precond_size);
 	hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->noglobal_eps);
-	hdeepinfo->recombination_control = dp_recombination_control_init(recomb_strategy, hdeepinfo->population, hdeepinfo->hevalctrl->hrand, hdeepinfo->recombination_weight, hdeepinfo->recombination_prob, hdeepinfo->recombination_gamma);
+	hdeepinfo->recombination_control = dp_recombination_control_init(hdeepinfo->hevalctrl->hrand, hdeepinfo->population, gkf, groupname);
 	hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
 	if ( hdeepinfo->max_threads > 0 ) {
         hdeepinfo->gthreadpool = g_thread_pool_new ((GFunc) dp_deep_evaluate_func, (gpointer) hdeepinfo, hdeepinfo->max_threads, hdeepinfo->exclusive, &gerror);
@@ -73,7 +123,7 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
 			g_error("%s", gerror->message);
 		}
 	}
-	for (i = 0; i < population_size; i++) {
+	for (i = 0; i < hdeepinfo->population->size; i++) {
 		hdeepinfo->trial->individ[i]->user_data = hdeepinfo->population->individ[i]->user_data;
 	}
 	return hdeepinfo;

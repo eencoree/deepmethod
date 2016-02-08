@@ -40,15 +40,13 @@ extern "C"
 typedef struct DpDeepInfo {
 	int debug;
 	int population_size;
-	double recombination_weight;
-	double recombination_prob;
-	double recombination_gamma;
 	int es_lambda;
 	int es_cutoff;
 	int es_kind;
 	int selection_done;
 	double noglobal_eps;
 	double substeps;
+	double substieps;
 	DpPopulation*trial;
 	DpPopulation*population;
 	DpPopulation*popunion;
@@ -59,9 +57,9 @@ typedef struct DpDeepInfo {
 	gboolean exclusive;
 } DpDeepInfo;
 
-DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, int seed, double gamma_init, double roundoff_error, DpEvaluationStrategy eval_strategy, int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, int es_lambda, int es_cutoff, int es_kind, double noglobal_eps, DpRecombinationStrategy recomb_strategy, gint max_threads, double substeps);
+DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, GKeyFile*gkf, gchar*groupname);
 
-DpDeepInfo *dp_deep_info_new (int population_size, double recombination_weight, double recombination_prob, double recombination_gamma, int es_lambda, int es_cutoff, int es_kind, double noglobal_eps, gint max_threads, double substeps);
+DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname);
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo);
 

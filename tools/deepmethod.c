@@ -119,6 +119,7 @@ int main(int argc, char **argv)
 	int world_id = 0, world_count = 1;
 	double dval;
 	GOptionContext *context;
+	GKeyFile*gkf;
 	GError *gerror = NULL;
 #ifdef ENABLE_NLS
 	bindtextdomain (GETTEXT_PACKAGE, DEEPMETHOD_LOCALEDIR);
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
 			operation = g_strdup("optimize");
 		}
 	}
-	dp_settings_init(settings_file, settings_group, dpsettings, &gerror);
+	gkf = dp_settings_init(settings_file, settings_group, dpsettings, &gerror);
 	if ( gerror != NULL ) {
 		g_error(_("Settings init:%s"), gerror->message);
 	}
@@ -194,14 +195,14 @@ int main(int argc, char **argv)
 	if ( !g_strcmp0 ( operation, "optimize" ) ) {
 		heval = xm_translate_parms(xmmodel);
 		htarget = dp_target_new();
-		dp_settings_target_init(target_file, target_group, htarget, &gerror);
+		dp_target_init(target_file, target_group, htarget, &gerror);
 		if ( gerror != NULL ) {
 			g_error("%s", gerror->message);
 		}
 		xm_translate_score(htarget, xmmodel);
 		hopt = dp_opt_init(heval, htarget, world_id, world_count, hopt_filename, dpsettings->stop_type, dpsettings->criterion, dpsettings->stop_count, dpsettings->pareto_all, dpsettings->precision);
 		hopt->debug = hoptdebug;
-		dp_settings_process_run(dpsettings, hopt, world_id, heval, htarget, &gerror);
+		dp_settings_process_run(dpsettings, gkf, settings_group, hopt, world_id, heval, htarget, &gerror);
 		if ( gerror != NULL ) {
 			g_error(_("Settings process init:%s"), gerror->message);
 		}
@@ -209,7 +210,7 @@ int main(int argc, char **argv)
 	} else if ( !g_strcmp0 ( operation, "monitor" ) ) {
 		heval = xm_translate_parms(xmmodel);
 		htarget = dp_target_new();
-		dp_settings_target_init(target_file, target_group, htarget, &gerror);
+		dp_target_init(target_file, target_group, htarget, &gerror);
 		if ( gerror != NULL ) {
 			g_error("%s", gerror->message);
 		}

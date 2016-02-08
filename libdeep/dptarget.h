@@ -52,7 +52,16 @@ typedef struct DpTargetFunc {
 
 DpTargetFunc*dp_target_func_new(int index, double weight, double rank, char*sname);
 
+
+typedef enum DpTargetAggrType {
+	DpTargetAggrSum = (1 << 0),
+	DpTargetAggrMax  = (1 << 1),
+	DpTargetAggrNone = (1 << 2)
+} DpTargetAggrType;
+
 typedef struct DpTarget {
+	DpTargetAggrType penalty_aggr_type;
+	DpTargetAggrType constrain_aggr_type;
 	int precond_size;
 	DpTargetFunc**precond;
 	DpTargetFunc*target;
@@ -87,6 +96,8 @@ int dp_target_eval_prime (DpTarget*htarget, double*x, int*invalid, double*prime,
 void dp_target_shift_penalty_weights (DpTarget*htarget);
 
 void dp_target_shift_penalty_ranks (DpTarget*htarget);
+
+int dp_target_init(gchar*filename, gchar*groupname, DpTarget *htarget, GError**err);
 
 #ifdef __cplusplus
 }
