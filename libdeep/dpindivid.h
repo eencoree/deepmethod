@@ -37,6 +37,7 @@ extern "C"
 typedef struct DpIndivid {
 	int size;
 	double cost;
+	int cost_ind;
 	int age;
 	int pareto_front;
 	int dom_count;

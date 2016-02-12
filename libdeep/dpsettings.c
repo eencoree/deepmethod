@@ -245,12 +245,20 @@ GKeyFile*dp_settings_init(gchar*filename, gchar*groupname, DpSettings *hopt, GEr
 
 int dp_settings_process_run(DpSettings *dpsettings, GKeyFile*gkf, gchar*groupname, DpOpt *hopt, int world_id, DpEvaluation*heval, DpTarget*htarget, GError**err)
 {
+	GError *gerror = NULL;
 	DpDeepInfo*hdeepinfo;
 	DpOsdaInfo*hosdainfo;
 	gpointer method_info;
 	int i, order, tau_flag;
-	gchar**list;
+	gchar**list, *str;
 	DpOptType opt_type;
+	if ( ( str = g_key_file_get_string(gkf, groupname, "delay_count", &gerror) ) != NULL ) {
+		hopt->delay = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	list = dpsettings->run_before;
 	order = -1;
 	tau_flag = 1;
@@ -349,6 +357,11 @@ int dp_settings_process_run(DpSettings *dpsettings, GKeyFile*gkf, gchar*groupnam
 			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep_generate, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "gcadeep") ) {
+			opt_type = H_OPT_DEEP;
+			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			method_info = (gpointer) hdeepinfo;
+			dp_opt_add_func(hopt, dp_opt_deep_generate_ca, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "edeep") ) {
             opt_type = H_OPT_NONE;
 			method_info = NULL;

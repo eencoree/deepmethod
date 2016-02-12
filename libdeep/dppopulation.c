@@ -164,16 +164,32 @@ void dp_population_delete(DpPopulation*pop)
 
 void dp_population_update(DpPopulation*pop, int start_index, int end_index)
 {
-	int i, j, n;
+	int i, j, n, kounter;
 	double smean, smean2, s;
-	double fmin;
+	double fmin, fmean;
 	int amax, imax, imin;
+
+	g_qsort_with_data(pop->ages_descending, pop->size, sizeof(pop->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, pop);
+	g_qsort_with_data(pop->cost_ascending, pop->size, sizeof(pop->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, pop);
+
+	kounter = 0;
+	fmean = 0;
+	if (pop->individ[start_index]->cost < G_MAXDOUBLE) {
+		fmean += pop->individ[start_index]->cost;
+		kounter++;
+	}
 	fmin = pop->individ[start_index]->cost;
+	pop->individ[start_index]->cost_ind = pop->cost_ascending[start_index];
 	imin = start_index;
 	amax = pop->individ[start_index]->age;
 	imax = start_index;
 	n = end_index - start_index + 1;
 	for ( j = start_index + 1; j < end_index; j++) {
+		pop->individ[pop->cost_ascending[j]]->cost_ind = j;
+		if (pop->individ[j]->cost < G_MAXDOUBLE) {
+			fmean += pop->individ[j]->cost;
+			kounter++;
+		}
 		if ( pop->individ[j]->cost < fmin ) {
 			fmin = pop->individ[j]->cost;
 			imin = j;
@@ -202,6 +218,7 @@ void dp_population_update(DpPopulation*pop, int start_index, int end_index)
 	}
 	pop->imin = imin;
 	pop->dmin = fmin;
+	pop->fmean = fmean / kounter;
 	pop->iage = imax;
 	pop->aage = amax;
 }

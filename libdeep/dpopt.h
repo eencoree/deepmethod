@@ -65,6 +65,7 @@ typedef struct DpOpt {
 	double old_cost;
 	double cost_start;
 	int stop_counter;
+	int delay;
 	double criterion;
 	DpOptStopType stop_type;
 	int stop_count;
@@ -108,6 +109,8 @@ DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data);
 DpLoopExitCode dp_opt_deep(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_deep_generate(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_deep_generate_ca(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_deep_evaluate(DpLoop*hloop, gpointer user_data);
 

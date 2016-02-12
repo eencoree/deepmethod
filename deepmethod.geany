@@ -28,23 +28,19 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=9
-FILE_NAME_0=22341;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
-FILE_NAME_1=4150;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.h;0;4
-FILE_NAME_2=5823;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpevaluation.c;0;4
+current_page=8
+FILE_NAME_0=11094;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
+FILE_NAME_1=1714;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.h;0;4
+FILE_NAME_2=17414;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpevaluation.c;0;4
 FILE_NAME_3=3611;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpevaluation.h;0;4
-FILE_NAME_4=1502;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpdeep.c;0;4
-FILE_NAME_5=1822;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpdeep.h;0;4
-FILE_NAME_6=13251;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpsettings.c;0;4
-FILE_NAME_7=1992;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpsettings.h;0;4
-FILE_NAME_8=7630;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Ftools%2Fdeepmethod.c;0;4
-FILE_NAME_9=1128;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdptarget.c;0;4
-FILE_NAME_10=3115;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdptarget.h;0;4
-FILE_NAME_11=0;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
-FILE_NAME_12=0;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Ftools%2Fxmtranslate.c;0;4
+FILE_NAME_4=17988;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpdeep.c;0;4
+FILE_NAME_5=6888;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Ftools%2Fdeepmethod.c;0;4
+FILE_NAME_6=0;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdprecombination.c;0;4
+FILE_NAME_7=7289;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpsettings.c;0;4
+FILE_NAME_8=5500;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdppopulation.c;0;4
 
 [VTE]
-last_dir=/home
+last_dir=/users/kkozlov
 
 [prjorg]
 source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;

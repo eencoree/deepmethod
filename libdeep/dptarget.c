@@ -222,8 +222,7 @@ void dp_target_shift_penalty_ranks (DpTarget*htarget)
 	}
 }
 
-
-int dp_target_load(GKeyFile*gkf, gchar*groupname, DpTarget *htarget, GError**err)
+int dp_target_load(gchar*filename, gchar*groupname, DpTarget *htarget, GError**err)
 {
 	GError *gerror = NULL;
 	gchar**keys, **array;
@@ -233,6 +232,14 @@ int dp_target_load(GKeyFile*gkf, gchar*groupname, DpTarget *htarget, GError**err
 	double dindex;
 	double rank;
 	double weight;
+	gchar*str;
+	GKeyFile*gkf = NULL;
+	g_return_val_if_fail (err == NULL || *err == NULL, 1);
+	gkf = g_key_file_new();
+	if ( g_key_file_load_from_file (gkf, filename, G_KEY_FILE_NONE, &gerror) == FALSE ) {
+		g_propagate_error (err, gerror);
+		return 1;
+	}
 	if ( ( keys = g_key_file_get_keys(gkf, groupname, &ksize, &gerror) ) == NULL ) {
 		g_propagate_error (err, gerror);
 		return 1;
@@ -299,19 +306,16 @@ int dp_target_load(GKeyFile*gkf, gchar*groupname, DpTarget *htarget, GError**err
 		}
 	}
 	g_strfreev(keys);
+	g_key_file_free(gkf);
 	return retval;
 }
 
 int dp_target_init(gchar*filename, gchar*groupname, DpTarget *htarget, GError**err)
 {
 	int ret_val = 0;;
-	GKeyFile*gkf = NULL;
 	GError *gerror = NULL;
-	if ( ( gkf = dp_read(filename, &gerror) ) == NULL ) {
-		g_propagate_error (err, gerror);
-		return 1;
-	}
-	ret_val = dp_settings_target_load(gkf, groupname, htarget, &gerror);
+	g_return_val_if_fail (err == NULL || *err == NULL, 1);
+	ret_val = dp_target_load(filename, groupname, htarget, &gerror);
 	if ( ret_val == 1 ) {
 		g_propagate_error (err, gerror);
 		ret_val = 1;

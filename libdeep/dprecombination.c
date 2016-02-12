@@ -404,7 +404,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
-			input_4->moves++;
+			input_2->moves++;
 			input_2->grads++;
 			input_3->grads++;
 		break;
@@ -426,8 +426,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
-			input_4->moves++;
-			input_2->grads++;
+			individ->moves++;
 			input_3->grads++;
 		break;
 		case DE_3_exp_rand_D:
@@ -447,7 +446,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
-			input_4->moves++;
+			input_2->moves++;
 			input_2->grads++;
 			input_3->grads++;
 		break;
@@ -468,7 +467,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 					i = 0;
 				}
 			}
-			input_4->moves++;
+			individ->moves++;
 			input_2->grads++;
 			input_3->grads++;
 		break;

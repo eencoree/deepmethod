@@ -37,16 +37,24 @@ extern "C"
 #include "dprecombination.h"
 #include "dpevaluation.h"
 
+typedef enum DpSelector {
+	DpSelectorGenerated = (1 << 0),
+	DpSelectorEvaluated  = (1 << 1),
+	DpSelectorSelected  = (1 << 2),
+	DpSelectorNone = (1 << 3)
+} DpSelector;
+
 typedef struct DpDeepInfo {
 	int debug;
 	int population_size;
 	int es_lambda;
 	int es_cutoff;
 	int es_kind;
-	int selection_done;
+	DpSelector selector;
 	double noglobal_eps;
 	double substeps;
 	double substieps;
+	int mean_cost;
 	DpPopulation*trial;
 	DpPopulation*population;
 	DpPopulation*popunion;
@@ -77,11 +85,15 @@ void dp_deep_info_save(FILE*fp, DpDeepInfo *hdeepinfo);
 
 void dp_deep_generate_step(DpDeepInfo*hdeepinfo);
 
+void dp_deep_generate_ca_step(DpDeepInfo*hdeepinfo);
+
 void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo);
 
 void dp_deep_select_step(DpDeepInfo*hdeepinfo);
 
 void dp_deep_generate_func (gpointer data, gpointer user_data);
+
+void dp_deep_generate_ca_func (gpointer data, gpointer user_data);
 
 void dp_deep_evaluate_func (gpointer data, gpointer user_data);
 

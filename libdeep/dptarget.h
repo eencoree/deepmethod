@@ -52,7 +52,6 @@ typedef struct DpTargetFunc {
 
 DpTargetFunc*dp_target_func_new(int index, double weight, double rank, char*sname);
 
-
 typedef enum DpTargetAggrType {
 	DpTargetAggrSum = (1 << 0),
 	DpTargetAggrMax  = (1 << 1),

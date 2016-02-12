@@ -61,6 +61,7 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 	hopt->pareto_all = pareto_all;
 	hopt->precision = precision;
 	hopt->debug = 0;
+	hopt->delay = 0;
 	return hopt;
 }
 
@@ -260,8 +261,25 @@ DpLoopExitCode dp_opt_deep_generate(DpLoop*hloop, gpointer user_data)
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	if ( hdeepinfo->selector == DpSelectorGenerated ) {
+        return ret_val;
+    }
 	dp_deep_generate_step(hdeepinfo);
-	hdeepinfo->selection_done = 0;
+	hdeepinfo->selector = DpSelectorGenerated;
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_deep_generate_ca(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	if ( hdeepinfo->selector == DpSelectorGenerated ) {
+        return ret_val;
+    }
+	g_debug("dp_opt_deep_generate_ca tau:%d selector:%d kounter:%d delay:%d stop_counter:%d", hloop->tau_counter, hdeepinfo->selector, hdeepinfo->hevalctrl->kounter, hopt->delay, hopt->stop_counter);
+	dp_deep_generate_ca_step(hdeepinfo);
+	hdeepinfo->selector = DpSelectorGenerated;
 	return ret_val;
 }
 
@@ -271,6 +289,7 @@ DpLoopExitCode dp_opt_deep_evaluate(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 	dp_deep_evaluate_step(hdeepinfo);
+	hdeepinfo->selector = DpSelectorEvaluated;
 	return ret_val;
 }
 
@@ -279,12 +298,12 @@ DpLoopExitCode dp_opt_deep_select(DpLoop*hloop, gpointer user_data)
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-	if ( hdeepinfo->selection_done == 1 ) {
+	if ( hdeepinfo->selector == DpSelectorSelected ) {
         return ret_val;
-	}
+    }
 	dp_deep_select_step(hdeepinfo);
 	dp_deep_accept_step(hdeepinfo, &(hopt->cost));
-	hdeepinfo->selection_done = 1;
+	hdeepinfo->selector = DpSelectorSelected;
 	return ret_val;
 }
 
@@ -313,7 +332,7 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 		hloop->exit_str = g_strdup_printf ( "dp_write_log: can't open %s", hopt->logname);
 		return DP_LOOP_EXIT_ERROR;
 	}
-	fprintf(fp, "wtime:%e tau:%d", hloop->w_time, hloop->tau_counter);
+	fprintf(fp, "wtime:%e tau:%d freeze:%d score:%.*f", hloop->w_time, hloop->tau_counter, hopt->stop_counter, precision, hopt->cost);
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
@@ -351,7 +370,7 @@ DpLoopExitCode dp_print_log(DpLoop*hloop, gpointer user_data)
 	FILE*fp;
 	int i, kounter;
 	int precision = hopt->precision;
-	fprintf(stdout, "%s wtime:%e tau:%d", msg, hloop->w_time, hloop->tau_counter);
+	fprintf(stdout, "%s wtime:%e tau:%d freeze:%d score:%.*f", msg, hloop->w_time, hloop->tau_counter, hopt->stop_counter, precision, hopt->cost);
 	g_free(msg);
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
@@ -576,12 +595,22 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo;
 	int stop_flag = ( hloop->stop_flag == DP_LOOP_EXIT_SUCCESS ) ? 1 : 0;
-	int src_ind, dst_ind, i, k;
+	int src_ind, dst_ind, i, k, substieps, substeps;
+	GMainContext *gcontext = g_main_context_default();
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-			g_qsort_with_data(hdeepinfo->population->ages_descending, hdeepinfo->population->size, sizeof(hdeepinfo->population->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, hdeepinfo->population);
-			g_qsort_with_data(hdeepinfo->population->cost_ascending, hdeepinfo->population->size, sizeof(hdeepinfo->population->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, hdeepinfo->population);
+			DpEvaluationCtrl*hevalctrl = hdeepinfo->hevalctrl;
+			GError*gerror = NULL;
+			gboolean immediate_stop = FALSE;
+			//gboolean immediate_stop = TRUE;
+			gboolean wait_finish = TRUE;
+			//gboolean wait_finish = FALSE;
+			gulong microseconds = G_USEC_PER_SEC / 1000;
+			hevalctrl->gthreadpool = g_thread_pool_new ((GFunc) dp_evaluation_population_init_func, (gpointer) hevalctrl, hevalctrl->eval_max_threads, hevalctrl->exclusive, &gerror);
+			if ( gerror != NULL ) {
+				g_error("%s", gerror->message);
+			}
 			if (hdeepinfo->es_kind == 0) {
 				src_ind = hdeepinfo->population->cost_ascending[0];
 			}
@@ -592,13 +621,20 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
                 dst_ind = hdeepinfo->population->ages_descending[i];
 				g_debug ("dp_opt_substitute: trying count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
                 if (hdeepinfo->population->individ[dst_ind]->age < hdeepinfo->es_cutoff) break;
-/*                if (hdeepinfo->population->individ[dst_ind]->failures < -hdeepinfo->es_cutoff) break;*/
                 if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
 					g_debug ("dp_opt_substitute: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
                     dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
-                    if (hdeepinfo->substeps >= 0) {
-						dp_evaluation_individ_scramble(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], hdeepinfo->substeps);
-						dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[dst_ind], i, 0);
+                    substeps = hdeepinfo->substeps;
+                    if (hopt->delay > 0 && hopt->stop_counter >= hopt->delay) {
+						substeps = 0;
+					}
+                    if (substeps >= 0) {
+//                    if (hdeepinfo->substeps >= 0) {
+						dp_evaluation_individ_scramble(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], substeps);
+						g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(hdeepinfo->population->individ[dst_ind]), &gerror);
+						if ( gerror != NULL ) {
+							g_error("%s", gerror->message);
+						}
 						hdeepinfo->population->individ[dst_ind]->age = 0;
 						hdeepinfo->population->individ[dst_ind]->moves = 0;
 						hdeepinfo->population->individ[dst_ind]->failures = 0;
@@ -614,9 +650,17 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 	                if ( dst_ind != hdeepinfo->population->imin && dst_ind != src_ind ) {
 						g_debug ("dp_opt_substitute: changed count=%d; iter=%d; src=%d; age=%d; failures=%d; cost=%f; dst=%d; age=%d; failures=%d; cost=%f;", i, hdeepinfo->population->iter, src_ind, hdeepinfo->population->individ[src_ind]->age, hdeepinfo->population->individ[src_ind]->failures, hdeepinfo->population->individ[src_ind]->cost, dst_ind, hdeepinfo->population->individ[dst_ind]->age, hdeepinfo->population->individ[dst_ind]->failures, hdeepinfo->population->individ[dst_ind]->cost);
 	                    dp_individ_copy_values(hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[src_ind]);
-	                    if (hdeepinfo->substieps >= 0) {
-							dp_evaluation_individ_scramble(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], hdeepinfo->substieps);
-							dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[dst_ind], i, 0);
+	                    substieps = hdeepinfo->substieps;
+	                    if (hopt->delay > 0 && hopt->stop_counter >= hopt->delay) {
+							substieps = 0;
+						}
+	                    if (substieps >= 0) {
+							dp_evaluation_individ_scramble(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], substieps);
+							g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(hdeepinfo->population->individ[dst_ind]), &gerror);
+							if ( gerror != NULL ) {
+								g_error("%s", gerror->message);
+							}
+//							dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[dst_ind], i, 0);
 							hdeepinfo->population->individ[dst_ind]->age = 0;
 							hdeepinfo->population->individ[dst_ind]->moves = 0;
 							hdeepinfo->population->individ[dst_ind]->failures = 0;
@@ -625,6 +669,11 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 	                }
 				}
 			}
+			while(g_thread_pool_unprocessed (hevalctrl->gthreadpool) > 0) {
+				g_main_context_iteration(gcontext, FALSE);
+	            g_usleep (microseconds);
+	        }
+			g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
 			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
 		break;
 	}
@@ -805,7 +854,7 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data)
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-            if ( hdeepinfo->selection_done == 1 ) {
+            if ( hdeepinfo->selector == DpSelectorSelected ) {
                 return ret_val;
             }
 			pop = hdeepinfo->popunion;
@@ -830,7 +879,7 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data)
             population->iter++;
             dp_population_update(population, 0, population->size);
             dp_deep_accept_step(hdeepinfo, &(hopt->cost));
-            hdeepinfo->selection_done = 1;
+            hdeepinfo->selector = DpSelectorSelected;
 		break;
 	}
 	return ret_val;

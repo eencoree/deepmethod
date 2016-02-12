@@ -458,10 +458,10 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 {
 	DpPopulation*pop;
 	int i, istart = 0;
-	//gboolean immediate_stop = FALSE;
-	gboolean immediate_stop = TRUE;
-	//gboolean wait_finish = TRUE;
-	gboolean wait_finish = FALSE;
+	gboolean immediate_stop = FALSE;
+	//gboolean immediate_stop = TRUE;
+	gboolean wait_finish = TRUE;
+	//gboolean wait_finish = FALSE;
 	GError *gerror = NULL;
 	GMainContext *gcontext = g_main_context_default();
 	gulong microseconds = G_USEC_PER_SEC / 1000;

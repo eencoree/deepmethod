@@ -41,6 +41,7 @@ typedef struct DpPopulation {
 	int imin;
 	int target_index;
 	double dmin;
+	double fmean;
 	int iage;
 	int aage;
 	int ind_size;
