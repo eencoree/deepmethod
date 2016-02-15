@@ -110,6 +110,7 @@ DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname)
 	hdeepinfo->selector = DpSelectorNone;
 	hdeepinfo->debug = 0;
     hdeepinfo->gthreadpool = NULL;
+    hdeepinfo->last_method = -1;
 	return hdeepinfo;
 }
 
@@ -281,33 +282,23 @@ void dp_deep_generate_ca_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;
 	int start_index, end_index;
-	DpIndivid*my_tabu;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
 	int my_id = GPOINTER_TO_INT(data) - 1;
 	DpPopulation*trial = hdeepinfo->trial;
 	DpIndivid*my_trial = trial->individ[my_id];
 	DpPopulation*population = hdeepinfo->population;
 	DpIndivid*my_individ = population->individ[my_id];
+
 	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+
 	int ignore_cost = hdeepinfo->hevalctrl->eval_target->ignore_cost;
 	GRand*hrand = hdeepinfo->hevalctrl->hrand;
-	r1 = population->imin;
-	if (my_id != r1) {
-		r4 = g_rand_int_range (hrand, 0, my_individ->cost_ind);
-		r4 = population->cost_ascending[r4];
-	} else {
-		r4 = r1;
-	}
-	do {
-		r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
-	} while ( r2 == my_id || r2 == r1 || r2 == r4 );
-	do {
-		r3 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
-	} while ( r3 == my_id || r3 == r1 || r3 == r2 || r4 == r3 );
-	my_tabu = population->individ[r1];
-	start_index = g_rand_int_range (hrand, 0, population->ind_size);
-	end_index = population->ind_size;
-	dp_individ_copy_values(my_trial, my_individ);
+	r1 = population->ifmax;
+	r2 = my_id;
+	r3 = my_id;
+	r4 = my_id;
+	start_index = my_id;
+	end_index = hdeepinfo->es_lambda;
 	my_trial->age = 0;
 	my_trial->r1 = r1;
 	my_trial->r2 = r2;
@@ -316,7 +307,7 @@ void dp_deep_generate_ca_func (gpointer data, gpointer user_data)
 	my_trial->moves = 0;
 	my_trial->failures = 0;
 	my_trial->grads = 0;
-	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+	dp_individ_recombination_ca(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
 	my_trial->cost = G_MAXDOUBLE;
 }
 

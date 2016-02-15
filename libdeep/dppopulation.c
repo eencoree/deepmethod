@@ -166,17 +166,23 @@ void dp_population_update(DpPopulation*pop, int start_index, int end_index)
 {
 	int i, j, n, kounter;
 	double smean, smean2, s;
-	double fmin, fmean;
-	int amax, imax, imin;
+	double fmin, fmean, fmax;
+	int amax, imax, imin, ifmax;
 
 	g_qsort_with_data(pop->ages_descending, pop->size, sizeof(pop->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, pop);
 	g_qsort_with_data(pop->cost_ascending, pop->size, sizeof(pop->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, pop);
 
 	kounter = 0;
 	fmean = 0;
+	fmax = 0;
+	ifmax = -1;
 	if (pop->individ[start_index]->cost < G_MAXDOUBLE) {
 		fmean += pop->individ[start_index]->cost;
 		kounter++;
+		if ( pop->individ[start_index]->cost > fmax ) {
+			fmax = pop->individ[start_index]->cost;
+			ifmax = start_index;
+		}
 	}
 	fmin = pop->individ[start_index]->cost;
 	pop->individ[start_index]->cost_ind = pop->cost_ascending[start_index];
@@ -189,6 +195,10 @@ void dp_population_update(DpPopulation*pop, int start_index, int end_index)
 		if (pop->individ[j]->cost < G_MAXDOUBLE) {
 			fmean += pop->individ[j]->cost;
 			kounter++;
+			if ( pop->individ[j]->cost > fmax ) {
+				fmax = pop->individ[j]->cost;
+				ifmax = j;
+			}
 		}
 		if ( pop->individ[j]->cost < fmin ) {
 			fmin = pop->individ[j]->cost;
@@ -221,6 +231,8 @@ void dp_population_update(DpPopulation*pop, int start_index, int end_index)
 	pop->fmean = fmean / kounter;
 	pop->iage = imax;
 	pop->aage = amax;
+	pop->fmax = fmax;
+	pop->ifmax = ifmax;
 }
 
 int dp_population_target_compare(gconstpointer a, gconstpointer b, gpointer user_data)

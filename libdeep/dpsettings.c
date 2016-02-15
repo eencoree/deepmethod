@@ -259,18 +259,28 @@ int dp_settings_process_run(DpSettings *dpsettings, GKeyFile*gkf, gchar*groupnam
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "logdepth", &gerror) ) != NULL ) {
+		hopt->logdepth = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	list = dpsettings->run_before;
 	order = -1;
 	tau_flag = 1;
 	opt_type = H_OPT_NONE;
 	method_info = NULL;
-	dp_opt_add_func_from_list(list, hopt, tau_flag, opt_type, order, method_info);
+//	dp_opt_add_func_from_list(list, hopt, tau_flag, opt_type, order, method_info);
+	dp_opt_add_from_func_list(list, hopt, order, gkf, groupname, world_id, heval, htarget, err);
 	order = 1;
 	list = dpsettings->run_after;
-	dp_opt_add_func_from_list(list, hopt, tau_flag, opt_type, order, method_info);
+//	dp_opt_add_func_from_list(list, hopt, tau_flag, opt_type, order, method_info);
+	dp_opt_add_from_func_list(list, hopt, order, gkf, groupname, world_id, heval, htarget, err);
 	order = 0;
 	list = dpsettings->run;
-	for ( i = 0; list[i]; i += 2 ) {
+	dp_opt_add_from_func_list(list, hopt, order, gkf, groupname, world_id, heval, htarget, err);
+/*	for ( i = 0; list[i]; i += 2 ) {
 		tau_flag = g_strtod(list[i + 1], NULL);
 		if (hopt->world_id == 0) {
 			if ( !g_strcmp0(list[i], "writelog") ) {
@@ -373,9 +383,9 @@ int dp_settings_process_run(DpSettings *dpsettings, GKeyFile*gkf, gchar*groupnam
 		} else if ( !g_strcmp0(list[i], "osda") ) {
 			opt_type = H_OPT_OSDA;
 /*			hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);*/
-			method_info = (gpointer) hosdainfo;
+/*			method_info = (gpointer) hosdainfo;
 			dp_opt_add_func(hopt, dp_opt_osda, tau_flag, opt_type, order, method_info);
 		}
-	}
+	}*/
 	return 0;
 }

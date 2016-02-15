@@ -66,6 +66,7 @@ typedef struct DpOpt {
 	double cost_start;
 	int stop_counter;
 	int delay;
+	int logdepth;
 	double criterion;
 	DpOptStopType stop_type;
 	int stop_count;
@@ -89,6 +90,8 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 void dp_opt_add_func(DpOpt *hopt, DpLoopFunc func, int tau_flag, DpOptType opt_type, int order, gpointer method_info);
 
 void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType opt_type, int order, gpointer method_info);
+
+void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf, gchar*groupname, int world_id, DpEvaluation*heval, DpTarget*htarget, GError**err);
 
 void dp_opt_run(DpOpt *hopt);
 

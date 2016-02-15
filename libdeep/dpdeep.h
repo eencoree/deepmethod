@@ -55,6 +55,7 @@ typedef struct DpDeepInfo {
 	double substeps;
 	double substieps;
 	int mean_cost;
+	int last_method;
 	DpPopulation*trial;
 	DpPopulation*population;
 	DpPopulation*popunion;

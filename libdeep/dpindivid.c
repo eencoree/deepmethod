@@ -102,6 +102,7 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 		individ->precond[i] = trial->precond[i];
 	}
 	if (individ->user_data == NULL) individ->user_data = trial->user_data;
+	individ->cost_ind = trial->cost_ind;
 }
 
 void dp_individ_save(FILE*fp, DpIndivid*individ)

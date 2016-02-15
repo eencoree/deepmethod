@@ -472,9 +472,33 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 			input_3->grads++;
 		break;
 		default:
-			fprintf(stderr, "\ndp_individ_recombination: unknown type %d\n", control->strategy);
-			exit(-1);
+			g_error("dp_individ_recombination: unknown type %d", control->strategy);
 	}
+}
+
+void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index)
+{
+	int i, b;
+	double cost_max;
+	cost_max = input_1->cost;
+	b = end_index;
+	double alpha, beta, c1, c2, d, u;
+	u = g_rand_double(hrand);
+	if (individ->cost_ind < input_2->cost_ind) {
+		alpha = 1;
+		beta = (double)(input_2->cost_ind - individ->cost_ind) / (b - 1);
+	} else {
+		alpha = -1;
+		beta = (double)(individ->cost_ind - input_2->cost_ind) / (b - 1);
+	}
+	for ( i = 0; i < individ->size; i++ ) {
+		d = (input_2->x[i] - individ->x[i]) / 2.0;
+		c1 = individ->x[i] - d * (1 + alpha * beta);
+		c2 = individ->x[i] + d * (1 - alpha * beta);
+//		individ->x[i] = c1 + (c2 - c1) * g_rand_double(hrand);
+		individ->x[i] = c1 + (c2 - c1) * u;
+	}
+	input_2->moves++;
 }
 
 DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*pop, GKeyFile*gkf, gchar*groupname)
