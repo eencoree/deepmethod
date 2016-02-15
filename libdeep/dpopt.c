@@ -206,54 +206,6 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 	}
 }
 
-void dp_opt_add_func_from_list(gchar**list, DpOpt *hopt, int tau_flag, DpOptType opt_type, int order, gpointer method_info)
-{
-	int i;
-	for ( i = 0; list[i]; i++ ) {
-		if (hopt->world_id == 0) {
-			if ( !g_strcmp0(list[i], "writelog") ) {
-				dp_opt_add_func(hopt, dp_write_log, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "writestate") ) {
-					dp_opt_add_func(hopt, dp_write_state, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "printlog") ) {
-					dp_opt_add_func(hopt, dp_print_log, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "readstate") ) {
-				dp_opt_add_func(hopt, dp_read_state, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "writetst") ) {
-				dp_opt_add_func(hopt, dp_write_tst, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "substitute") ) {
-				dp_opt_add_func(hopt, dp_opt_substitute, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "optpost") ) {
-				dp_opt_add_func(hopt, dp_opt_post, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "optposteval") ) {
-				dp_opt_add_func(hopt, dp_opt_post_evaluate, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "rotatetarget") ) {
-				dp_opt_add_func(hopt, dp_rotate_target, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "initstop") ) {
-				dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "writepareto") ) {
-				dp_opt_add_func(hopt, dp_write_pareto, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "cr2cost") ) {
-				dp_opt_add_func(hopt, dp_opt_cr2cost, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "evalpareto") ) {
-				dp_opt_add_func(hopt, dp_opt_evaluate_pareto_front, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "selpareto") ) {
-				dp_opt_add_func(hopt, dp_select_pareto_front, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "sortpareto") ) {
-				dp_opt_add_func(hopt, dp_sort_pareto_front, tau_flag, opt_type, order, method_info);
-			} else if ( !g_strcmp0(list[i], "permutepop") ) {
-				dp_opt_add_func(hopt, dp_opt_permute, tau_flag, opt_type, order, method_info);
-			}
-		}
-		if ( !g_strcmp0(list[i], "mpidistribute") ) {
-				dp_opt_add_func(hopt, dp_opt_mpi_distribute, tau_flag, opt_type, order, method_info);
-		} else if ( !g_strcmp0(list[i], "mpigather") ) {
-			dp_opt_add_func(hopt, dp_opt_mpi_gather, tau_flag, opt_type, order, method_info);
-
-		}
-	}
-}
-
 void dp_opt_run(DpOpt *hopt)
 {
 	DpLoop *hloop = hopt->hloop;
