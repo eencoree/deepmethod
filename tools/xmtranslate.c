@@ -88,7 +88,7 @@ void xm_translate_score(DpTarget*htarget, XmModel *xmmodel)
 	htarget->user_data = (gpointer)(xmmodel);
 	htarget->copy_model = xm_model_copy_values;
 	htarget->update_model = xm_model_update_values;
-	for ( i = 0; i < htarget->size; i++ ) {
+	for ( i = 0; i < htarget->penalty_size; i++ ) {
 		htarget->penalty[i]->f = xm_translate_get_score_func_by_name(htarget->penalty[i]->name);
 	}
 	htarget->params_to_string = xm_model_score_double_to_string;
@@ -102,6 +102,12 @@ void xm_translate_score(DpTarget*htarget, XmModel *xmmodel)
 	}
 	if ( htarget->prime != NULL ) {
 		htarget->prime->f = xm_translate_get_score_func_by_name(htarget->prime->name);
+	}
+	for ( i = 0; i < htarget->constreq_size; i++ ) {
+		htarget->constreq[i]->f = xm_translate_get_score_func_by_name(htarget->constreq[i]->name);
+	}
+	for ( i = 0; i < htarget->constrneq_size; i++ ) {
+		htarget->constrneq[i]->f = xm_translate_get_score_func_by_name(htarget->constrneq[i]->name);
 	}
 }
 

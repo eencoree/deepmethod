@@ -42,15 +42,27 @@ typedef void (*DpFuncUpdateModel)(gpointer user_data, double*buffer, int index, 
 
 typedef GString* (*DpFuncParamsToString)(void *user_data, double*x);
 
+typedef enum DpTargetFuncType {
+	DpTargetFuncPrime = (1 << 0),
+	DpTargetFuncPrecond  = (1 << 1),
+	DpTargetFuncTarget = (1 << 2),
+	DpTargetFuncPenalty = (1 << 3),
+	DpTargetFuncConstrEq = (1 << 4),
+	DpTargetFuncConstrNeq = (1 << 5),
+	DpTargetFuncNone = (1 << 6)
+} DpTargetFuncType;
+
 typedef struct DpTargetFunc {
+	DpTargetFuncType tp;
 	char*name;
 	DpFunc f;
 	double weight;
 	double rank;
 	int index;
+	double addon;
 } DpTargetFunc;
 
-DpTargetFunc*dp_target_func_new(int index, double weight, double rank, char*sname);
+DpTargetFunc*dp_target_func_new(DpTargetFuncType tp, int index, double weight, double rank, char*sname, char*addon);
 
 typedef enum DpTargetAggrType {
 	DpTargetAggrSum = (1 << 0),
@@ -63,8 +75,13 @@ typedef struct DpTarget {
 	DpTargetAggrType constrain_aggr_type;
 	int precond_size;
 	DpTargetFunc**precond;
+	int constreq_size;
+	DpTargetFunc**constreq;
+	int constrneq_size;
+	DpTargetFunc**constrneq;
 	DpTargetFunc*target;
-	int size;
+	int array_size;
+	int penalty_size;
 	DpTargetFunc**penalty;
 	DpTargetFunc*prime;
 	gpointer user_data;
@@ -78,9 +95,7 @@ typedef struct DpTarget {
 
 DpTarget*dp_target_new();
 
-void dp_target_add_func (DpTarget*htarget, int index, double weight, double rank, char *sname);
-
-void dp_target_insert_prime_func (DpTarget*htarget, int index, double weight, double rank, char *sname);
+void dp_target_add_func (DpTarget*htarget, DpTargetFuncType tp, int index, double weight, double rank, char *sname, char*addon);
 
 int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data, int index, double cost0);
 

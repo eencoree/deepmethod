@@ -29,14 +29,19 @@
 #include <glib.h>
 #include "dptarget.h"
 
-DpTargetFunc*dp_target_func_new(int index, double weight, double rank, char*sname)
+DpTargetFunc*dp_target_func_new(DpTargetFuncType tp, int index, double weight, double rank, char*sname, char*addon)
 {
 	DpTargetFunc*htargetfunc;
 	htargetfunc = (DpTargetFunc*)malloc(sizeof(DpTargetFunc));
-	htargetfunc->index = 0;
+	htargetfunc->index = index;
 	htargetfunc->weight = weight;
 	htargetfunc->rank = rank;
+	htargetfunc->tp = tp;
 	htargetfunc->name = g_strdup (sname);
+	htargetfunc->addon = 0;
+	if (htargetfunc->tp == DpTargetFuncConstrEq || htargetfunc->tp == DpTargetFuncConstrNeq) {
+		htargetfunc->addon = (addon != NULL) ? g_strtod(addon, NULL) : 0;
+	}
 	return htargetfunc;
 }
 
@@ -44,11 +49,16 @@ DpTarget*dp_target_new()
 {
 	DpTarget*htarget;
 	htarget = (DpTarget*)malloc(sizeof(DpTarget));
-	htarget->size = 0;
+	htarget->array_size = 0;
 	htarget->target = NULL;
+	htarget->penalty_size = 0;
 	htarget->penalty = NULL;
 	htarget->precond_size = 0;
 	htarget->precond = NULL;
+	htarget->constreq_size = 0;
+	htarget->constreq = NULL;
+	htarget->constrneq_size = 0;
+	htarget->constrneq = NULL;
 	htarget->prime = NULL;
 	htarget->debug = 0;
 	htarget->ignore_cost = 0;
@@ -58,34 +68,40 @@ DpTarget*dp_target_new()
 	return htarget;
 }
 
-void dp_target_add_func (DpTarget*htarget, int index, double weight, double rank, char *sname)
+void dp_target_add_func (DpTarget*htarget, DpTargetFuncType tp, int index, double weight, double rank, char *sname, char*addon)
 {
 	DpTargetFunc*htargetfunc;
-	htargetfunc = dp_target_func_new(index, weight, rank, sname);
-	if ( index == 0 ) {
+	htargetfunc = dp_target_func_new(tp, index, weight, rank, sname, addon);
+	if ( tp == DpTargetFuncTarget ) {
 		htarget->target = htargetfunc;
-	} else if ( index > 0 ) {
-		htarget->penalty = (DpTargetFunc**)realloc(htarget->penalty, ( htarget->size + 1 ) * sizeof (DpTargetFunc*) );
-		htarget->penalty[ htarget->size ] = htargetfunc;
-		htarget->size++;
-	} else if ( index < 0 ) {
+	} else if ( tp == DpTargetFuncPenalty ) {
+		htarget->penalty = (DpTargetFunc**)realloc(htarget->penalty, ( htarget->penalty_size + 1 ) * sizeof (DpTargetFunc*) );
+		htarget->penalty[ htarget->penalty_size ] = htargetfunc;
+		htarget->penalty_size++;
+		htarget->array_size++;
+	} else if ( tp == DpTargetFuncPrecond ) {
 		htarget->precond = (DpTargetFunc**)realloc(htarget->precond, ( htarget->precond_size + 1 ) * sizeof (DpTargetFunc*) );
 		htarget->precond[ htarget->precond_size ] = htargetfunc;
 		htarget->precond_size++;
+	} else if ( tp == DpTargetFuncConstrEq ) {
+		htarget->constreq = (DpTargetFunc**)realloc(htarget->constreq, ( htarget->constreq_size + 1 ) * sizeof (DpTargetFunc*) );
+		htarget->constreq[ htarget->constreq_size ] = htargetfunc;
+		htarget->constreq_size++;
+		htarget->array_size++;
+	} else if ( tp == DpTargetFuncConstrNeq ) {
+		htarget->constrneq = (DpTargetFunc**)realloc(htarget->constrneq, ( htarget->constrneq_size + 1 ) * sizeof (DpTargetFunc*) );
+		htarget->constrneq[ htarget->constrneq_size ] = htargetfunc;
+		htarget->constrneq_size++;
+		htarget->array_size++;
+	} else if ( tp == DpTargetFuncPrime ) {
+		htarget->prime = htargetfunc;
 	}
-}
-
-void dp_target_insert_prime_func (DpTarget*htarget, int index, double weight, double rank, char *sname)
-{
-	DpTargetFunc*hprimefunc;
-	hprimefunc = dp_target_func_new(index, weight, rank, sname);
-	htarget->prime = hprimefunc;
 }
 
 int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double*penalty, double*precond, gpointer user_data, int index, double cost0)
 {
-	int max_value_flag = 0, i;
-	double value, f, retval, max_value = G_MAXDOUBLE, target_value;
+	int max_value_flag = 0, i, pen_ind;
+	double value, f, retval, max_value = G_MAXDOUBLE, target_value, constr_value;
 	for ( i = 0; i < htarget->precond_size; i++ ) {
 		f = htarget->precond[i]->f(user_data, x);
 		if ( f < max_value ) {
@@ -108,20 +124,57 @@ int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double
 		f *= htarget->target->weight;
 		retval = f;
 		value = 0;
-		for ( i = 0; i < htarget->size; i++ ) {
+		pen_ind = 0;
+		for ( i = 0; i < htarget->penalty_size; i++ ) {
 			f = htarget->penalty[i]->f(user_data, x);
 			if ( f < max_value ) {
-				penalty[i] = f;
+				penalty[pen_ind++] = f;
 				f *= htarget->penalty[i]->weight;
 				if (htarget->penalty_aggr_type == DpTargetAggrSum) {
 					value += f;
 				} else if (htarget->penalty_aggr_type == DpTargetAggrMax) {
 					value = (value > f) ? value : f;
 				}
-
 			} else {
 				max_value_flag = 1;
-				penalty[i] = max_value;
+				penalty[pen_ind++] = max_value;
+			}
+		}
+		retval += value;
+		value = 0;
+		for ( i = 0; i < htarget->constrneq_size; i++ ) {
+			f = htarget->constrneq[i]->f(user_data, x);
+			if ( f < max_value ) {
+				constr_value = f - htarget->constrneq[i]->addon;
+				penalty[pen_ind++] = (constr_value < 0) ? 0 : constr_value;
+				f *= htarget->constrneq[i]->weight;
+				if (htarget->constrain_aggr_type == DpTargetAggrSum) {
+					value += f;
+				} else if (htarget->constrain_aggr_type == DpTargetAggrMax) {
+					value = (value > f) ? value : f;
+				}
+			} else {
+				max_value_flag = 1;
+				penalty[pen_ind++] = max_value;
+			}
+		}
+		retval += value;
+		value = 0;
+		for ( i = 0; i < htarget->constreq_size; i++ ) {
+			f = htarget->constreq[i]->f(user_data, x);
+			if ( f < max_value ) {
+				constr_value = f - htarget->constreq[i]->addon;
+				constr_value = (constr_value < 0) ? -constr_value : constr_value;
+				penalty[pen_ind++] = (constr_value == 0) ? 0 : constr_value;
+				f *= htarget->constreq[i]->weight;
+				if (htarget->constrain_aggr_type == DpTargetAggrSum) {
+					value += f;
+				} else if (htarget->constrain_aggr_type == DpTargetAggrMax) {
+					value = (value > f) ? value : f;
+				}
+			} else {
+				max_value_flag = 1;
+				penalty[pen_ind++] = max_value;
 			}
 		}
 		retval += value;
@@ -137,8 +190,15 @@ int dp_target_eval (DpTarget*htarget, double*x, int*invalid, double*cost, double
 			fprintf(stdout, "%d %13.9f %13.9f\n", i, precond[i], htarget->precond[i]->weight);
 		}
 		fprintf(stdout, "N penalty weight:\n");
-		for ( i = 0; i < htarget->size; i++ ) {
-			fprintf(stdout, "%d %13.9f %13.9f\n", i, penalty[i], htarget->penalty[i]->weight);
+		pen_ind = 0;
+		for ( i = 0; i < htarget->penalty_size; i++ ) {
+			fprintf(stdout, "%d %13.9f %13.9f\n", i, penalty[pen_ind++], htarget->penalty[i]->weight);
+		}
+		for ( i = 0; i < htarget->constreq_size; i++ ) {
+			fprintf(stdout, "%d %13.9f %13.9f\n", i, penalty[pen_ind++], htarget->constreq[i]->weight);
+		}
+		for ( i = 0; i < htarget->constrneq_size; i++ ) {
+			fprintf(stdout, "%d %13.9f %13.9f\n", i, penalty[pen_ind++], htarget->constrneq[i]->weight);
 		}
 		fprintf(stdout, "max_value_flag=%d value=%13.9f retval=%13.9f\n", max_value_flag, value, retval);
 	}
@@ -192,14 +252,14 @@ void dp_target_shift_penalty_weights (DpTarget*htarget)
 {
 	int i;
 	double weight;
-	weight = htarget->penalty[ htarget->size - 1 ]->weight;
-	for ( i = htarget->size - 1; i > 0; i-- ) {
+	weight = htarget->penalty[ htarget->penalty_size - 1 ]->weight;
+	for ( i = htarget->penalty_size - 1; i > 0; i-- ) {
 		htarget->penalty[i]->weight = htarget->penalty[i - 1]->weight;
 	}
 	htarget->penalty[0]->weight = weight;
 	if ( htarget->debug == 1 ) {
 		fprintf(stdout, "dp_target_shift_penalty_weights: # rank weight\n");
-		for ( i = 0; i < htarget->size; i++ ) {
+		for ( i = 0; i < htarget->penalty_size; i++ ) {
 			fprintf(stdout, "%d %13.9f %13.9f\n", i, htarget->penalty[i]->rank, htarget->penalty[i]->weight);
 		}
 	}
@@ -209,14 +269,14 @@ void dp_target_shift_penalty_ranks (DpTarget*htarget)
 {
 	int i;
 	double rank;
-	rank = htarget->penalty[ htarget->size - 1 ]->rank;
-	for ( i = htarget->size - 1; i > 0; i-- ) {
+	rank = htarget->penalty[ htarget->penalty_size - 1 ]->rank;
+	for ( i = htarget->penalty_size - 1; i > 0; i-- ) {
 		htarget->penalty[i]->rank = htarget->penalty[i - 1]->rank;
 	}
 	htarget->penalty[0]->rank = rank;
 	if ( htarget->debug == 1 ) {
 		fprintf(stdout, "dp_target_shift_penalty_ranks: # rank weight\n");
-		for ( i = 0; i < htarget->size; i++ ) {
+		for ( i = 0; i < htarget->penalty_size; i++ ) {
 			fprintf(stdout, "%d %13.9f %13.9f\n", i, htarget->penalty[i]->rank, htarget->penalty[i]->weight);
 		}
 	}
@@ -286,21 +346,25 @@ int dp_target_load(gchar*filename, gchar*groupname, DpTarget *htarget, GError**e
 	}
 	for ( i = 0; i < (int)ksize; i++ ) {
 		if ( ( array = g_key_file_get_string_list(gkf, groupname, keys[i], &length, &gerror) ) != NULL ) {
-			if ( length == 4 ) {
-                dindex = g_strtod(array[1], NULL);
-                if ( dindex < 0 ) {
-                    index = (int)( dindex - 0.5 );
-                } else {
-                    index = (int)( dindex + 0.5 );
-                }
-				rank = g_strtod(array[2], NULL);
-				weight = g_strtod(array[3], NULL);
-				dp_target_add_func (htarget, index, weight, rank, array[0]);
-			} else if ( length == 5 ) {
-				index = (int)( g_strtod(array[1], NULL) + 0.5 );
-				rank = g_strtod(array[2], NULL);
-				weight = g_strtod(array[3], NULL);
-				dp_target_insert_prime_func (htarget, index, weight, rank, array[0]);
+			DpTargetFuncType tp = DpTargetFuncNone;
+			if (!g_strcmp0(array[0], "target")) {
+				tp = DpTargetFuncTarget;
+			} else if (!g_strcmp0(array[0], "penalty")) {
+				tp = DpTargetFuncPenalty;
+			} else if (!g_strcmp0(array[0], "precond")) {
+				tp = DpTargetFuncPrecond;
+			} else if (!g_strcmp0(array[0], "constreq")) {
+				tp = DpTargetFuncConstrEq;
+			} else if (!g_strcmp0(array[0], "constrneq")) {
+				tp = DpTargetFuncConstrNeq;
+			} else if (!g_strcmp0(array[0], "prime")) {
+				tp = DpTargetFuncPrime;
+			}
+			if (tp != DpTargetFuncNone) {
+				index = (int)( g_strtod(array[2], NULL) + 0.5 );
+				rank = g_strtod(array[3], NULL);
+				weight = g_strtod(array[4], NULL);
+				dp_target_add_func (htarget, tp, index, weight, rank, array[1], array[5]);
 			}
 			g_strfreev(array);
 		}

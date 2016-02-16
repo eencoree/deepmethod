@@ -193,7 +193,7 @@ int dp_evaluation_individ_compare(const void *p1, const void *p2, void *user_dat
 		select_trial = 1;
 	} else {
 		select_trial = -1;
-		for ( i = 0; i < hevalctrl->eval_target->size; i++ ) {
+		for ( i = 0; i < hevalctrl->eval_target->array_size; i++ ) {
 			if ( trial->targets[i] < individ->targets[i] && g_rand_double(hrand) < hevalctrl->eval_target->penalty[i]->rank ) {
 				select_trial = 1;
 				break;
@@ -239,7 +239,7 @@ int dp_evaluation_individ_dominates_compare(const void *p1, const void *p2, void
 		dominates = 0;
 	} else {
 		dominates = 1;
-		for ( i = 0; i < hevalctrl->eval_target->size; i++ ) {
+		for ( i = 0; i < hevalctrl->eval_target->array_size; i++ ) {
 			if ( trial->targets[i] < individ->targets[i] ) {
 				dominates = 0;
 				break;
@@ -434,7 +434,7 @@ DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, in
 {
 	DpPopulation*pop;
 	int i;
-	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size);
+	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->array_size, hevalctrl->eval_target->precond_size);
 	dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 	pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, 0);
@@ -465,7 +465,7 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	GError *gerror = NULL;
 	GMainContext *gcontext = g_main_context_default();
 	gulong microseconds = G_USEC_PER_SEC / 1000;
-	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size);
+	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->array_size, hevalctrl->eval_target->precond_size);
 	if ( noglobal_eps == 0 ) {
 		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 		pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
@@ -517,7 +517,7 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 DpIndivid*dp_evaluation_individ_init(DpEvaluationCtrl*hevalctrl)
 {
 	DpIndivid*individ;
-	individ = dp_individ_new(hevalctrl->eval->size, hevalctrl->eval_target->size, hevalctrl->eval_target->precond_size);
+	individ = dp_individ_new(hevalctrl->eval->size, hevalctrl->eval_target->array_size, hevalctrl->eval_target->precond_size);
 	dp_evaluation_individ_set(hevalctrl, individ);
 	individ->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 	dp_evaluation_individ_evaluate(hevalctrl, individ, individ, 0, 0);
