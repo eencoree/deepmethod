@@ -43,6 +43,7 @@ DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname)
 	hdeepinfo->substeps = 0;
 	hdeepinfo->substieps = 0;
 	hdeepinfo->mean_cost = 0;
+	hdeepinfo->ca_flag = 0;
 	if ( ( str = g_key_file_get_string(gkf, groupname, "population_size", &gerror) ) != NULL ) {
 		hdeepinfo->population_size = g_strtod( str , NULL);
 		g_free(str);
@@ -66,6 +67,13 @@ DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname)
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "es_kind", &gerror) ) != NULL ) {
 		hdeepinfo->es_kind = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "ca_flag", &gerror) ) != NULL ) {
+		hdeepinfo->ca_flag = g_strtod( str , NULL);
 		g_free(str);
 	} else {
 		g_debug ("%s", gerror->message );
@@ -381,6 +389,28 @@ void dp_deep_select_func (gpointer data, gpointer user_data)
 	}
 }
 
+void dp_de_select_func (gpointer data, gpointer user_data)
+{
+	int r1, r2, r3, r4;
+	int start_index, end_index;
+	DpIndivid*my_tabu;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
+	int my_id = GPOINTER_TO_INT(data) - 1;
+	DpPopulation*trial = hdeepinfo->trial;
+	DpIndivid*my_trial = trial->individ[my_id];
+	DpPopulation*population = hdeepinfo->population;
+	DpIndivid*my_individ = population->individ[my_id];
+	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+	int ignore_cost = hdeepinfo->hevalctrl->eval_target->ignore_cost;
+	r1 = population->imin;
+	my_tabu = population->individ[r1];
+	if ( my_trial->cost >= my_individ->cost ) {
+		population->individ[my_id] = my_trial;
+		trial->individ[my_id] = my_individ;
+		my_individ->age++;
+	}
+}
+
 void dp_deep_generate_step(DpDeepInfo*hdeepinfo)
 {
 	int individ_id;
@@ -456,6 +486,29 @@ void dp_deep_select_step(DpDeepInfo*hdeepinfo)
 	GError *gerror = NULL;
 	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 		dp_deep_select_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
+	}
+	dp_population_update(trial, 0, trial->size);
+	trial->iter = population->iter + 1;
+	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+		int r4 = trial->individ[individ_id]->r4;
+		if (r4 > -1 && trial->individ[individ_id]->age > 0 && trial->individ[r4]->age > 0) {
+			trial->individ[r4]->failures++;
+		}
+	}
+	hdeepinfo->population = trial; /* accepted */
+	hdeepinfo->trial = population;
+}
+
+void dp_de_select_step(DpDeepInfo*hdeepinfo)
+{
+	int individ_id;
+	gboolean immediate_stop = FALSE;
+	gboolean wait_finish = TRUE;
+	DpPopulation*population = hdeepinfo->population;
+	DpPopulation*trial = hdeepinfo->trial;
+	GError *gerror = NULL;
+	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+		dp_de_select_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
 	}
 	dp_population_update(trial, 0, trial->size);
 	trial->iter = population->iter + 1;

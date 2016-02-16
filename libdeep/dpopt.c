@@ -197,6 +197,10 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 			opt_type = H_OPT_NONE;
 			method_info = NULL;
 			dp_opt_add_func(hopt, dp_opt_deep_select, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "selde") ) {
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_de_select, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "osda") ) {
 			opt_type = H_OPT_OSDA;
 /*			hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);*/
@@ -356,7 +360,7 @@ DpLoopExitCode dp_opt_deep_generate_ca(DpLoop*hloop, gpointer user_data)
         return ret_val;
     }
 	g_debug("dp_opt_deep_generate_ca tau:%d selector:%d kounter:%d delay:%d stop_counter:%d", hloop->tau_counter, hdeepinfo->selector, hdeepinfo->hevalctrl->kounter, hopt->delay, hopt->stop_counter);
-	b1 = (int)(population->size / hdeepinfo->es_lambda + 0.5);
+	b1 = (hdeepinfo->ca_flag == 0) ? hdeepinfo->es_lambda : (int)(population->size / hdeepinfo->es_lambda + 0.5);
 	k = 0;
 	for (i = 0; i < hdeepinfo->es_lambda; i++) {
 		ind = population->cost_ascending[i];
@@ -370,6 +374,7 @@ DpLoopExitCode dp_opt_deep_generate_ca(DpLoop*hloop, gpointer user_data)
 	trial->ifmax = ind;
 	trial->imin = 0;
 	for (i = 0; i < b1; i++) {
+		if (i * b1 > population->size - 1) break;
 		tmp_ind = trial->individ[i * b1];
 		for (j = i; j < population->size; j += b1) {
 			dp_individ_copy_values(population->individ[j], tmp_ind);
@@ -402,6 +407,20 @@ DpLoopExitCode dp_opt_deep_select(DpLoop*hloop, gpointer user_data)
         return ret_val;
     }
 	dp_deep_select_step(hdeepinfo);
+	dp_deep_accept_step(hdeepinfo, &(hopt->cost));
+	hdeepinfo->selector = DpSelectorSelected;
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_de_select(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	if ( hdeepinfo->selector == DpSelectorSelected ) {
+        return ret_val;
+    }
+	dp_de_select_step(hdeepinfo);
 	dp_deep_accept_step(hdeepinfo, &(hopt->cost));
 	hdeepinfo->selector = DpSelectorSelected;
 	return ret_val;

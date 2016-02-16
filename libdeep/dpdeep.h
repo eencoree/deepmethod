@@ -50,6 +50,7 @@ typedef struct DpDeepInfo {
 	int es_lambda;
 	int es_cutoff;
 	int es_kind;
+	int ca_flag;
 	DpSelector selector;
 	double noglobal_eps;
 	double substeps;
@@ -92,6 +93,8 @@ void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo);
 
 void dp_deep_select_step(DpDeepInfo*hdeepinfo);
 
+void dp_de_select_step(DpDeepInfo*hdeepinfo);
+
 void dp_deep_generate_func (gpointer data, gpointer user_data);
 
 void dp_deep_generate_ca_func (gpointer data, gpointer user_data);
@@ -99,6 +102,8 @@ void dp_deep_generate_ca_func (gpointer data, gpointer user_data);
 void dp_deep_evaluate_func (gpointer data, gpointer user_data);
 
 void dp_deep_select_func (gpointer data, gpointer user_data);
+
+void dp_de_select_func (gpointer data, gpointer user_data);
 
 void dp_deep_info_load(FILE*fp, DpDeepInfo *hdeepinfo);
 

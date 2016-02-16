@@ -483,7 +483,7 @@ void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, D
 	cost_max = input_1->cost;
 	b = end_index;
 	double alpha, beta, c1, c2, d, u;
-	u = g_rand_double(hrand);
+//	u = g_rand_double(hrand);
 	if (individ->cost_ind < input_2->cost_ind) {
 		alpha = 1;
 		beta = (double)(input_2->cost_ind - individ->cost_ind) / (b - 1);
@@ -495,8 +495,8 @@ void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, D
 		d = (input_2->x[i] - individ->x[i]) / 2.0;
 		c1 = individ->x[i] - d * (1 + alpha * beta);
 		c2 = individ->x[i] + d * (1 - alpha * beta);
-//		individ->x[i] = c1 + (c2 - c1) * g_rand_double(hrand);
-		individ->x[i] = c1 + (c2 - c1) * u;
+		individ->x[i] = c1 + (c2 - c1) * g_rand_double(hrand);
+//		individ->x[i] = c1 + (c2 - c1) * u;
 	}
 	input_2->moves++;
 }
