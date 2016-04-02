@@ -465,6 +465,7 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 	GError *gerror = NULL;
 	GMainContext *gcontext = g_main_context_default();
 	gulong microseconds = G_USEC_PER_SEC / 1000;
+	int notdone, currstatus;
 	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->array_size, hevalctrl->eval_target->precond_size);
 	if ( noglobal_eps == 0 ) {
 		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
@@ -497,10 +498,21 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 				g_error("%s", gerror->message);
 			}
 		}
-		while(g_thread_pool_unprocessed (hevalctrl->gthreadpool) > 0) {
+		notdone = 1;
+		while(notdone == 1 || g_thread_pool_unprocessed (hevalctrl->gthreadpool) > 0) {
 			g_main_context_iteration(gcontext, FALSE);
-            g_usleep (microseconds);
-        }
+			g_usleep (microseconds);
+			notdone = 0;
+                        for ( i = pop->slice_a; i < pop->slice_b; i++ ) {
+				g_mutex_lock( &(pop->individ[i]->m) );
+				currstatus = pop->individ[i]->status;
+				g_mutex_unlock( &(pop->individ[i]->m) );
+/*                                currstatus = dp_deep_evaluate_status (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);*/
+                                if ( currstatus == 1 ) {
+                                        notdone = 1;
+                                }
+                        }
+		}
 		g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
 	} else {
 		for ( i = pop->slice_a; i < pop->slice_b; i++) {

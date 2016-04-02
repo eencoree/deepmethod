@@ -309,7 +309,7 @@ static gboolean out_watch( GIOChannel   *channel,
 	wrongstart = 0;
     if( cond == G_IO_HUP ){
         g_debug("Cond %d is G_IO_HUP %d", intprt->child_pid, (int)cond);
-        g_io_channel_unref( channel );
+/*        g_io_channel_unref( channel );*/
         return( FALSE );
     } else if( cond == G_IO_IN ) {
 		g_debug("Cond %d is G_IO_IN %d", intprt->child_pid, (int)cond);
@@ -330,7 +330,7 @@ static gboolean out_watch( GIOChannel   *channel,
 	}
 	if (wrongstart == 1) {
 		g_debug("Cond %d is G_IO_IN %d but status %d", intprt->child_pid, (int)cond, currstatus);
-		g_string_free(response, TRUE);
+/*		g_string_free(response, TRUE);*/
 		return TRUE;
 	}
 /* status was 1 - let's change it to 2 */
@@ -341,7 +341,7 @@ static gboolean out_watch( GIOChannel   *channel,
     response = interpreter_recieve_response(channel, intprt->debug, intprt->api);
 /* read info - "free" interpreter */
     g_mutex_lock( &(intprt->mstatus) );
-	intprt->status = 2;
+	intprt->status = 0;
 	g_mutex_unlock( &(intprt->mstatus) );
     g_mutex_lock( &(intprt->m) );
     intprt->response = g_string_free(response, FALSE);
@@ -357,8 +357,9 @@ static gboolean err_watch( GIOChannel   *channel,
     gsize  size;
 
     if( cond == G_IO_HUP ) {
-        g_io_channel_unref( channel );
-        return( FALSE );
+/*        g_io_channel_unref( channel );*/
+		g_debug("Err G_IO_HUP");
+        return (TRUE);
     }
 
     g_io_channel_read_line( channel, &string, &size, NULL, NULL );
@@ -369,11 +370,19 @@ static gboolean err_watch( GIOChannel   *channel,
 }
 
 void write_to_interpreter(GIOChannel* in, GString* msg){
-    g_io_channel_write_chars( in,
+    GError *err = NULL;
+    GIOStatus gs = g_io_channel_write_chars( in,
             msg->str,
             msg->len,
             NULL,
-            NULL);
+            &err);
+    if (gs != G_IO_STATUS_NORMAL) {
+	g_debug("Write chars status bad %d", gs);
+	if (err != NULL) {
+		g_debug("%s", err->message);
+	}
+	return;
+    }
     g_io_channel_flush(in, NULL);
 }
 
@@ -381,6 +390,7 @@ void init_source_to_interpreter(GIOChannel * intprt_in, API*api){
 	if (strlen(api->source_cmd) > 0) {
 		GString * command = g_string_new(api->source_cmd);
 		g_string_append_printf(command, "(\'%s\')\r\n%s\r\n", api->file_cmd, api->fflush_cmd);
+//		g_string_append_printf(command, "(\'%s\');\r\n", api->file_cmd);
 		write_to_interpreter(intprt_in, command);
 	}
 }
@@ -459,8 +469,9 @@ void api_free(API*api)
 void kill_interpreter(Interpreter* intprt)
 {
 	kill(intprt->child_pid, SIGKILL);
-	g_object_unref (intprt->out);
-	g_object_unref (intprt->err);
+	g_debug("Interp killed [%d]:", intprt->child_pid);
+	g_io_channel_unref (intprt->out);
+	g_io_channel_unref (intprt->err);
 	g_mutex_clear (&(intprt->m));
 	g_cond_clear (&(intprt->cond));
 	api_free(intprt->api);
@@ -489,7 +500,8 @@ GString *create_command(XmModel*xmmodel, API*api)
 	}
 	command = g_string_append(command, buf);
 	g_free(buf);
-	g_string_append_printf(command, ")\r\n%s\r\n", api->fflush_cmd);
+	g_string_append_printf(command, ");\r\n%s\r\n", api->fflush_cmd);
+//	g_string_append_printf(command, ");\r\n");
 	return command;
 }
 
@@ -535,6 +547,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 	g_mutex_lock( &(intprt->mstatus) );
 	intprt->status = 1;
 	g_mutex_unlock( &(intprt->mstatus) );
+	g_debug("Run starting [%d]:", intprt->child_pid);
     write_to_interpreter(intprt->in, command);
 	failed = FALSE;
     g_mutex_lock( &(intprt->m) );
@@ -543,12 +556,13 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 			      // timeout has passed.
 //			g_mutex_unlock (&data_mutex);
 //			return NULL;
+			g_debug("Run timeouted [%d]:", intprt->child_pid);
 			failed = TRUE;
 		}
     }
 	if (failed) {
 		g_mutex_unlock (&(intprt->m));
-		g_debug ( "Interpreter timed out");
+		g_debug ( "Interpreter failed [%d]:", intprt->child_pid);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
@@ -556,7 +570,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		kill_interpreter(intprt);
 		intprt = init_interpreter(xmmodel);
 		g_async_queue_push(queue, (gpointer)intprt);
-		g_printf("Re-added intprt\n");
+		g_debug("Re-added intprt [%d]:", intprt->child_pid);
 		return child_exit_status;
 	}
     standard_output = g_strdup( intprt->response );
@@ -576,14 +590,16 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 			}
 		}
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
-			if ( result[xmmodel->keys[i]] != NULL ) {
-				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
+			int result_length = g_strv_length(result);
+			int ik = (xmmodel->keys[i] >= 0) ? xmmodel->keys[i] : result_length + xmmodel->keys[i];
+			if ( result[ik] != NULL ) {
+				xmmodel->array[i] = g_strtod(result[ik], NULL);
 			} else {
 				g_debug ( "result[%d] doesn't exist", xmmodel->keys[i]);
 			}
 		}
 	} else {
-		g_debug ( "Couldn't parse interpreter output: %s", standard_output);
+		g_debug ( "Couldn't parse interpreter [%d] output: %s", intprt->child_pid, standard_output);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
 		}
@@ -953,6 +969,7 @@ double xm_model_objfunc(gpointer user_data, double*x)
 			g_message("Ret val %d val %f", ret_val, val);
 		}
 	}
+	g_debug("Objfunc: %f", val);
 	return val;
 }
 
