@@ -470,6 +470,16 @@ void kill_interpreter(Interpreter* intprt)
 {
 	kill(intprt->child_pid, SIGKILL);
 	g_debug("Interp killed [%d]:", intprt->child_pid);
+	if (g_source_remove_by_user_data ((gpointer) intprt)) {
+		g_debug("Source 1 removed [%d]:", intprt->child_pid);
+	} else {
+		g_debug("Source not 1 removed [%d]:", intprt->child_pid);
+	}
+	if (g_source_remove_by_user_data ((gpointer) intprt)) {
+		g_debug("Source 2 removed [%d]:", intprt->child_pid);
+	} else {
+		g_debug("Source not 2 removed [%d]:", intprt->child_pid);
+	}
 	g_io_channel_unref (intprt->out);
 	g_io_channel_unref (intprt->err);
 	g_mutex_clear (&(intprt->m));
@@ -560,7 +570,7 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 			failed = TRUE;
 		}
     }
-	if (failed) {
+	if (!(intprt->response) || failed) {
 		g_mutex_unlock (&(intprt->m));
 		g_debug ( "Interpreter failed [%d]:", intprt->child_pid);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
@@ -581,17 +591,26 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 	intprt->status = 0;
 	g_mutex_unlock( &(intprt->mstatus) );
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
+	int result_length = g_strv_length(result);
 	if ( strlen(standard_output) > 0 && result != NULL ) {
 		if ( xmmodel->debug == 1 ) {
-			int result_length = g_strv_length(result);
 			g_printf("result_length = %d;\n", result_length);
 			for ( j = 0; j < result_length; j++ ) {
 				g_printf("result[%d] = %s;\n", j, result[j]);
 			}
 		}
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
-			int result_length = g_strv_length(result);
 			int ik = (xmmodel->keys[i] >= 0) ? xmmodel->keys[i] : result_length + xmmodel->keys[i];
+			if (ik < 0 || ik > result_length - 1) {
+				g_debug ( "Couldn't parse interpreter [%d] result: %s", intprt->child_pid, standard_output);
+				for ( i = 0; i < xmmodel->num_keys; i++ ) {
+					xmmodel->array[i] = max_value;
+				}
+				xmmodel->copy_val_parms = 0;
+				kill_interpreter(intprt);
+				intprt = init_interpreter(xmmodel);
+				g_debug("Re-added intprt [%d]:", intprt->child_pid);
+			}
 			if ( result[ik] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[ik], NULL);
 			} else {

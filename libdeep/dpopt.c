@@ -533,7 +533,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);
-	char              *base;
+	char *base;
 	gchar **base_tokens;
 	int n_base_tokens, n_extra_tokens;
 	base = (char *)calloc(MAX_RECORD, sizeof(char *));
