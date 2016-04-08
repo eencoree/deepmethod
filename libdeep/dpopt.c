@@ -533,6 +533,10 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);
+	DpDeepInfo*hdeepinfo;
+	hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	double fmean, fmax, cost;
+	int last_method, kounter;
 	char *base;
 	gchar **base_tokens;
 	int n_base_tokens, n_extra_tokens;
@@ -548,17 +552,25 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
     base = fgets(base, MAX_RECORD, fp);
     base_tokens = g_strsplit(base, ":", -1);
     n_base_tokens = g_strv_length(base_tokens) - 1;
-    n_extra_tokens = n_base_tokens - ( heval->size + 3 );
+    n_extra_tokens = n_base_tokens - ( heval->size + 8 );
     g_strfreev(base_tokens);
     free(base);
 	do {
-		fscanf(fp, "wtime:%lf tau:%d cost:%lf", &(hloop->w_time), &(hloop->tau_counter), &(hopt->cost));
-        for ( i = 0; i < n_extra_tokens; i++) {
-            fscanf(fp, " target[%*i]:%*f");
-		}
-		for ( i = 0; i < heval->size; i++) {
-			fscanf(fp, " p[%d]:%lf", &(heval->points[i]->index), heval->points[i]->param);
-		}
+		fscanf(fp, "wtime:%lf tau:%d freeze:%d score:%lf", &(hloop->w_time), &(hloop->tau_counter), &(hopt->stop_counter), &(hopt->cost));
+		fscanf(fp, " fmean:%lf fmax:%lf", &fmean, &fmax);
+		fscanf(fp, " L:%d", &last_method);
+		fscanf(fp, " kounter:%d", &kounter);
+		fscanf(fp, " cost:%lf", &cost);
+/*		if (hopt->logdepth > 1) {*/
+			for ( i = 0; i < n_extra_tokens; i++) {
+				fscanf(fp, " target[%*i]:%*f");
+			}
+/*		}*/
+/*		if (hopt->logdepth > 0) {*/
+			for ( i = 0; i < heval->size; i++) {
+				fscanf(fp, " p[%d]:%lf", &(heval->points[i]->index), heval->points[i]->param);
+			}
+/*		}*/
 	} while ( !feof(fp) && monitor != hloop->tau_counter );
 	fclose(fp);
 	return ret_val;

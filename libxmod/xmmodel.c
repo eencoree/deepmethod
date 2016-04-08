@@ -2094,7 +2094,7 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "octave" ) ) {
 		if ( ( file_contents = xm_model_octave_contents(xmmodel) ) == NULL ) {
-			g_error("Can't get subsubset contents");
+			g_error("Can't get octave contents");
 		}
 	} else {
 		file_contents = g_string_new("");
