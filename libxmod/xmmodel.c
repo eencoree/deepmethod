@@ -430,8 +430,8 @@ Interpreter* init_interpreter(XmModel * xmmodel){
             G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
             NULL, &child_pid,
             &in, &out, &err, NULL );
-    if( ! ret ){
-        g_error( "SPAWN FAILED" );
+    if ( !ret ) {
+        g_printf("g_spawn_async_with_pipes in init interpreter\nfailed for %s\nwith %s", args[0], gerror->message);
         return NULL;
     }
     Interpreter* intprt = g_new(Interpreter, 1);
@@ -579,6 +579,10 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 		xmmodel->copy_val_parms = 0;
 		kill_interpreter(intprt);
 		intprt = init_interpreter(xmmodel);
+		if (!intprt) {
+			g_debug("Couldn't re-add interpreter!");
+			return child_exit_status;
+		}
 		g_async_queue_push(queue, (gpointer)intprt);
 		g_debug("Re-added intprt [%d]:", intprt->child_pid);
 		return child_exit_status;
@@ -609,9 +613,10 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 				xmmodel->copy_val_parms = 0;
 				kill_interpreter(intprt);
 				intprt = init_interpreter(xmmodel);
-				g_debug("Re-added intprt [%d]:", intprt->child_pid);
-			}
-			if ( result[ik] != NULL ) {
+				if (intprt) {
+					g_debug("Re-added new intprt [%d]:", intprt->child_pid);
+				}
+			} else if ( result[ik] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[ik], NULL);
 			} else {
 				g_debug ( "result[%d] doesn't exist", xmmodel->keys[i]);
@@ -628,7 +633,9 @@ int xm_model_run_interpreter(XmModel *xmmodel)
     xmmodel->copy_val_parms = 0;
 
 	// return interpreter to queue
-	g_async_queue_push(queue, (gpointer)intprt);
+	if (intprt) {
+		g_async_queue_push(queue, (gpointer)intprt);
+	}
 	child_exit_status = 0;
 	return child_exit_status;
 }
