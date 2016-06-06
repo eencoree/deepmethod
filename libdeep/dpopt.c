@@ -539,7 +539,11 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	DpEvaluation*heval = (DpEvaluation*)(hopt->heval);
 	DpTarget*htarget = (DpTarget*)(hopt->htarget);
 	DpDeepInfo*hdeepinfo;
+	DpPopulation*pop;
+	DpEvaluationCtrl*hevalctrl;
 	hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	pop = hdeepinfo->population;
+	hevalctrl = hdeepinfo->hevalctrl;
 	double fmean, fmax, cost;
 	int last_method, kounter;
 	char *base;
@@ -553,7 +557,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	if ( !fp && hopt->monitor > 0 ) {
 		hloop->exit_str = g_strdup_printf ( "dp_read_log: can't open %s", hopt->logname);
 		return DP_LOOP_EXIT_ERROR;
-	} else if ( hopt->monitor < 1 ) {
+	} else if ( !fp && hopt->monitor < 1 ) {
 		return ret_val;
 	}
     base = fgets(base, MAX_RECORD, fp);
@@ -580,6 +584,9 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 /*		}*/
 	} while ( !feof(fp) && monitor != hloop->tau_counter );
 	fclose(fp);
+	if ( hopt->monitor < 1 ) {
+		dp_evaluation_individ_set(hevalctrl, pop->individ[pop->imin]);
+	}
 	return ret_val;
 }
 
