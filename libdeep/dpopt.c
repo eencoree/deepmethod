@@ -63,6 +63,7 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 	hopt->debug = 0;
 	hopt->delay = 0;
 	hopt->logdepth = 0;
+	hopt->monitor = -1;
 	return hopt;
 }
 
@@ -108,6 +109,10 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
 				dp_opt_add_func(hopt, dp_print_log, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "readlog") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_read_log, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "writestate") ) {
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
@@ -545,9 +550,11 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	FILE*fp;
 	int i;
 	fp = fopen(hopt->logname, "r");
-	if ( !fp ) {
+	if ( !fp && hopt->monitor > 0 ) {
 		hloop->exit_str = g_strdup_printf ( "dp_read_log: can't open %s", hopt->logname);
 		return DP_LOOP_EXIT_ERROR;
+	} else if ( hopt->monitor < 1 ) {
+		return ret_val;
 	}
     base = fgets(base, MAX_RECORD, fp);
     base_tokens = g_strsplit(base, ":", -1);
