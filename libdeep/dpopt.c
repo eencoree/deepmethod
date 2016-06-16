@@ -558,13 +558,13 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	} else if ( !fp && hopt->monitor < 1 ) {
 		return ret_val;
 	}
-	targets = g_new(double, n_extra_tokens);
     base = fgets(base, MAX_RECORD, fp);
     base_tokens = g_strsplit(base, ":", -1);
     n_base_tokens = g_strv_length(base_tokens) - 1;
     n_extra_tokens = n_base_tokens - ( heval->size + 8 );
     g_strfreev(base_tokens);
     free(base);
+    targets = g_new(double, n_extra_tokens);
 	do {
 		fscanf(fp, "wtime:%lf tau:%d freeze:%d score:%lf", &(hloop->w_time), &(hloop->tau_counter), &(hopt->stop_counter), &(hopt->cost));
 		fscanf(fp, " fmean:%lf fmax:%lf", &fmean, &fmax);
