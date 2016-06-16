@@ -542,7 +542,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	DpPopulation*pop;
 	DpEvaluationCtrl*hevalctrl;
 	hdeepinfo = (DpDeepInfo*)(hopt->method_info);
-	double fmean, fmax, cost;
+	double fmean, fmax, cost, *targets;
 	int last_method, kounter;
 	char *base;
 	gchar **base_tokens;
@@ -558,6 +558,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	} else if ( !fp && hopt->monitor < 1 ) {
 		return ret_val;
 	}
+	targets = g_new(double, n_extra_tokens);
     base = fgets(base, MAX_RECORD, fp);
     base_tokens = g_strsplit(base, ":", -1);
     n_base_tokens = g_strv_length(base_tokens) - 1;
@@ -572,7 +573,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 		fscanf(fp, " cost:%lf", &cost);
 /*		if (hopt->logdepth > 1) {*/
 			for ( i = 0; i < n_extra_tokens; i++) {
-				fscanf(fp, " target[%*i]:%*f");
+				fscanf(fp, " target[%*i]:%lf", &targets[i]);
 			}
 /*		}*/
 /*		if (hopt->logdepth > 0) {*/
@@ -586,7 +587,12 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 		pop = hdeepinfo->population;
 		hevalctrl = hdeepinfo->hevalctrl;
 		dp_evaluation_individ_set(hevalctrl, pop->individ[pop->imin]);
+		for ( i = 0; i < n_extra_tokens; i++) {
+			pop->individ[pop->imin]->targets[i] = targets[i];
+		}
+		pop->individ[pop->imin]->cost = cost;
 	}
+	g_free(targets);
 	return ret_val;
 }
 

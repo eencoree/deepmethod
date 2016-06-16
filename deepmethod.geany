@@ -28,17 +28,17 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=0
-FILE_NAME_0=20838;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
+current_page=7
+FILE_NAME_0=16011;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
 FILE_NAME_1=3395;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.h;0;4
 FILE_NAME_2=15797;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpevaluation.c;0;4
 FILE_NAME_3=5595;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpdeep.c;0;4
 FILE_NAME_4=2275;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdptarget.c;0;4
 FILE_NAME_5=0;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpindivid.c;0;4
 FILE_NAME_6=0;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Ftools%2Fdeepmethod.c;0;4
-FILE_NAME_7=7742;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpsettings.c;0;4
+FILE_NAME_7=5009;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpsettings.c;0;4
 FILE_NAME_8=1686;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdptarget.h;0;4
-FILE_NAME_9=57407;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
+FILE_NAME_9=2239;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
 FILE_NAME_10=1951;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdploop.c;0;4
 
 [VTE]
