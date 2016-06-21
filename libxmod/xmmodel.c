@@ -468,7 +468,10 @@ void api_free(API*api)
 
 void kill_interpreter(Interpreter* intprt)
 {
+#ifndef G_OS_WIN32
 	kill(intprt->child_pid, SIGKILL);
+#endif
+	g_spawn_close_pid (intprt->child_pid);
 	g_debug("Interp killed [%d]:", intprt->child_pid);
 	if (g_source_remove_by_user_data ((gpointer) intprt)) {
 		g_debug("Source 1 removed [%d]:", intprt->child_pid);
