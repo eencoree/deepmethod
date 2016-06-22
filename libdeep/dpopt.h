@@ -81,6 +81,7 @@ typedef struct DpOpt {
 	int pareto_all;
 	int precision;
 	int debug;
+	int keep_order;
 } DpOpt;
 
 //DpOptSettings*dp_opt_settings_new();

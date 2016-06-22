@@ -64,6 +64,7 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 	hopt->delay = 0;
 	hopt->logdepth = 0;
 	hopt->monitor = -1;
+	hopt->keep_order = 0;
 	return hopt;
 }
 
@@ -406,6 +407,9 @@ DpLoopExitCode dp_opt_deep_generate_ac(DpLoop*hloop, gpointer user_data)
 	if ( hdeepinfo->selector == DpSelectorGenerated ) {
         return ret_val;
     }
+    if (hopt->keep_order == 1 && hdeepinfo->last_method != 1) {
+        return ret_val;
+	}
 	dp_deep_generate_ac_step(hdeepinfo);
 	hdeepinfo->selector = DpSelectorGenerated;
 	hdeepinfo->last_method = 2;

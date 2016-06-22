@@ -266,6 +266,13 @@ int dp_settings_process_run(DpSettings *dpsettings, GKeyFile*gkf, gchar*groupnam
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "keep_order", &gerror) ) != NULL ) {
+		hopt->keep_order = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	list = dpsettings->run_before;
 	order = -1;
 	tau_flag = 1;
