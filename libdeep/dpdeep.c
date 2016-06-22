@@ -319,6 +319,39 @@ void dp_deep_generate_ca_func (gpointer data, gpointer user_data)
 	my_trial->cost = G_MAXDOUBLE;
 }
 
+void dp_deep_generate_ac_func (gpointer data, gpointer user_data)
+{
+	int r1, r2, r3, r4;
+	int start_index, end_index;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
+	int my_id = GPOINTER_TO_INT(data) - 1;
+	DpPopulation*trial = hdeepinfo->trial;
+	DpIndivid*my_trial = trial->individ[my_id];
+	DpPopulation*population = hdeepinfo->population;
+	DpIndivid*my_individ = population->individ[my_id];
+
+	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+
+	int ignore_cost = hdeepinfo->hevalctrl->eval_target->ignore_cost;
+	GRand*hrand = hdeepinfo->hevalctrl->hrand;
+	r1 = population->ifmax;
+	r2 = my_id;
+	r3 = my_id;
+	r4 = my_id;
+	start_index = my_id;
+	end_index = hdeepinfo->es_lambda;
+	my_trial->age = 0;
+	my_trial->r1 = r1;
+	my_trial->r2 = r2;
+	my_trial->r3 = r3;
+	my_trial->r4 = r4;
+	my_trial->moves = 0;
+	my_trial->failures = 0;
+	my_trial->grads = 0;
+	dp_individ_recombination_ac(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+	my_trial->cost = G_MAXDOUBLE;
+}
+
 void dp_deep_evaluate_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;
@@ -434,6 +467,19 @@ void dp_deep_generate_ca_step(DpDeepInfo*hdeepinfo)
 	GError *gerror = NULL;
 	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
 		dp_deep_generate_ca_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
+    }
+}
+
+void dp_deep_generate_ac_step(DpDeepInfo*hdeepinfo)
+{
+	int individ_id;
+	gboolean immediate_stop = FALSE;
+	gboolean wait_finish = TRUE;
+	DpPopulation*population = hdeepinfo->population;
+	DpPopulation*trial = hdeepinfo->trial;
+	GError *gerror = NULL;
+	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+		dp_deep_generate_ac_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
     }
 }
 

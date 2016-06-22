@@ -194,6 +194,11 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep_generate_ca, tau_flag, opt_type, order, method_info);
+		} else if ( !g_strcmp0(list[i], "gacdeep") ) {
+			opt_type = H_OPT_DEEP;
+			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			method_info = (gpointer) hdeepinfo;
+			dp_opt_add_func(hopt, dp_opt_deep_generate_ac, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "edeep") ) {
             opt_type = H_OPT_NONE;
 			method_info = NULL;
@@ -390,6 +395,20 @@ DpLoopExitCode dp_opt_deep_generate_ca(DpLoop*hloop, gpointer user_data)
 	dp_deep_generate_ca_step(hdeepinfo);
 	hdeepinfo->selector = DpSelectorGenerated;
 	hdeepinfo->last_method = 1;
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_deep_generate_ac(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	if ( hdeepinfo->selector == DpSelectorGenerated ) {
+        return ret_val;
+    }
+	dp_deep_generate_ac_step(hdeepinfo);
+	hdeepinfo->selector = DpSelectorGenerated;
+	hdeepinfo->last_method = 2;
 	return ret_val;
 }
 

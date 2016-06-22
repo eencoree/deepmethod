@@ -501,6 +501,17 @@ void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, D
 	input_2->moves++;
 }
 
+void dp_individ_recombination_ac(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index)
+{
+	int i;
+	double d;
+	for ( i = 0; i < individ->size; i++ ) {
+		d = (input_2->x[i] - individ->x[i]) * 2.0;
+		individ->x[i] += d * g_rand_double(hrand);
+	}
+	input_2->moves++;
+}
+
 DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*pop, GKeyFile*gkf, gchar*groupname)
 {
 	DpRecombinationControl*rc;

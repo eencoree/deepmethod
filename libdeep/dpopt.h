@@ -113,6 +113,8 @@ DpLoopExitCode dp_opt_deep_generate(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_deep_generate_ca(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_opt_deep_generate_ac(DpLoop*hloop, gpointer user_data);
+
 DpLoopExitCode dp_opt_deep_evaluate(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_deep_select(DpLoop*hloop, gpointer user_data);
