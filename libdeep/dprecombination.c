@@ -506,10 +506,10 @@ void dp_individ_recombination_ac(DpRecombinationControl *control, GRand*hrand, D
 	int i;
 	double d;
 	for ( i = 0; i < individ->size; i++ ) {
-		d = (input_2->x[i] - individ->x[i]) * 2.0;
+		d = (input_4->x[i] - individ->x[i]) * 2.0;
 		individ->x[i] += d * g_rand_double(hrand);
 	}
-	input_2->moves++;
+	input_4->moves++;
 }
 
 DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*pop, GKeyFile*gkf, gchar*groupname)

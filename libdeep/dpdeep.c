@@ -334,10 +334,14 @@ void dp_deep_generate_ac_func (gpointer data, gpointer user_data)
 
 	int ignore_cost = hdeepinfo->hevalctrl->eval_target->ignore_cost;
 	GRand*hrand = hdeepinfo->hevalctrl->hrand;
-	r1 = population->ifmax;
+/*	r1 = population->ifmax;
 	r2 = my_id;
 	r3 = my_id;
-	r4 = my_id;
+	r4 = my_id;*/
+	r1 = my_individ->r1;
+	r2 = my_individ->r2;
+	r3 = my_individ->r3;
+	r4 = my_individ->r4;
 	start_index = my_id;
 	end_index = hdeepinfo->es_lambda;
 	my_trial->age = 0;
