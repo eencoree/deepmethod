@@ -338,12 +338,15 @@ void dp_deep_generate_ac_func (gpointer data, gpointer user_data)
 	r2 = my_id;
 	r3 = my_id;
 	r4 = my_id;*/
-	r1 = my_individ->r1;
-	r2 = my_individ->r2;
-	r3 = my_individ->r3;
-	r4 = my_individ->r4;
+	r1 = (my_individ->r1 < 0) ? population->imin : my_individ->r1;
+	r2 = (my_individ->r2 < 0) ? population->imin : my_individ->r2;
+	r3 = (my_individ->r3 < 0) ? population->imin : my_individ->r3;
+	r4 = (my_individ->r4 < 0) ? population->imin : my_individ->r4;
 	start_index = my_id;
 	end_index = hdeepinfo->es_lambda;
+/* The following code checks if
+ * the inidvid has parents
+ */
 	my_trial->age = 0;
 	my_trial->r1 = r1;
 	my_trial->r2 = r2;
