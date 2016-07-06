@@ -702,16 +702,16 @@ int xm_model_run_command(XmModel *xmmodel)
 	}
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
+	int result_length = g_strv_length(result);
 	if ( strlen(standard_output) > 0 && result != NULL ) {
 		if ( xmmodel->debug == 1 ) {
-			int result_length = g_strv_length(result);
 			g_printf("result_length = %d;\n", result_length);
 			for ( j = 0; j < result_length; j++ ) {
 				g_printf("result[%d] = %s;\n", j, result[j]);
 			}
 		}
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
-			if ( result[xmmodel->keys[i]] != NULL ) {
+			if ( xmmodel->keys[i] < result_length && result[xmmodel->keys[i]] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
 			} else {
 				g_debug ( "result[%d] doesn't exist", xmmodel->keys[i]);
