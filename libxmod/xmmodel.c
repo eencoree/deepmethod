@@ -599,6 +599,8 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 	g_mutex_unlock( &(intprt->mstatus) );
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	int result_length = g_strv_length(result);
+	int parsing_failed = 0;
+	int need_intprt_restart = 0;
 	if ( strlen(standard_output) > 0 && result != NULL ) {
 		if ( xmmodel->debug == 1 ) {
 			g_printf("result_length = %d;\n", result_length);
@@ -610,15 +612,8 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 			int ik = (xmmodel->keys[i] >= 0) ? xmmodel->keys[i] : result_length + xmmodel->keys[i];
 			if (ik < 0 || ik > result_length - 1) {
 				g_debug ( "Couldn't parse interpreter [%d] result: %s", intprt->child_pid, standard_output);
-				for ( i = 0; i < xmmodel->num_keys; i++ ) {
-					xmmodel->array[i] = max_value;
-				}
-				xmmodel->copy_val_parms = 0;
-				kill_interpreter(intprt);
-				intprt = init_interpreter(xmmodel);
-				if (intprt) {
-					g_debug("Re-added new intprt [%d]:", intprt->child_pid);
-				}
+				parsing_failed = 1;
+				need_intprt_restart = 1;
 			} else if ( result[ik] != NULL ) {
 				xmmodel->array[i] = g_strtod(result[ik], NULL);
 			} else {
@@ -626,6 +621,16 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 			}
 		}
 	} else {
+		parsing_failed = 1;
+	}
+	if (need_intprt_restart == 1) {
+		kill_interpreter(intprt);
+		intprt = init_interpreter(xmmodel);
+		if (intprt) {
+			g_debug("Re-added new intprt [%d]:", intprt->child_pid);
+		}
+	}
+	if (parsing_failed == 1) {
 		g_debug ( "Couldn't parse interpreter [%d] output: %s", intprt->child_pid, standard_output);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
 			xmmodel->array[i] = max_value;
@@ -662,6 +667,7 @@ int xm_model_run_command(XmModel *xmmodel)
 			for ( i = 0; i < xmmodel->num_values; i++ ) {
 				xmmodel->array[i] = max_value;
 			}
+			xmmodel->copy_val_parms = 0;
 			return child_exit_status;
 		}
 		if ( gerror ) {
@@ -677,6 +683,7 @@ int xm_model_run_command(XmModel *xmmodel)
 				for ( i = 0; i < xmmodel->num_values; i++ ) {
 					xmmodel->array[i] = max_value;
 				}
+				xmmodel->copy_val_parms = 0;
 				return child_exit_status;
 			}
 			params = g_string_append(params, buf);
@@ -703,6 +710,7 @@ int xm_model_run_command(XmModel *xmmodel)
 	g_strfreev(margv);
 	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	int result_length = g_strv_length(result);
+	int parsing_failed = 0;
 	if ( strlen(standard_output) > 0 && result != NULL ) {
 		if ( xmmodel->debug == 1 ) {
 			g_printf("result_length = %d;\n", result_length);
@@ -711,13 +719,20 @@ int xm_model_run_command(XmModel *xmmodel)
 			}
 		}
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
-			if ( xmmodel->keys[i] < result_length && result[xmmodel->keys[i]] != NULL ) {
-				xmmodel->array[i] = g_strtod(result[xmmodel->keys[i]], NULL);
+			int ik = (xmmodel->keys[i] >= 0) ? xmmodel->keys[i] : result_length + xmmodel->keys[i];
+			if (ik < 0 || ik > result_length - 1) {
+				g_debug ( "Couldn't parse command result: %s", standard_output);
+				parsing_failed = 1;
+			} else if (result[ik] != NULL ) {
+				xmmodel->array[i] = g_strtod(result[ik], NULL);
 			} else {
 				g_debug ( "result[%d] doesn't exist", xmmodel->keys[i]);
 			}
 		}
 	} else {
+		parsing_failed = 1;
+	}
+	if (parsing_failed == 1) {
 		g_debug ( "Couldn't parse output: %s", standard_output);
 		g_debug ( "Standard error: %s", standard_error);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {

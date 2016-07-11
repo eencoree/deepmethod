@@ -29,17 +29,15 @@ long_line_column=72
 
 [files]
 current_page=4
-FILE_NAME_0=14559;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
-FILE_NAME_1=3260;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.h;0;4
+FILE_NAME_0=20768;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
+FILE_NAME_1=1220;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.h;0;4
 FILE_NAME_2=16016;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpevaluation.c;0;4
 FILE_NAME_3=12612;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpdeep.c;0;4
-FILE_NAME_4=16986;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
+FILE_NAME_4=23657;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
 FILE_NAME_5=0;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Ftools%2Fdeepmethod.c;0;4
 FILE_NAME_6=7715;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpsettings.c;0;4
 FILE_NAME_7=17410;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdprecombination.c;0;4
-FILE_NAME_8=2912;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpdeep.h;0;4
-FILE_NAME_9=2467;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdprecombination.h;0;4
-FILE_NAME_10=0;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpindivid.c;0;4
+FILE_NAME_8=0;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpindivid.c;0;4
 
 [VTE]
 last_dir=/users/kkozlov

@@ -570,7 +570,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	char *base;
 	gchar **base_tokens;
 	int n_base_tokens, n_extra_tokens;
-	base = (char *)calloc(MAX_RECORD, sizeof(char *));
+	base = (char *)calloc(4 * MAX_RECORD, sizeof(char *));
 	int monitor = hopt->monitor;
 	FILE*fp;
 	int i;
@@ -581,7 +581,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	} else if ( !fp && hopt->monitor < 1 ) {
 		return ret_val;
 	}
-    base = fgets(base, MAX_RECORD, fp);
+    base = fgets(base, 4 * MAX_RECORD, fp);
     base_tokens = g_strsplit(base, ":", -1);
     n_base_tokens = g_strv_length(base_tokens) - 1;
     n_extra_tokens = n_base_tokens - ( heval->size + 8 );
