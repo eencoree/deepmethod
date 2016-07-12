@@ -55,6 +55,14 @@ typedef enum DpOptStopType {
 	H_OPT_ABSOLUTE_ITER
 } DpOptStopType;
 
+typedef enum DpCancel {
+	DP_PROPORTIONAL_CANCEL = (1 << 0),
+	DP_ABSOLUTE_CANCEL = (1 << 1),
+	DP_ABSOLUTE_SCORE = (1 << 2),
+	DP_ABSOLUTE_TIME = (1 << 3),
+	DP_ABSOLUTE_ITER = (1 << 4)
+} DpCancel;
+
 typedef struct DpOpt {
 	DpOptType opt_type;
 	DpEvaluation*heval;
@@ -64,12 +72,23 @@ typedef struct DpOpt {
 	double new_cost;
 	double old_cost;
 	double cost_start;
-	int stop_counter;
 	int delay;
 	int logdepth;
-	double criterion;
+/* deprecated */
 	DpOptStopType stop_type;
 	int stop_count;
+	double criterion;
+	int stop_counter;
+/* end deprecated */
+	guint cancel_flags;
+	int cancel_count;
+	int cancel_iter;
+	double cancel_time;
+	double cancel_prop;
+	double cancel_abs;
+	double cancel_score;
+	int cancel_counter;
+/* end new api */
 	char*filename;
 	char*logname;
 	char*chkname;
@@ -108,6 +127,8 @@ DpLoopExitCode dp_write_tst(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data);
 
+DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data);
+
 DpLoopExitCode dp_opt_deep(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_deep_generate(DpLoop*hloop, gpointer user_data);
@@ -133,6 +154,8 @@ DpLoopExitCode dp_opt_post(DpLoop*hloop, gpointer user_data);
 DpLoopExitCode dp_opt_post_evaluate(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_opt_init_stop(DpLoop*hloop, gpointer user_data);
+
+DpLoopExitCode dp_opt_init_cancel(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data);
 

@@ -65,6 +65,14 @@ DpOpt *dp_opt_init(DpEvaluation*heval, DpTarget*htarget, int world_id, int world
 	hopt->logdepth = 0;
 	hopt->monitor = -1;
 	hopt->keep_order = 0;
+	hopt->cancel_flags = 0;
+	hopt->cancel_count = 0;
+	hopt->cancel_iter = 0;
+	hopt->cancel_time = 0;
+	hopt->cancel_prop = 0;
+	hopt->cancel_abs = 0;
+	hopt->cancel_score = 0;
+	hopt->cancel_counter = 0;
 	return hopt;
 }
 
@@ -150,6 +158,14 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
 				dp_opt_add_func(hopt, dp_opt_init_stop, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "checkcancel") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_check_cancel, tau_flag, opt_type, order, method_info);
+			} else if ( !g_strcmp0(list[i], "initcancel") ) {
+				opt_type = H_OPT_NONE;
+				method_info = NULL;
+				dp_opt_add_func(hopt, dp_opt_init_cancel, tau_flag, opt_type, order, method_info);
 			} else if ( !g_strcmp0(list[i], "substitute") ) {
 				opt_type = H_OPT_NONE;
 				method_info = NULL;
@@ -327,6 +343,85 @@ DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data)
 	} else if ( hopt->stop_type == H_OPT_ABSOLUTE_TIME && hloop->w_time >= hopt->criterion ) {
 		ret_val = DP_LOOP_EXIT_SUCCESS;
 	} else if ( hopt->stop_type == H_OPT_ABSOLUTE_ITER && hloop->tau_counter >= hopt->criterion ) {
+		ret_val = DP_LOOP_EXIT_SUCCESS;
+	}
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_init_cancel(DpLoop*hloop, gpointer user_data)
+{
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo;
+	DpOsdaInfo*hosdainfo;
+	switch (hopt->opt_type) {
+		case H_OPT_DEEP:
+			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+			dp_deep_accept_step(hdeepinfo, &(hopt->cost));
+			hopt->old_cost = hopt->cost;
+			hopt->cancel_counter = 0;
+		break;
+		case H_OPT_OSDA:
+			hosdainfo = (DpOsdaInfo*)(hopt->method_info);
+			dp_osda_accept_step(hosdainfo, &(hopt->cost));
+			hopt->old_cost = hopt->cost;
+			hopt->cancel_counter = 0;
+		break;
+	}
+	return ret_val;
+}
+
+DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data)
+{
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
+	double delta = 0;
+	double criterion = -1;
+	if ( hopt->cancel_flags & DP_PROPORTIONAL_CANCEL ) {
+		delta = ( hopt->old_cost - hopt->cost );
+		if ( hopt->old_cost != 0 ) {
+			delta /= hopt->old_cost;
+		}
+		criterion = hopt->cancel_prop;
+		delta = (delta > 0) ? delta : -delta;
+		if ( delta < criterion ) {
+			hopt->cancel_counter++;
+		} else {
+			hopt->cancel_counter = 0;
+			hopt->old_cost = hopt->cost;
+		}
+	}
+	if ( hopt->cancel_flags & DP_ABSOLUTE_CANCEL ) {
+		delta = hopt->old_cost - hopt->cost;
+		criterion = hopt->cancel_abs;
+		delta = (delta > 0) ? delta : -delta;
+		if ( delta < criterion ) {
+			hopt->cancel_counter++;
+		} else {
+			hopt->cancel_counter = 0;
+			hopt->old_cost = hopt->cost;
+		}
+	}
+	if ( hopt->cancel_flags & DP_ABSOLUTE_SCORE ) {
+		delta = hopt->cost;
+		criterion = hopt->cancel_score;
+		delta = (delta > 0) ? delta : -delta;
+		if ( delta < criterion ) {
+			hopt->cancel_counter++;
+		} else {
+			hopt->cancel_counter = 0;
+			hopt->old_cost = hopt->cost;
+		}
+	}
+	if ( (hopt->cancel_flags & DP_ABSOLUTE_TIME) && (hloop->w_time >= hopt->cancel_time) ) {
+		ret_val = DP_LOOP_EXIT_SUCCESS;
+	}
+	if ( (hopt->cancel_flags & DP_ABSOLUTE_ITER) && (hloop->tau_counter >= hopt->cancel_iter) ) {
+		ret_val = DP_LOOP_EXIT_SUCCESS;
+	}
+	if ( hopt->cancel_counter == hopt->cancel_count) {
+		hopt->cancel_counter = 0;
+		hopt->old_cost = hopt->cost;
 		ret_val = DP_LOOP_EXIT_SUCCESS;
 	}
 	return ret_val;

@@ -252,6 +252,73 @@ int dp_settings_process_run(DpSettings *dpsettings, GKeyFile*gkf, gchar*groupnam
 	int i, order, tau_flag;
 	gchar**list, *str;
 	DpOptType opt_type;
+	if ( ( str = g_key_file_get_string(gkf, groupname, "proportional_stop", &gerror) ) != NULL ) {
+		hopt->cancel_flags |= DP_PROPORTIONAL_CANCEL;
+		hopt->cancel_prop = g_strtod( str , NULL);
+		g_free(str);
+		if ( gerror != NULL ) {
+			g_debug ("%s", gerror->message );
+			g_clear_error (&gerror);
+		}
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_stop", &gerror) ) != NULL ) {
+		hopt->cancel_flags |= DP_ABSOLUTE_CANCEL;
+		hopt->cancel_abs = g_strtod( str , NULL);
+		g_free(str);
+		if ( gerror != NULL ) {
+			g_debug ("%s", gerror->message );
+			g_clear_error (&gerror);
+		}
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_score", &gerror) ) != NULL ) {
+		hopt->cancel_flags |= DP_ABSOLUTE_SCORE;
+		hopt->cancel_score = g_strtod( str , NULL);
+		g_free(str);
+		if ( gerror != NULL ) {
+			g_debug ("%s", gerror->message );
+			g_clear_error (&gerror);
+		}
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_iter", &gerror) ) != NULL ) {
+		hopt->cancel_flags |= DP_ABSOLUTE_ITER;
+		hopt->cancel_iter = g_strtod( str , NULL);
+		g_free(str);
+		if ( gerror != NULL ) {
+			g_debug ("%s", gerror->message );
+			g_clear_error (&gerror);
+		}
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_time", &gerror) ) != NULL ) {
+		hopt->cancel_flags |= DP_ABSOLUTE_TIME;
+		hopt->cancel_time = g_strtod( str , NULL);
+		g_free(str);
+		if ( gerror != NULL ) {
+			g_debug ("%s", gerror->message );
+			g_clear_error (&gerror);
+		}
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( ( str = g_key_file_get_string(gkf, groupname, "stop_count", &gerror) ) != NULL ) {
+		hopt->cancel_count = g_strtod( str , NULL);
+		g_free(str);
+	} else {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "delay_count", &gerror) ) != NULL ) {
 		hopt->delay = g_strtod( str , NULL);
 		g_free(str);
