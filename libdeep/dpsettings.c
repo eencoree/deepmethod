@@ -105,7 +105,8 @@ int dp_settings_load(GKeyFile*gkf, gchar*groupname, DpSettings *hopt, GError**er
 	GError *gerror = NULL;
 	gchar*str,**strlist;
 	int retval = 0;
-	if ( ( str = g_key_file_get_string(gkf, groupname, "proportional_stop", &gerror) ) != NULL ) {
+	int done_this = 0;
+	if ( done_this == 0 && ( str = g_key_file_get_string(gkf, groupname, "proportional_stop", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_PROPORTIONAL_STOP;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
@@ -113,7 +114,12 @@ int dp_settings_load(GKeyFile*gkf, gchar*groupname, DpSettings *hopt, GError**er
 			g_debug ("%s", gerror->message );
 			g_clear_error (&gerror);
 		}
-	} else if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_stop", &gerror) ) != NULL ) {
+		done_this = 1;
+	} else if ( gerror != NULL ) {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( done_this == 0 && ( str = g_key_file_get_string(gkf, groupname, "absolute_stop", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_ABSOLUTE_STOP;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
@@ -121,7 +127,12 @@ int dp_settings_load(GKeyFile*gkf, gchar*groupname, DpSettings *hopt, GError**er
 			g_debug ("%s", gerror->message );
 			g_clear_error (&gerror);
 		}
-	} else if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_score", &gerror) ) != NULL ) {
+		done_this = 1;
+	} else if ( gerror != NULL ) {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( done_this == 0 && ( str = g_key_file_get_string(gkf, groupname, "absolute_score", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_ABSOLUTE_SCORE;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
@@ -129,7 +140,12 @@ int dp_settings_load(GKeyFile*gkf, gchar*groupname, DpSettings *hopt, GError**er
 			g_debug ("%s", gerror->message );
 			g_clear_error (&gerror);
 		}
-	} else if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_iter", &gerror) ) != NULL ) {
+		done_this = 1;
+	} else if ( gerror != NULL ) {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( done_this == 0 && ( str = g_key_file_get_string(gkf, groupname, "absolute_iter", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_ABSOLUTE_ITER;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
@@ -137,7 +153,12 @@ int dp_settings_load(GKeyFile*gkf, gchar*groupname, DpSettings *hopt, GError**er
 			g_debug ("%s", gerror->message );
 			g_clear_error (&gerror);
 		}
-	} else if ( ( str = g_key_file_get_string(gkf, groupname, "absolute_time", &gerror) ) != NULL ) {
+		done_this = 1;
+	} else if ( gerror != NULL ) {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
+	}
+	if ( done_this == 0 && ( str = g_key_file_get_string(gkf, groupname, "absolute_time", &gerror) ) != NULL ) {
 		hopt->stop_type = H_OPT_ABSOLUTE_TIME;
 		hopt->criterion = g_strtod( str , NULL);
 		g_free(str);
@@ -145,6 +166,10 @@ int dp_settings_load(GKeyFile*gkf, gchar*groupname, DpSettings *hopt, GError**er
 			g_debug ("%s", gerror->message );
 			g_clear_error (&gerror);
 		}
+		done_this = 1;
+	} else if ( gerror != NULL ) {
+		g_debug ("%s", gerror->message );
+		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "stop_count", &gerror) ) != NULL ) {
 		hopt->stop_count = g_strtod( str , NULL);
