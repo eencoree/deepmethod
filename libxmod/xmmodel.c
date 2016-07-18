@@ -1805,13 +1805,20 @@ GString*xm_model_gcdm_contents(XmModel*xmmodel)
 GString*xm_model_gemstat_contents(XmModel*xmmodel)
 {
 	GString*file_contents;
+	gchar*buf = NULL;
 	int i, j, k;
 	file_contents = g_string_new("");
 	for ( i = 0; i < xmmodel->num_parts; i++ ) {
 		g_string_append_printf(file_contents, "%s ", xmmodel->part[i].name);
 		for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
 			k = xmmodel->part[i].index[j];
-			g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+			if ( (buf = param2str(xmmodel, k)) == NULL) {
+				g_string_free(file_contents, TRUE);
+				return NULL;
+			}
+			file_contents = g_string_append(file_contents, buf);
+			g_free(buf);
+			file_contents = g_string_append_c(file_contents, ' ');
 		}
 		file_contents = g_string_append_c(file_contents, '\n');
 	}
@@ -1858,18 +1865,31 @@ GString*xm_model_subsubset_contents(XmModel*xmmodel)
 GString*xm_model_octave_contents(XmModel*xmmodel)
 {
 	GString*file_contents;
+	gchar*buf = NULL;
 	int i, j, k;
 	file_contents = g_string_new("");
 	for ( i = 0; i < xmmodel->num_parts; i++ ) {
 		g_string_append_printf(file_contents, "%s =", xmmodel->part[i].name);
 		if ( xmmodel->part[i].num_parms == 1 ) {
 			k = xmmodel->part[i].index[0];
-			g_string_append_printf(file_contents, "%16.9f;", xmmodel->dparms[k]);
+			if ( (buf = param2str(xmmodel, k)) == NULL) {
+				g_string_free(file_contents, TRUE);
+				return NULL;
+			}
+			file_contents = g_string_append(file_contents, buf);
+			g_free(buf);
+			file_contents = g_string_append_c(file_contents, ';');
 		} else if ( xmmodel->part[i].num_parms > 1 ) {
 			g_string_append_printf(file_contents, "[");
 			for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
 				k = xmmodel->part[i].index[j];
-				g_string_append_printf(file_contents, "%16.9f ", xmmodel->dparms[k]);
+				if ( (buf = param2str(xmmodel, k)) == NULL) {
+					g_string_free(file_contents, TRUE);
+					return NULL;
+				}
+				file_contents = g_string_append(file_contents, buf);
+				g_free(buf);
+				file_contents = g_string_append_c(file_contents, ' ');
 			}
 			g_string_append_printf(file_contents, "];");
 		}

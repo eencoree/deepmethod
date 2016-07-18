@@ -574,7 +574,7 @@ DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data)
 		hloop->exit_str = g_strdup_printf ( "dp_write_log: can't open %s", hopt->logname);
 		return DP_LOOP_EXIT_ERROR;
 	}
-	fprintf(fp, "wtime:%e tau:%d freeze:%d score:%.*f", hloop->w_time, hloop->tau_counter, hopt->stop_counter, precision, hopt->cost);
+	fprintf(fp, "wtime:%e tau:%d freeze:%d score:%.*f", hloop->w_time, hloop->tau_counter, hopt->cancel_counter, precision, hopt->cost);
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
@@ -618,7 +618,7 @@ DpLoopExitCode dp_print_log(DpLoop*hloop, gpointer user_data)
 	FILE*fp;
 	int i, kounter;
 	int precision = hopt->precision;
-	fprintf(stdout, "%s wtime:%e tau:%d freeze:%d score:%.*f", msg, hloop->w_time, hloop->tau_counter, hopt->stop_counter, precision, hopt->cost);
+	fprintf(stdout, "%s wtime:%e tau:%d freeze:%d score:%.*f", msg, hloop->w_time, hloop->tau_counter, hopt->cancel_counter, precision, hopt->cost);
 		g_free(msg);
 	switch (hopt->opt_type) {
 		case H_OPT_DEEP:
