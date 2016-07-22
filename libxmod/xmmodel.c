@@ -39,10 +39,31 @@
 #define g_strcmp0(str1, str2) strcmp(str1, str2)
 #endif
 
+int check_debug (gchar*debug_str) {
+	int verbose = 0;
+	const gchar*p = g_getenv("G_MESSAGES_DEBUG");
+	if (p == NULL) {
+		return verbose;
+	}
+	gchar*debug_env = g_strdup(p);
+	if (debug_env == NULL) {
+		return verbose;
+	}
+	gchar**debug_envv = g_strsplit(debug_env, " ", -1);
+	if (debug_envv == NULL) {
+		g_free(debug_env);
+		return verbose;
+	}
+	verbose = g_strv_contains ((const gchar* const*)debug_envv, debug_str);
+	g_free(debug_env);
+	g_strfreev(debug_envv);
+	return verbose;
+}
+
 XmModel*xm_model_new()
 {
 	XmModel *xmmodel = (XmModel*)g_malloc( sizeof(XmModel) );
-	xmmodel->debug = 0;
+	xmmodel->debug = check_debug(G_LOG_DOMAIN);
 	xmmodel->size = 0;
 	xmmodel->tweak = NULL;
 	xmmodel->command = NULL;
@@ -1095,12 +1116,12 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_propagate_error (err, gerror);
 		return 1;
 	}
-	if ( ( ii = g_key_file_get_integer(gkf, groupname, "debug", &gerror) ) != 0  || gerror == NULL ) {
+/*	if ( ( ii = g_key_file_get_integer(gkf, groupname, "debug", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->debug = ii;
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
-	}
+	}*/
     if ( ( ii = g_key_file_get_integer(gkf, groupname, "a_precision", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->a_precision = ii;
 	} else {
