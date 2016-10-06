@@ -676,7 +676,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	} else if ( !fp && hopt->monitor < 1 ) {
 		return ret_val;
 	}
-    base = fgets(base, 4 * MAX_RECORD, fp);
+    base = fgets(base, 16 * MAX_RECORD, fp);
     base_tokens = g_strsplit(base, ":", -1);
     n_base_tokens = g_strv_length(base_tokens) - 1;
     n_extra_tokens = n_base_tokens - ( heval->size + 8 );
@@ -883,10 +883,10 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 			DpEvaluationCtrl*hevalctrl = hdeepinfo->hevalctrl;
 			GError*gerror = NULL;
-			gboolean immediate_stop = FALSE;
-			//gboolean immediate_stop = TRUE;
-			gboolean wait_finish = TRUE;
-			//gboolean wait_finish = FALSE;
+/*			gboolean immediate_stop = FALSE;*/
+			gboolean immediate_stop = TRUE;
+/*			gboolean wait_finish = TRUE;*/
+			gboolean wait_finish = FALSE;
 			gulong microseconds = G_USEC_PER_SEC / 1000;
 			hevalctrl->gthreadpool = g_thread_pool_new ((GFunc) dp_evaluation_population_init_func, (gpointer) hevalctrl, hevalctrl->eval_max_threads, hevalctrl->exclusive, &gerror);
 			if ( gerror != NULL ) {
