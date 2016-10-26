@@ -160,9 +160,16 @@ void dp_evaluation_individ_evaluate(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 
 void dp_evaluation_individ_evaluate_precond(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, DpIndivid*tabu, int index, double cost)
 {
-	int max_value_flag;
+	int max_value_flag = 0, i;
 	individ->invalid = 1;
-	dp_evaluation_individ_prepare(hevalctrl, individ);
+	max_value_flag = dp_evaluation_individ_prepare(hevalctrl, individ);
+	if (max_value_flag == 1) {
+/*		individ->cost = G_MAXDOUBLE;
+		for ( i = 0; i < individ->ntargets; i++ ) {
+			individ->targets[i] = G_MAXDOUBLE;
+		}*/
+		return;
+	}
 	dp_target_eval_update_user_data(hevalctrl->eval_target, individ->user_data, tabu->z, index, cost);
 	max_value_flag = dp_target_eval_precond (hevalctrl->eval_target, individ->z, &(individ->invalid), individ->precond, individ->user_data, index, cost);
 }

@@ -599,7 +599,7 @@ void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo)
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo)
 {
+    dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
 	dp_recombination_control_update(hdeepinfo->recombination_control, hdeepinfo->hevalctrl->hrand, hdeepinfo->population, 0, hdeepinfo->population->size);
-/*    dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);*/
 }
 
