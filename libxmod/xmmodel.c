@@ -54,7 +54,9 @@ int check_debug (gchar*debug_str) {
 		g_free(debug_env);
 		return verbose;
 	}
+#ifndef OLDGLIB
 	verbose = g_strv_contains ((const gchar* const*)debug_envv, debug_str);
+#endif
 	g_free(debug_env);
 	g_strfreev(debug_envv);
 	return verbose;

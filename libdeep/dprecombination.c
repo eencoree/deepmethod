@@ -596,7 +596,7 @@ DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*
 	}
 	rc->size = pop->ind_size;
 	rc->pop_size = pop->size;
-	rc->toggle = 0;
+	rc->toggle = g_rand_double(hrand) > 0.5 ? 1:0;
 	rc->p_inf = G_MINDOUBLE;
 	rc->p_supp = 1.0;
 	rc->f_inf = 1.0 / sqrt((double)pop->ind_size);

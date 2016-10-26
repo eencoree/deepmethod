@@ -127,10 +127,6 @@ int main(int argc, char **argv)
 	textdomain (GETTEXT_PACKAGE);
 #endif
 	hopt_filename = NULL;
-	if (!GLIB_CHECK_VERSION (2, 36, 0)) {
-        g_thread_init (NULL);
-        g_type_init();
-	}
 	context = g_option_context_new (_("- DEEP optimizer"));
 	g_option_context_add_main_entries(context, (const GOptionEntry *)entries, NULL);
 	g_option_context_set_ignore_unknown_options(context, TRUE);
