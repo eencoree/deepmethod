@@ -472,11 +472,12 @@ Interpreter* init_interpreter(XmModel * xmmodel){
     /* Add watches to channels */
     g_io_add_watch( intprt->out, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)out_watch, intprt);
     g_io_add_watch( intprt->err, G_IO_IN | G_IO_OUT | G_IO_HUP, (GIOFunc)err_watch, intprt);
-
-	init_source_to_interpreter(intprt->in, intprt->api);
-	g_debug("Interpreter init [%d]:", intprt->child_pid);
-	GString *response = interpreter_recieve_response(intprt->out, intprt->debug, intprt->api);
-	g_string_free(response, TRUE);
+	if (strlen(api->source_cmd) > 0) {
+		init_source_to_interpreter(intprt->in, intprt->api);
+		g_debug("Interpreter init [%d]:", intprt->child_pid);
+		GString *response = interpreter_recieve_response(intprt->out, intprt->debug, intprt->api);
+		g_string_free(response, TRUE);
+	}
     return intprt;
 }
 
