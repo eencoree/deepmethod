@@ -114,7 +114,7 @@ DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname)
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	hdeepinfo->exclusive = FALSE;
+	hdeepinfo->exclusive = TRUE;
 	hdeepinfo->selector = DpSelectorNone;
 	hdeepinfo->debug = 0;
     hdeepinfo->gthreadpool = NULL;
@@ -510,7 +510,7 @@ void dp_deep_evaluate_step(DpDeepInfo*hdeepinfo)
 		}
 		notdone = 1;
 //        while(g_thread_pool_unprocessed (hdeepinfo->gthreadpool) > 0) {
-		while(notdone == 1 && g_thread_pool_unprocessed (hdeepinfo->gthreadpool) > 0) {
+		while(notdone == 1 || g_thread_pool_unprocessed (hdeepinfo->gthreadpool) > 0) {
 			g_main_context_iteration(gcontext, FALSE);
             g_usleep (microseconds);
 			notdone = 0;

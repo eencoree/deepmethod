@@ -42,7 +42,7 @@ DpEvaluationCtrl*dp_evaluation_ctrl_new()
 	ec->eval = NULL;
 	ec->eval_target = NULL;
 	ec->eval_max_threads = 0;
-	ec->exclusive = FALSE;
+	ec->exclusive = TRUE;
 	return ec;
 }
 
@@ -458,7 +458,13 @@ void dp_evaluation_population_init_func (gpointer data, gpointer user_data)
 {
 	DpEvaluationCtrl*hevalctrl = (DpEvaluationCtrl*)user_data;
 	DpIndivid*individ = (DpIndivid*)data;
+	g_mutex_lock( &(individ->m) );
+	individ->status = 1;
+	g_mutex_unlock( &(individ->m) );
 	dp_evaluation_individ_evaluate(hevalctrl, individ, individ, 0, 0);
+	g_mutex_lock( &(individ->m) );
+	individ->status = 0;
+	g_mutex_unlock( &(individ->m) );
 }
 
 DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps)
@@ -510,15 +516,15 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 			g_main_context_iteration(gcontext, FALSE);
 			g_usleep (microseconds);
 			notdone = 0;
-                        for ( i = pop->slice_a; i < pop->slice_b; i++ ) {
+			for ( i = pop->slice_a; i < pop->slice_b; i++ ) {
 				g_mutex_lock( &(pop->individ[i]->m) );
 				currstatus = pop->individ[i]->status;
 				g_mutex_unlock( &(pop->individ[i]->m) );
 /*                                currstatus = dp_deep_evaluate_status (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);*/
-                                if ( currstatus == 1 ) {
-                                        notdone = 1;
-                                }
-                        }
+				if ( currstatus == 1 ) {
+						notdone = 1;
+				}
+			}
 		}
 		g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
 	} else {
