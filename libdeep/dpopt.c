@@ -883,11 +883,10 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 			hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 			DpEvaluationCtrl*hevalctrl = hdeepinfo->hevalctrl;
 			GError*gerror = NULL;
-/*			gboolean immediate_stop = FALSE;*/
 			gboolean immediate_stop = TRUE;
-/*			gboolean wait_finish = TRUE;*/
 			gboolean wait_finish = FALSE;
 			gulong microseconds = G_USEC_PER_SEC / 1000;
+			int notdone, currstatus;
 			hevalctrl->gthreadpool = g_thread_pool_new ((GFunc) dp_evaluation_population_init_func, (gpointer) hevalctrl, hevalctrl->eval_max_threads, hevalctrl->exclusive, &gerror);
 			if ( gerror != NULL ) {
 				g_error("%s", gerror->message);
@@ -910,7 +909,6 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 						substeps = 0;
 					}
                     if (substeps >= 0) {
-//                    if (hdeepinfo->substeps >= 0) {
 						dp_evaluation_individ_scramble(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], substeps);
 						g_thread_pool_push (hevalctrl->gthreadpool, (gpointer)(hdeepinfo->population->individ[dst_ind]), &gerror);
 						if ( gerror != NULL ) {
@@ -941,7 +939,6 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 							if ( gerror != NULL ) {
 								g_error("%s", gerror->message);
 							}
-//							dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, hdeepinfo->population->individ[dst_ind], hdeepinfo->population->individ[dst_ind], i, 0);
 							hdeepinfo->population->individ[dst_ind]->age = 0;
 							hdeepinfo->population->individ[dst_ind]->moves = 0;
 							hdeepinfo->population->individ[dst_ind]->failures = 0;
@@ -950,9 +947,19 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 	                }
 				}
 			}
-			while(g_thread_pool_unprocessed (hevalctrl->gthreadpool) > 0) {
+			notdone = 1;
+			while(notdone == 1 || g_thread_pool_unprocessed (hevalctrl->gthreadpool) > 0) {
 				g_main_context_iteration(gcontext, FALSE);
 	            g_usleep (microseconds);
+				notdone = 0;
+				for (i = 0; i < hdeepinfo->population->size; i++) {
+					g_mutex_lock( &(hdeepinfo->population->individ[i]->m) );
+					currstatus = hdeepinfo->population->individ[i]->status;
+					g_mutex_unlock( &(hdeepinfo->population->individ[i]->m) );
+					if ( currstatus == 1 ) {
+						notdone = 1;
+					}
+				}
 	        }
 			g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
 			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);

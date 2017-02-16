@@ -522,7 +522,7 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 				g_mutex_unlock( &(pop->individ[i]->m) );
 /*                                currstatus = dp_deep_evaluate_status (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);*/
 				if ( currstatus == 1 ) {
-						notdone = 1;
+					notdone = 1;
 				}
 			}
 		}
