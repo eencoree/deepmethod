@@ -605,7 +605,7 @@ DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*
 	rc->p = (double*)calloc(rc->size, sizeof(double));
 	rc->c = (double*)calloc(rc->size, sizeof(double));
 	rc->v = (double*)calloc(rc->size, sizeof(double));
-	if ( weight == 0 && prob == 0 && gamma > 0 ) {
+	if ( weight == 0 && prob == 0 && rc->gamma > 0 ) {
 		rc->adjust = 1;
 		for ( i = 0; i < rc->size; i++ ) {
 			rc->f[i] = g_rand_double_range(hrand, rc->f_inf, rc->f_supp);
