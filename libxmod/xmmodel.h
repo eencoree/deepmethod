@@ -149,6 +149,8 @@ gchar *xm_model_convert_parms_to_subsubset(gpointer *user_data, GError **err);
 
 gchar *xm_model_convert_parms_to_octave(gpointer *user_data, GError **err);
 
+gchar *xm_model_convert_parms_to_r(gpointer *user_data, GError **err);
+
 XmModelConn*xm_model_conn_new(int source, int source_conn, int dest, int dest_conn, int rank);
 
 int xm_model_conn_comp (gconstpointer a, gconstpointer b);
@@ -168,6 +170,8 @@ GString*xm_model_subset_contents(XmModel*xmmodel);
 GString*xm_model_subsubset_contents(XmModel*xmmodel);
 
 GString*xm_model_octave_contents(XmModel*xmmodel);
+
+GString*xm_model_r_contents(XmModel*xmmodel);
 
 void xm_model_save(XmModel*xmmodel, gchar*filename);
 

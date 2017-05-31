@@ -23,19 +23,19 @@ It consists of three sections: for minimizer settings, target settings and model
 maximal number of threads to start
 .TP
 .BR proportional_stop|absolute_stop|absolute_score|absolute_iter|absolute_time =\fINUMBER\fR
-type of stopping criterion and the value of error 
+type of stopping criterion and the value of error
 .TP
 .BR stop_count =\fINUMBER\fR
-number of steps for stopping 
+number of steps for stopping
 .TP
 .BR population_size =\fINUMBER\fR
-number of members of the population 
+number of members of the population
 .TP
 .BR recombination_strategy =\fIde_3_bin|de_3_exp|de_3_exp_T|de_3_bin_T|de_3_bin_rand|de_3_exp_rand|de_3_exp_rand_T|de_3_bin_rand_T\fR
 type of evolution
 .TP
 .BR recombination_weight =\fINUMBER\fR
-scaling factor, 0 means adaptation 
+scaling factor, 0 means adaptation
 .TP
 .BR recombination_prob =\fINUMBER\fR
 probability, 0 means adaptation
@@ -44,7 +44,7 @@ probability, 0 means adaptation
 adaptation parameter
 .TP
 .BR es_lambda =\fINUMBER\fR
-number of individuals to exchange. 
+number of individuals to exchange.
 .TP
 .BR noglobal_eps =\fI-1|0|NUMBER\fR
 small or big cube in parameter space, 0 - big, -1 - big and initial guess is ignored.
@@ -80,13 +80,13 @@ log more info
 seed for pseudo random numbers
 .TP
 .BR run_before =\fIinitstop;optpost;optposteval;writelog;printlog;\fR
-functions to run befor main loop 
+functions to run befor main loop
 .TP
 .BR run =\fIgcadeep;5;gdeep;1;edeep;1;sdeep;24;selde;1;checkstop;1;optpost;1;optposteval;1;writelog;1;printlog;1;\fR
-functions to run in main loop with number of tau's 
+functions to run in main loop with number of tau's
 .TP
 .BR run_after =\fIoptpost;optposteval;writelog;printlog;\fR
-functions to run after main loop 
+functions to run after main loop
 .TP
 .BR [default_target]
 .TP
@@ -96,12 +96,12 @@ functions to run after main loop
 is the multiplier for the function value in the final value
 .TP
 .BR <rank>
-is the value with wich the random number is compared to decide if the decrease in this function is worth 
+is the value with wich the random number is compared to decide if the decrease in this function is worth
 .TP
 .BR <index>
 -1 means "before anything else", 0 means it is the main scoring function, >1 - for penalties
 .TP
-.BR <keyword> 
+.BR <keyword>
 .TP
 .BR doubletoint ", " doubletoindex
 convert parameters to integers
@@ -110,7 +110,7 @@ convert parameters to integers
 scoring functions
 .TP
 .BR readpenalty
-read the value of the penalty from scoring program output 
+read the value of the penalty from scoring program output
 .TP
 .BR [default_model]
 .TP
@@ -157,7 +157,10 @@ for integer indices
 for subset of integer indices
 .TP
 .BR octave
-to use in R and Octave with source command
+to use in Octave with source command
+.TP
+.BR r
+to use in R with source command
 .TP
 .BR gcdm
 for gcdm program
@@ -178,7 +181,7 @@ number of concyrrent threads for interpreter
 waiting time for interpreter
 .TP
 .BR mapping =\fI1;10;...;0;\fR
-defines the reordering of keys 
+defines the reordering of keys
 .
 .SH FILES
 The actual name of the file is not important. Each section can be placed in a separate file and a group name can be arbitrary. These data can be given on the command line. The names of log, state and pareto front files are produced from the name of the output file that also can be supplied on the command line.
