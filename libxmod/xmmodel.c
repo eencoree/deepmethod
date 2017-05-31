@@ -1942,7 +1942,7 @@ GString*xm_model_r_contents(XmModel*xmmodel)
 			g_free(buf);
 		} else if ( xmmodel->part[i].num_parms > 1 ) {
 			g_string_append_printf(file_contents, "c(");
-			for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
+			for (j = 0; j < xmmodel->part[i].num_parms - 1; j++) {
 				k = xmmodel->part[i].index[j];
 				if ( (buf = param2str(xmmodel, k)) == NULL) {
 					g_string_free(file_contents, TRUE);
@@ -1952,6 +1952,14 @@ GString*xm_model_r_contents(XmModel*xmmodel)
 				g_free(buf);
 				file_contents = g_string_append_c(file_contents, ',');
 			}
+			j = xmmodel->part[i].num_parms - 1;
+            k = xmmodel->part[i].index[j];
+			if ( (buf = param2str(xmmodel, k)) == NULL) {
+				g_string_free(file_contents, TRUE);
+				return NULL;
+			}
+			file_contents = g_string_append(file_contents, buf);
+			g_free(buf);
 			g_string_append_printf(file_contents, ")");
 		}
 		file_contents = g_string_append_c(file_contents, '\n');
