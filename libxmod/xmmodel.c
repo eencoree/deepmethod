@@ -300,9 +300,10 @@ GString *interpreter_recieve_response(GIOChannel*out, int debug, API*api)
     gboolean is_done = FALSE;
     gsize size;
     GError *gerror = NULL;
+	int max_reponse_size = G_MAXINT16;
     int j = 0;
     suffix = g_strdup_printf("%s\n", api->fflush_cmd);
-    do{
+    do {
         status = g_io_channel_read_line( out, &response_line, &size, NULL, &gerror );
 		if (status != G_IO_STATUS_NORMAL) {
 			g_debug("Status is not NORMAL %d", status);
@@ -316,8 +317,9 @@ GString *interpreter_recieve_response(GIOChannel*out, int debug, API*api)
         is_done = g_str_has_suffix(response->str, suffix);
 		g_debug("line [%d] '%s' last=%d '%s' %d\n", j, response_line, is_done, response->str, status);
         j++;
+		if (j > max_reponse_size) is_done = TRUE;
         g_free(response_line);
-    } while( !is_done );
+    } while(!is_done);
     g_free(suffix);
     return response;
 }
@@ -492,11 +494,6 @@ void api_free(API*api)
 
 void kill_interpreter(Interpreter* intprt)
 {
-#ifndef G_OS_WIN32
-	kill(intprt->child_pid, SIGKILL);
-#endif
-	g_spawn_close_pid (intprt->child_pid);
-	g_debug("Interp killed [%d]:", intprt->child_pid);
 	if (g_source_remove_by_user_data ((gpointer) intprt)) {
 		g_debug("Source 1 removed [%d]:", intprt->child_pid);
 	} else {
@@ -512,6 +509,11 @@ void kill_interpreter(Interpreter* intprt)
 	g_mutex_clear (&(intprt->m));
 	g_cond_clear (&(intprt->cond));
 	api_free(intprt->api);
+#ifndef G_OS_WIN32
+	kill(intprt->child_pid, SIGKILL);
+#endif
+	g_spawn_close_pid (intprt->child_pid);
+	g_debug("Interp killed [%d]:", intprt->child_pid);
 	g_free(intprt);
 }
 
@@ -597,7 +599,8 @@ int xm_model_run_interpreter(XmModel *xmmodel)
 			failed = TRUE;
 		}
     }
-	if (!(intprt->response) || failed) {
+//	if (!(intprt->response) || failed) {
+	if (intprt->response == NULL || (intprt->response != NULL && strlen(intprt->response) < 2) || failed) {
 		g_mutex_unlock (&(intprt->m));
 		g_debug ( "Interpreter failed [%d]:", intprt->child_pid);
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {
