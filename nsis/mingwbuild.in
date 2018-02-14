@@ -17,7 +17,7 @@ DESTDIR=$ROOT/$BUILDROOT mingw32-configure
 DESTDIR=$ROOT/$BUILDROOT mingw32-make
 DESTDIR=$ROOT/$BUILDROOT mingw32-make install
 
-cd $ROOT
+cd $ROOT/nsis
 
 makensis DEEPMETHOD.nsis
 
