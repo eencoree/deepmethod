@@ -1,5 +1,9 @@
 #!/bin/bash -x
 
+# Dependencies:
+# mingw32-pkg-config mingw32-dbus-glib mingw32-readline mingw32-gsl mingw32-nsis mingw32-nsiswrapper
+#
+
 set -e
 
 NAME="deepmethod-@PACKAGE_VERSION@"
