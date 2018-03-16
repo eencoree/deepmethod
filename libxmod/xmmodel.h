@@ -143,6 +143,8 @@ gchar *xm_model_convert_parms_to_gcdm(gpointer *user_data, GError **err);
 
 gchar *xm_model_convert_parms_to_gemstat(gpointer *user_data, GError **err);
 
+gchar *xm_model_convert_parms_to_dgemstat(gpointer *user_data, GError **err);
+
 gchar *xm_model_convert_parms_to_subset(gpointer *user_data, GError **err);
 
 gchar *xm_model_convert_parms_to_subsubset(gpointer *user_data, GError **err);
@@ -164,6 +166,8 @@ GString*xm_model_sdf_contents(XmModel*xmmodel);
 GString*xm_model_gcdm_contents(XmModel*xmmodel);
 
 GString*xm_model_gemstat_contents(XmModel*xmmodel);
+
+GString*xm_model_dgemstat_contents(XmModel*xmmodel);
 
 GString*xm_model_subset_contents(XmModel*xmmodel);
 

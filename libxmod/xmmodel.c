@@ -270,6 +270,18 @@ gchar*param2str(XmModel*xmmodel, int i)
 	return str;
 }
 
+gchar*dparam2str(XmModel*xmmodel, int i)
+{
+	gchar*str = NULL;
+	if (xmmodel->dparms[i] != xmmodel->dparms[i]) { // is NaN
+		g_debug("p[%d] = %.13f is nan", i, xmmodel->dparms[i]);
+		return NULL;
+	} else {
+		str = g_strdup_printf("%.*f", xmmodel->b_precision, xmmodel->dparms[i]);
+	}
+	return str;
+}
+
 typedef struct API {
 	gchar*file_cmd;
 	gchar*source_cmd;
@@ -1443,6 +1455,8 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->converter = xm_model_convert_parms_to_gcdm;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_gemstat;
+		} else if ( !g_strcmp0 ( xmmodel->convert, "dgemstat" ) ) {
+			xmmodel->converter = xm_model_convert_parms_to_dgemstat;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "subset" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_subset;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "subsubset" ) ) {
@@ -1854,6 +1868,43 @@ GString*xm_model_gemstat_contents(XmModel*xmmodel)
 	return file_contents;
 }
 
+GString*xm_model_dgemstat_contents(XmModel*xmmodel)
+{
+	GString*file_contents;
+	gchar*buf = NULL;
+	int i, j, k;
+	file_contents = g_string_new("");
+	for ( i = 0; i < xmmodel->num_parts; i++ ) {
+		g_string_append_printf(file_contents, "%s ", xmmodel->part[i].name);
+		for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
+			k = xmmodel->part[i].index[j];
+			if ( (buf = param2str(xmmodel, k)) == NULL) {
+				g_string_free(file_contents, TRUE);
+				return NULL;
+			}
+			file_contents = g_string_append(file_contents, buf);
+			g_free(buf);
+			file_contents = g_string_append_c(file_contents, ' ');
+		}
+		file_contents = g_string_append_c(file_contents, '\n');
+	}
+	for ( i = 0; i < xmmodel->num_parts; i++ ) {
+		g_string_append_printf(file_contents, "%s ", xmmodel->part[i].name);
+		for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
+			k = xmmodel->part[i].index[j];
+			if ( (buf = dparam2str(xmmodel, k)) == NULL) {
+				g_string_free(file_contents, TRUE);
+				return NULL;
+			}
+			file_contents = g_string_append(file_contents, buf);
+			g_free(buf);
+			file_contents = g_string_append_c(file_contents, ' ');
+		}
+		file_contents = g_string_append_c(file_contents, '\n');
+	}
+	return file_contents;
+}
+
 GString*xm_model_subset_contents(XmModel*xmmodel)
 {
 	GString*file_contents;
@@ -2054,6 +2105,34 @@ gchar *xm_model_convert_parms_to_gemstat(gpointer *user_data, GError **err)
 	return name_used;
 }
 
+gchar *xm_model_convert_parms_to_dgemstat(gpointer *user_data, GError **err)
+{
+	XmModel*xmmodel = (XmModel*)user_data;
+	gint fhandle;
+	const gchar *tmpl = NULL;
+	gchar *name_used = NULL;
+	GError *gerror = NULL;
+	GString*file_contents;
+	g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+	if ( ( fhandle = g_file_open_tmp (tmpl, &name_used, &gerror) ) == -1 ) {
+		g_propagate_error (err, gerror);
+		return NULL;
+	}
+	close(fhandle);
+	if ( ( file_contents = xm_model_dgemstat_contents(xmmodel) ) == NULL ) {
+		g_unlink(name_used);
+		return NULL;
+	}
+	if ( !g_file_set_contents ((const gchar *)name_used, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+		g_string_free(file_contents, TRUE);
+		g_propagate_error (err, gerror);
+		g_unlink(name_used);
+		return NULL;
+	}
+	g_string_free(file_contents, TRUE);
+	return name_used;
+}
+
 gchar *xm_model_convert_parms_to_subset(gpointer *user_data, GError **err)
 {
 	XmModel*xmmodel = (XmModel*)user_data;
@@ -2228,6 +2307,10 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 	} else if ( !g_strcmp0 ( xmmodel->convert, "gemstat" ) ) {
 		if ( ( file_contents = xm_model_gemstat_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get gemstat contents");
+		}
+	} else if ( !g_strcmp0 ( xmmodel->convert, "dgemstat" ) ) {
+		if ( ( file_contents = xm_model_dgemstat_contents(xmmodel) ) == NULL ) {
+			g_error("Can't get dgemstat contents");
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "subset" ) ) {
 		if ( ( file_contents = xm_model_subset_contents(xmmodel) ) == NULL ) {
