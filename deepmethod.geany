@@ -19,34 +19,23 @@ indent_mode=2
 
 [project]
 name=deepmethod
-base_path=/users/kkozlov/storage1/c_projects/deepmethod
+base_path=/mnt/space/kkozlov/Projects/deepmethod/
 description=
-file_patterns=
+file_patterns=*.c;
 
 [long line marker]
 long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=14
-FILE_NAME_0=30217;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.c;0;4
-FILE_NAME_1=2003;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpopt.h;0;4
-FILE_NAME_2=19849;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpevaluation.c;0;4
-FILE_NAME_3=17944;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpdeep.c;0;4
-FILE_NAME_4=71407;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
-FILE_NAME_5=4417;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Ftools%2Fdeepmethod.c;0;4
-FILE_NAME_6=7963;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpsettings.c;0;4
-FILE_NAME_7=20543;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdprecombination.c;0;4
-FILE_NAME_8=1111;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdpindivid.c;0;4
-FILE_NAME_9=1492;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdploop.c;0;4
-FILE_NAME_10=7234;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdptarget.c;0;4
-FILE_NAME_11=1178;C;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibdeep%2Fdppopulation.c;0;4
-FILE_NAME_12=4506;C++;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Flibxmod%2Fxmmodel.h;0;4
-FILE_NAME_13=383;None;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Fdoc%2Fdeepmethod.1;0;4
-FILE_NAME_14=5023;None;0;EUTF-8;1;1;1;%2Fusers%2Fkkozlov%2Fstorage1%2Fc_projects%2Fdeepmethod%2Fdoc%2Fdeepmethod.conf.5;0;4
+current_page=0
+FILE_NAME_0=0;C;0;EUTF-8;1;1;1;%2Fmnt%2Fspace%2Fkkozlov%2FProjects%2Fdeepmethod%2Ftools%2Fdeepmethod.c;0;4
+FILE_NAME_1=0;C;0;EUTF-8;1;1;1;%2Fmnt%2Fspace%2Fkkozlov%2FProjects%2Fdeepmethod%2Ftools%2Fxmtranslate.c;0;4
+FILE_NAME_2=0;C;0;EUTF-8;1;1;1;%2Fmnt%2Fspace%2Fkkozlov%2FProjects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
+FILE_NAME_3=0;C;0;EUTF-8;1;1;1;%2Fmnt%2Fspace%2Fkkozlov%2FProjects%2Fdeepmethod%2Flibdeep%2Fdptarget.c;0;4
 
 [VTE]
-last_dir=/users/kkozlov
+last_dir=/storage3/kkozlov/Calcs/chickpea
 
 [prjorg]
 source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;
