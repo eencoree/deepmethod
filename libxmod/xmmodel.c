@@ -712,7 +712,11 @@ int xm_model_run_command(XmModel *xmmodel)
 		if ( gerror ) {
 			g_error("converter failed for %s", gerror->message);
 		}
-		g_string_append_printf(command, " %s", conversion);
+		gchar*buf;
+		buf = g_shell_quote(conversion);
+		command = g_string_append_c(command, ' ');
+		command = g_string_append(command, buf);
+		g_free(buf);
 	} else {
         GString *params = g_string_new("");
         gchar*buf;
@@ -783,6 +787,7 @@ int xm_model_run_command(XmModel *xmmodel)
 	g_free(standard_error);
 	if ( xmmodel->convert != NULL ) {
 		g_unlink(conversion);
+		g_free(conversion);
 	}
     xmmodel->copy_val_parms = 0;
 	return child_exit_status;
