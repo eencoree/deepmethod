@@ -787,7 +787,6 @@ int xm_model_run_command(XmModel *xmmodel)
 	g_free(standard_error);
 	if ( xmmodel->convert != NULL ) {
 		g_unlink(conversion);
-		g_free(conversion);
 	}
     xmmodel->copy_val_parms = 0;
 	return child_exit_status;
