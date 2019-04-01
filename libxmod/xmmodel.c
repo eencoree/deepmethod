@@ -1138,14 +1138,9 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_propagate_error (err, gerror);
 		return 1;
 	}
-/*	if ( ( ii = g_key_file_get_integer(gkf, groupname, "debug", &gerror) ) != 0  || gerror == NULL ) {
-		xmmodel->debug = ii;
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}*/
     if ( ( ii = g_key_file_get_integer(gkf, groupname, "a_precision", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->a_precision = ii;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
@@ -1481,6 +1476,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		for ( j = 0, jj = 0; j < length; j += 2, jj++ ) {
 			xmmodel->part[jj].name = g_strdup(strlist[j]);
 			xmmodel->part[jj].num_parms = g_strtod (strlist[j + 1], NULL);
+/*			fprintf(stderr, "%d %s %s %f\n", jj, xmmodel->part[jj].name, strlist[j + 1], xmmodel->part[jj].num_parms);*/
 			xmmodel->part[jj].index = g_new( int, xmmodel->part[jj].num_parms );
 			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
 				xmmodel->part[jj].index[k] = kk;

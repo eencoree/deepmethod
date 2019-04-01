@@ -28,13 +28,11 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=2
-FILE_NAME_0=0;C;0;EUTF-8;1;1;1;%2Fmnt%2Fspace%2Fkkozlov%2FProjects%2Fdeepmethod%2Ftools%2Fdeepmethod.c;0;4
-FILE_NAME_1=0;C;0;EUTF-8;1;1;1;%2Fmnt%2Fspace%2Fkkozlov%2FProjects%2Fdeepmethod%2Ftools%2Fxmtranslate.c;0;4
-FILE_NAME_2=25747;C;0;EUTF-8;1;1;1;%2Fmnt%2Fspace%2Fkkozlov%2FProjects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
+current_page=0
+FILE_NAME_0=46993;C;0;EUTF-8;1;1;1;%2Fnilmbb%2Fkkozlov%2FProjects%2Fdeepmethod%2Flibxmod%2Fxmmodel.c;0;4
 
 [VTE]
-last_dir=/storage3/kkozlov/Calcs/chickpea
+last_dir=/nilmbb/kkozlov/Projects/soy_modeling
 
 [prjorg]
 source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;
