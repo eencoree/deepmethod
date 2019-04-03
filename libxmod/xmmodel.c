@@ -1462,6 +1462,8 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->converter = xm_model_convert_parms_to_subsubset;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "octave" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_octave;
+		} else if ( !g_strcmp0 ( xmmodel->convert, "ini" ) ) {
+			xmmodel->converter = xm_model_convert_parms_to_ini;
 		} else if ( !g_strcmp0 ( xmmodel->convert, "r" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_r;
 		}
@@ -1942,6 +1944,41 @@ GString*xm_model_subsubset_contents(XmModel*xmmodel)
 	return file_contents;
 }
 
+GString*xm_model_ini_contents(XmModel*xmmodel)
+{
+	GString*file_contents;
+	gchar*buf = NULL;
+	int i, j, k;
+	file_contents = g_string_new("[DEEP]\n");
+	for ( i = 0; i < xmmodel->num_parts; i++ ) {
+		if ( xmmodel->part[i].num_parms == 1 ) {
+			g_string_append_printf(file_contents, "%s=", xmmodel->part[i].name);
+			k = xmmodel->part[i].index[0];
+			if ( (buf = param2str(xmmodel, k)) == NULL) {
+				g_string_free(file_contents, TRUE);
+				return NULL;
+			}
+			file_contents = g_string_append(file_contents, buf);
+			g_free(buf);
+			file_contents = g_string_append_c(file_contents, '\n');
+		} else if ( xmmodel->part[i].num_parms > 1 ) {
+			g_string_append_printf(file_contents, "%s/size=%d\n", xmmodel->part[i].name, xmmodel->part[i].num_parms);
+			for ( j = 0; j < xmmodel->part[i].num_parms; j++ ) {
+				k = xmmodel->part[i].index[j];
+				if ( (buf = param2str(xmmodel, k)) == NULL) {
+					g_string_free(file_contents, TRUE);
+					return NULL;
+				}
+				g_string_append_printf(file_contents, "%s/%d/value=", xmmodel->part[i].name, j + 1);
+				file_contents = g_string_append(file_contents, buf);
+				g_free(buf);
+				file_contents = g_string_append_c(file_contents, '\n');
+			}
+		}
+	}
+	return file_contents;
+}
+
 GString*xm_model_octave_contents(XmModel*xmmodel)
 {
 	GString*file_contents;
@@ -2189,6 +2226,34 @@ gchar *xm_model_convert_parms_to_subsubset(gpointer *user_data, GError **err)
 	return name_used;
 }
 
+gchar *xm_model_convert_parms_to_ini(gpointer *user_data, GError **err)
+{
+	XmModel*xmmodel = (XmModel*)user_data;
+	gint fhandle;
+	const gchar *tmpl = NULL;
+	gchar *name_used = NULL;
+	GError *gerror = NULL;
+	GString*file_contents;
+	g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+	if ( ( fhandle = g_file_open_tmp (tmpl, &name_used, &gerror) ) == -1 ) {
+		g_propagate_error (err, gerror);
+		return NULL;
+	}
+	close(fhandle);
+	if ( ( file_contents = xm_model_ini_contents(xmmodel) ) == NULL ) {
+		g_unlink(name_used);
+		return NULL;
+	}
+	if ( !g_file_set_contents ((const gchar *)name_used, (const gchar *)(file_contents->str), (gssize)(file_contents->len), &gerror) ) {
+		g_string_free(file_contents, TRUE);
+		g_propagate_error (err, gerror);
+		g_unlink(name_used);
+		return NULL;
+	}
+	g_string_free(file_contents, TRUE);
+	return name_used;
+}
+
 gchar *xm_model_convert_parms_to_octave(gpointer *user_data, GError **err)
 {
 	XmModel*xmmodel = (XmModel*)user_data;
@@ -2322,6 +2387,10 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "octave" ) ) {
 		if ( ( file_contents = xm_model_octave_contents(xmmodel) ) == NULL ) {
+			g_error("Can't get octave contents");
+		}
+	} else if ( !g_strcmp0 ( xmmodel->convert, "ini" ) ) {
+		if ( ( file_contents = xm_model_ini_contents(xmmodel) ) == NULL ) {
 			g_error("Can't get octave contents");
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "r" ) ) {

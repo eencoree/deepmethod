@@ -149,6 +149,8 @@ gchar *xm_model_convert_parms_to_subset(gpointer *user_data, GError **err);
 
 gchar *xm_model_convert_parms_to_subsubset(gpointer *user_data, GError **err);
 
+gchar *xm_model_convert_parms_to_ini(gpointer *user_data, GError **err);
+
 gchar *xm_model_convert_parms_to_octave(gpointer *user_data, GError **err);
 
 gchar *xm_model_convert_parms_to_r(gpointer *user_data, GError **err);
@@ -172,6 +174,8 @@ GString*xm_model_dgemstat_contents(XmModel*xmmodel);
 GString*xm_model_subset_contents(XmModel*xmmodel);
 
 GString*xm_model_subsubset_contents(XmModel*xmmodel);
+
+GString*xm_model_ini_contents(XmModel*xmmodel);
 
 GString*xm_model_octave_contents(XmModel*xmmodel);
 
