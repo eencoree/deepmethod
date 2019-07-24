@@ -264,7 +264,7 @@ gchar*param2str(XmModel*xmmodel, int i)
 		} else if (xmmodel->param_type[i] == 2) {
 			str = g_strdup_printf("%d", xmmodel->parms[i]);
 		} else if (xmmodel->param_type[i] == 3) {
-			str = g_strdup_printf("%.*f", xmmodel->b_precision, xmmodel->dparms[i]);
+			str = g_strdup_printf("%d", xmmodel->parms[i]);
 		}
 	}
 	return str;
@@ -1534,7 +1534,7 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 		for ( j = 0; j < xmmodel->size; j++ ) {
 			if (xmmodel->tweak[j] == 1) {
 				xmmodel->has_params[xmmodel->param_type[j]]++;
-			} else {
+			} else if (xmmodel->param_type[j] == 1 || xmmodel->param_type[j] == 2 ) {
 				xmmodel->has_params[3]++;
 				xmmodel->param_type[j] = 3;
 			}
