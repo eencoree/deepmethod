@@ -1554,7 +1554,7 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 		t2 = 0;
 		t3 = 0;
 		for ( j = 0; j < xmmodel->size; j++ ) {
-			if (xmmodel->param_type[j] == 0) {
+			if (xmmodel->param_type[j] == 0 && xmmodel->tweak[j] == 1) {
 				xmmodel->type_index[0][t0] = j;
 				t0++;
 			}
