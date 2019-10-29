@@ -144,13 +144,13 @@ void dp_individ_load(FILE*fp, DpIndivid*individ)
 	int i;
 	fscanf(fp, "%lf", &(individ->cost));
 	fscanf(fp, "%d", &(individ->age));
-	fprintf(fp, "%d", &(individ->r1));
-	fprintf(fp, "%d", &(individ->r2));
-	fprintf(fp, "%d", &(individ->r3));
-	fprintf(fp, "%d", &(individ->r4));
-	fprintf(fp, "%d", &(individ->moves));
-	fprintf(fp, "%d", &(individ->failures));
-	fprintf(fp, "%d", &(individ->grads));
+	fscanf(fp, "%d", &(individ->r1));
+	fscanf(fp, "%d", &(individ->r2));
+	fscanf(fp, "%d", &(individ->r3));
+	fscanf(fp, "%d", &(individ->r4));
+	fscanf(fp, "%d", &(individ->moves));
+	fscanf(fp, "%d", &(individ->failures));
+	fscanf(fp, "%d", &(individ->grads));
 	for ( i = 0; i < individ->size; i++ ) {
 	  fscanf(fp, "%lf", &(individ->x[i]));
 	}

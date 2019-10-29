@@ -22,7 +22,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+#if defined(_MSC_VER)
+
+#else
 #include <config.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <glib.h>
@@ -82,8 +86,11 @@ option_version_cb (const gchar *option_name,
                    gpointer     data,
                    GError     **error)
 {
+#if defined(_MSC_VER)
+  g_print ("%s %s\n", _("DEEP optimizer"));
+#else
   g_print ("%s %s\n", _("DEEP optimizer, version "), VERSION);
-
+#endif
   exit (0);
   return FALSE;
 }
@@ -130,7 +137,11 @@ int main(int argc, char **argv)
 	context = g_option_context_new (_("- DEEP optimizer"));
 	g_option_context_add_main_entries(context, (const GOptionEntry *)entries, NULL);
 	g_option_context_set_ignore_unknown_options(context, TRUE);
+#if defined(_MSC_VER)
+
+#else
 	g_option_context_set_translation_domain(context, GETTEXT_PACKAGE);
+#endif
 	if (!g_option_context_parse (context, &argc, &argv, &gerror)) {
 		g_error (_("option parsing failed: %s\n"), gerror->message);
 	}

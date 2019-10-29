@@ -27,12 +27,16 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) || defined(_MSC_VER)
 
 #else
 #include <sys/times.h>
 #endif
+#if defined(_MSC_VER)
+
+#else
 #include <unistd.h>
+#endif
 #include <time.h>
 #include "dploop.h"
 
@@ -51,7 +55,7 @@ DpLoop *dp_loop_new(GList *before_funcs, GList *funcs, GList *after_funcs)
 	hloop->funcs = funcs;
 	hloop->run_once_before = before_funcs;
 	hloop->run_once_after = after_funcs;
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) || defined(_MSC_VER)
 
 #else
 	hloop->clk_tck = (double)sysconf(_SC_CLK_TCK);
@@ -101,7 +105,7 @@ void dp_loop_run_once_func(void *arg, gpointer user_data)
 
 void dp_loop_zero_counters(DpLoop*hloop)
 {
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) || defined(_MSC_VER)
 
 #else
 	times(hloop->cpu_start);
@@ -119,7 +123,7 @@ void dp_loop_run(DpLoop*hloop)
 	while ( hloop->stop_flag == DP_LOOP_EXIT_NOEXIT ) {
 		hloop->tau_counter++;
 		g_list_foreach(hloop->funcs, dp_loop_run_func, (gpointer)hloop);
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) || defined(_MSC_VER)
 
 #else
 		times(hloop->cpu_finish);
