@@ -390,6 +390,11 @@ DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data)
 			hopt->cancel_counter = 0;
 			hopt->old_cost = hopt->cost;
 		}
+		if ( hopt->cancel_counter == hopt->cancel_count) {
+			hopt->cancel_counter = 0;
+			hopt->old_cost = hopt->cost;
+			ret_val = DP_LOOP_EXIT_SUCCESS;
+		}
 	}
 	if ( hopt->cancel_flags & DP_ABSOLUTE_CANCEL ) {
 		delta = hopt->old_cost - hopt->cost;
@@ -400,6 +405,11 @@ DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data)
 		} else {
 			hopt->cancel_counter = 0;
 			hopt->old_cost = hopt->cost;
+		}
+		if ( hopt->cancel_counter == hopt->cancel_count) {
+			hopt->cancel_counter = 0;
+			hopt->old_cost = hopt->cost;
+			ret_val = DP_LOOP_EXIT_SUCCESS;
 		}
 	}
 	if ( hopt->cancel_flags & DP_ABSOLUTE_SCORE ) {
@@ -412,16 +422,16 @@ DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data)
 			hopt->cancel_counter = 0;
 			hopt->old_cost = hopt->cost;
 		}
+		if ( hopt->cancel_counter == hopt->cancel_count) {
+			hopt->cancel_counter = 0;
+			hopt->old_cost = hopt->cost;
+			ret_val = DP_LOOP_EXIT_SUCCESS;
+		}
 	}
 	if ( (hopt->cancel_flags & DP_ABSOLUTE_TIME) && (hloop->w_time >= hopt->cancel_time) ) {
 		ret_val = DP_LOOP_EXIT_SUCCESS;
 	}
 	if ( (hopt->cancel_flags & DP_ABSOLUTE_ITER) && (hloop->tau_counter >= hopt->cancel_iter) ) {
-		ret_val = DP_LOOP_EXIT_SUCCESS;
-	}
-	if ( hopt->cancel_counter == hopt->cancel_count) {
-		hopt->cancel_counter = 0;
-		hopt->old_cost = hopt->cost;
 		ret_val = DP_LOOP_EXIT_SUCCESS;
 	}
 	return ret_val;

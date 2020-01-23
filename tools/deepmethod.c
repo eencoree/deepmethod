@@ -57,6 +57,7 @@ static char*output_file;
 static char*operation;
 static int monitor;
 static int hoptdebug;
+static gboolean dont_write_params = FALSE;
 
 /*
  * Standard gettext macros.
@@ -109,6 +110,7 @@ static GOptionEntry entries[] =
 	{ "monitor", 0, 0, G_OPTION_ARG_INT, &monitor, N_("Extract line from log"), N_("NUMBER") },
 	{ "debug", 0, 0, G_OPTION_ARG_INT, &hoptdebug, N_("Print out run-time info"), N_("NUMBER") },
 	{ "version", 0, G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, option_version_cb, NULL, NULL },
+	{ "dont-write-params", 'd', 0, G_OPTION_ARG_NONE, &dont_write_params, N_("Suppress parameters file"), NULL },
 	{ NULL }
 };
 
@@ -232,12 +234,14 @@ int main(int argc, char **argv)
 #ifdef MPIZE
 	if ( world_id == 0 ) { /* master process */
 #endif
-	if ( hopt->hloop->stop_flag != DP_LOOP_EXIT_ERROR ) {
-		xm_retranslate_precond(htarget, xmmodel);
-		xm_model_save(xmmodel, output_file);
-	} else {
-		g_error(_("Loop finished with an unknown error.\nOutput not produced."));
-	}
+		if (!dont_write_params) {
+			if ( hopt->hloop->stop_flag != DP_LOOP_EXIT_ERROR ) {
+				xm_retranslate_precond(htarget, xmmodel);
+				xm_model_save(xmmodel, output_file);
+			} else {
+				g_error(_("Loop finished with an unknown error.\nOutput not produced."));
+			}
+		}
 #ifdef MPIZE
 	}
 	MPI_Finalize();

@@ -12,7 +12,7 @@ BUILDROOT="buildroot"
 BUILD="build"
 
 rm -fr $BUILD/$NAME
-tar zxvf $NAME.tar.gz
+tar zxvf $NAME.tar.gz -C $BUILD
 cd $BUILD/$NAME
 
 autoreconf -fi
