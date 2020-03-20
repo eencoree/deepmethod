@@ -742,19 +742,23 @@ int xm_model_run_command(XmModel *xmmodel)
 		}
 	}
 	g_string_free(command, TRUE);
+	int g_spawn_failed = 0;
+	standard_output = NULL;
+	standard_error = NULL;
 /*	flaggs = G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL; */
 /*	flaggs |= G_SPAWN_STDERR_TO_DEV_NULL; */
 	flaggs = G_SPAWN_SEARCH_PATH;
 	if ( !g_spawn_sync (NULL, margv, NULL, (GSpawnFlags)flaggs, NULL, NULL, &standard_output, &standard_error, &child_exit_status, &gerror) ) {
 		if ( gerror ) {
-			g_error("g_spawn_sync failed for %s\nwith %s", margv[0], gerror->message);
+			g_debug("g_spawn_sync failed for %s\nwith %s", margv[0], gerror->message);
+			g_spawn_failed = 1;
 		}
 	}
 	g_strfreev(margv);
-	result = g_strsplit_set(standard_output, xmmodel->delimiters, -1);
-	int result_length = g_strv_length(result);
+	result = (standard_output == NULL) ? NULL:g_strsplit_set(standard_output, xmmodel->delimiters, -1);
 	int parsing_failed = 0;
-	if ( strlen(standard_output) > 0 && result != NULL ) {
+	if ( g_spawn_failed == 0 && standard_output != NULL && strlen(standard_output) > 0 && result != NULL ) {
+		int result_length = g_strv_length(result);
 		if ( xmmodel->debug == 1 ) {
 			g_printf("result_length = %d;\n", result_length);
 			for ( j = 0; j < result_length; j++ ) {
@@ -782,9 +786,9 @@ int xm_model_run_command(XmModel *xmmodel)
 			xmmodel->array[i] = max_value;
 		}
 	}
-	g_strfreev(result);
-	g_free(standard_output);
-	g_free(standard_error);
+	if (result != NULL) g_strfreev(result);
+	if (standard_output != NULL) g_free(standard_output);
+	if (standard_error != NULL) g_free(standard_error);
 	if ( xmmodel->convert != NULL ) {
 		g_unlink(conversion);
 	}
