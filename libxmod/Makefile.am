@@ -10,7 +10,8 @@ libxmod_la_LIBADD = \
 	$(DEEP_LIBS)
 
 AM_CPPFLAGS = \
-	$(DEEP_CFLAGS) -DG_LOG_DOMAIN=\"XmModel\"
+	$(DEEP_CFLAGS) \
+	-DG_LOG_DOMAIN=\"XmModel\"
 
 libxmodinclude_HEADERS = \ 
 	xmmodel.h
