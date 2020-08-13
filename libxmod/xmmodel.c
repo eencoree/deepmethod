@@ -1137,7 +1137,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	GError *gerror = NULL;
 	gchar*str, **strlist;
 	gsize length;
-	int *ilist, ii, j, jj, k, kk;
+	int *ilist, ii, j, jj, k, kk, nn, n;
 	double *dlist, dval;
 	int retval = 0;
 	g_return_val_if_fail (err == NULL || *err == NULL, 1);
@@ -1155,57 +1155,101 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	}
     if ( ( ii = g_key_file_get_integer(gkf, groupname, "b_precision", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->b_precision = ii;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "parms", &length, &gerror) ) != NULL ) {
-		xmmodel->size = length;
-		xmmodel->parms = ilist;
-		xmmodel->iparms = g_new0 ( int, length );
-		xmmodel->param_type = g_new0 ( int, length );
-		xmmodel->lookup = g_new0 ( int, length );
-		xmmodel->limited = g_new0 ( int, length );
-		for ( j = 0; j < xmmodel->size; j++ ) {
-			xmmodel->iparms[j] = xmmodel->parms[j];
-			xmmodel->limited[j] = 1;
-			xmmodel->param_type[j] = 0;
+	nn = 0;
+	if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "parts", &length, NULL) ) != NULL ) {
+		xmmodel->num_parts = length / 2;
+		xmmodel->part = g_new ( XmModelPart, xmmodel->num_parts );
+		for ( j = 0, jj = 0; j < length; j += 2, jj++ ) {
+			xmmodel->part[jj].name = g_strdup(strlist[j]);
+			n = g_strtod (strlist[j + 1], NULL);
+			nn += n;
+			xmmodel->part[jj].num_parms = n;
+			xmmodel->part[jj].index = g_new( int, xmmodel->part[jj].num_parms );
 		}
+		xmmodel->lookup = g_new0 ( int, nn );
+		kk = 0;
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				xmmodel->part[jj].index[k] = kk;
+				xmmodel->lookup[kk] = jj;
+				kk++;
+			}
+		}
+		g_free(strlist);
+	} else if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "partnames", &length, &gerror) ) != NULL ) {
+		xmmodel->num_parts = length;
+		xmmodel->part = g_new ( XmModelPart, xmmodel->num_parts );
+		for ( j = 0; j < length; j++ ) {
+			xmmodel->part[j].name = g_strdup(strlist[j]);
+		}
+		if (gerror != NULL) g_clear_error (&gerror);
+		if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "partsizes", &length, &gerror) ) == NULL ) {
+			g_error("No part sizes!");
+		}
+		for ( j = 0; j < length; j++ ) {
+			n = ilist[j];
+			nn += n;
+			xmmodel->part[j].num_parms = n;
+			xmmodel->part[j].index = g_new( int, xmmodel->part[j].num_parms );
+		}
+		xmmodel->lookup = g_new0 ( int, nn );
+		kk = 0;
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				xmmodel->part[jj].index[k] = kk;
+				xmmodel->lookup[kk] = jj;
+				kk++;
+			}
+		}
+		g_free(ilist);
+		g_free(strlist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( length = g_key_file_get_integer(gkf, groupname, "numparms", &gerror) ) != 0  || gerror == NULL ) {
-		xmmodel->size = length;
-		xmmodel->parms = g_new0 ( int, length );
-		xmmodel->iparms = g_new0 ( int, length );
-		xmmodel->param_type = g_new0 ( int, length );
-		xmmodel->lookup = g_new0 ( int, length );
-		xmmodel->limited = g_new0 ( int, length );
-		for ( j = 0; j < xmmodel->size; j++ ) {
-			xmmodel->parms[j] = j;
-			xmmodel->iparms[j] = xmmodel->parms[j];
-			xmmodel->limited[j] = 1;
-			xmmodel->param_type[j] = 0;
-		}
-		/* from numdparms */
+	if (nn > 0) {
+		xmmodel->size = nn;
+		xmmodel->parms = g_new0 ( int, xmmodel->size );
+		xmmodel->iparms = g_new0 ( int, xmmodel->size );
+		xmmodel->param_type = g_new0 ( int, xmmodel->size );
+		xmmodel->limited = g_new0 ( int, xmmodel->size );
 		xmmodel->dparms = g_new0 ( double, xmmodel->size );
 		xmmodel->bparms = g_new0 ( double, xmmodel->size );
 		xmmodel->scale = g_new0 ( double, xmmodel->size );
-		for ( j = 0; j < xmmodel->size; j ++ ) {
+		xmmodel->mask = g_new0 ( int, xmmodel->size );
+		xmmodel->tweak = g_new0 ( int, xmmodel->size );
+		xmmodel->lbound = g_new0 ( double, xmmodel->size );
+		xmmodel->hbound = g_new0 ( double, xmmodel->size );
+	} else {
+		g_error ("parts absent");
+	}
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "parms", &length, NULL) ) != NULL ) {
+		if (length != xmmodel->size) {
+			g_error ("model size %d != num parms %d", xmmodel->size, length);
+		}
+		for ( j = 0; j < xmmodel->size; j++ ) {
+			xmmodel->parms[j] = ilist[j];
+			xmmodel->iparms[j] = xmmodel->parms[j];
+			xmmodel->limited[j] = 1;
+			xmmodel->param_type[j] = 0;
+		}
+		g_free(ilist);
+	} else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "valparms", &length, NULL) ) != NULL ) {
+		k = 0;
+		for ( j = 0; j < xmmodel->size; j++ ) {
+			xmmodel->limited[j] = 1;
+			xmmodel->param_type[j] = 0;
+			xmmodel->parms[j] = ilist[k];
+			xmmodel->iparms[j] = ilist[k];
 			xmmodel->dparms[j] = j;
 			xmmodel->bparms[j] = xmmodel->dparms[j];
 			xmmodel->scale[j] = 1.0;
-		}
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}
-	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "valparms", &length, &gerror) ) != NULL ) {
-	    k = 0;
-		for ( j = 0; j < xmmodel->size; j++ ) {
-			xmmodel->parms[j] = ilist[k];
-			xmmodel->iparms[j] = ilist[k];
             k++;
             if ( k >= length ) {
                 k = 0;
@@ -1213,52 +1257,93 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		}
 		xmmodel->copy_val_parms = 1;
 		g_free(ilist);
+	} else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "parmvals", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num parms %d", xmmodel->num_parts, length);
+		}
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->parms[kk] = ilist[jj];
+				xmmodel->iparms[kk] = ilist[jj];
+			}
+		}
+		xmmodel->copy_val_parms = 1;
+		g_free(ilist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "partype", &length, &gerror) ) != NULL ) {
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "partype", &length, NULL) ) != NULL ) {
 		for ( j = 0; j < xmmodel->size; j++) {
 			xmmodel->param_type[j] = ilist[j];
 		}
+		g_free(ilist);
+		if (gerror != NULL) g_clear_error (&gerror);
+	} else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "parmtypes", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num types %d", xmmodel->num_parts, length);
+		}
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->param_type[kk] = ilist[jj];
+			}
+		}
+		g_free(ilist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "subsubset", &length, &gerror) ) != NULL ) {
 		xmmodel->subsubset = ilist;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "hasparams", &length, &gerror) ) != NULL ) {
 		xmmodel->has_params = ilist;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "mask", &length, &gerror) ) != NULL ) {
-		xmmodel->mask = ilist;
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}
-	if ( ( length = g_key_file_get_integer(gkf, groupname, "nummask", &gerror) ) != 0  || gerror == NULL ) {
-		xmmodel->mask = g_new0 ( int, xmmodel->size );
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "mask", &length, NULL) ) != NULL ) {
+		for ( j = 0; j < xmmodel->size; j ++ ) {
+			xmmodel->mask[j] = ilist[j];
+		}
+		g_free(ilist);
+		if (gerror != NULL) g_clear_error (&gerror);
+	} else if ( ( length = g_key_file_get_integer(gkf, groupname, "nummask", NULL) ) != 0  || gerror == NULL ) {
 		for ( j = 0; j < length; j ++ ) {
 			xmmodel->mask[j] = 1;
 		}
 		for ( j = length; j < xmmodel->size; j ++ ) {
 			xmmodel->mask[j] = 0;
 		}
+	} else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "maskvals", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num mask %d", xmmodel->num_parts, length);
+		}
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->mask[kk] = ilist[jj];
+			}
+		}
+		g_free(ilist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "tweak", &length, &gerror) ) != NULL ) {
-		xmmodel->tweak = ilist;
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "tweak", &length, NULL) ) != NULL ) {
 		xmmodel->index_size = 0;
 		for ( j = 0; j < xmmodel->size; j++) {
+			xmmodel->tweak[j] = ilist[j];
 			if ( xmmodel->tweak[j] == 1 ) {
 				xmmodel->index_size++;
 			}
@@ -1272,14 +1357,9 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 				k++;
 			}
 		}
-
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}
-	if ( ( length = g_key_file_get_integer(gkf, groupname, "numtweak", &gerror) ) != 0  || gerror == NULL ) {
+		g_free(ilist);
+	} else if ( ( length = g_key_file_get_integer(gkf, groupname, "numtweak", NULL) ) != 0 ) {
 		xmmodel->index_size = length;
-		xmmodel->tweak = g_new0 ( int, xmmodel->size );
 		xmmodel->index = g_new0 ( int, xmmodel->index_size );
 		xmmodel->tweak_index = g_new0 ( int, xmmodel->index_size );
 		for ( j = 0; j < length; j ++ ) {
@@ -1289,14 +1369,9 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		for ( j = length; j < xmmodel->size; j ++ ) {
 			xmmodel->tweak[j] = 0;
 		}
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}
-	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "valnotweak", &length, &gerror) ) != NULL ) {
+	} else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "valnotweak", &length, NULL) ) != NULL ) {
 		ii = xmmodel->size - length;
 		xmmodel->index_size = ii;
-		xmmodel->tweak = g_new0 ( int, xmmodel->size );
 		xmmodel->index = g_new0 ( int, ii );
 		xmmodel->tweak_index = g_new0 ( int, ii );
 		for ( j = 0; j < length; j ++ ) {
@@ -1314,78 +1389,160 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->tweak[ ilist[j] ] = 0;
 		}
 		g_free(ilist);
+	} else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "tweakvals", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num tweak %d", xmmodel->num_parts, length);
+		}
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->tweak[kk] = ilist[jj];
+			}
+		}
+		xmmodel->index_size = 0;
+		for ( j = 0; j < xmmodel->size; j++) {
+			if ( xmmodel->tweak[j] == 1 ) {
+				xmmodel->index_size++;
+			}
+		}
+		xmmodel->index = g_new0 ( int, xmmodel->index_size );
+		xmmodel->tweak_index = g_new0 ( int, xmmodel->index_size );
+		k = 0;
+		for ( j = 0; j < xmmodel->size; j++) {
+			if ( xmmodel->tweak[j] == 1 ) {
+				xmmodel->tweak_index[k] = j;
+				k++;
+			}
+		}
+		g_free(ilist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "dparms", &length, &gerror) ) != NULL ) {
-		xmmodel->dparms = dlist;
-		xmmodel->bparms = g_new0 ( double, xmmodel->size );
-		xmmodel->scale = g_new0 ( double, xmmodel->size );
+	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "dparms", &length, NULL) ) != NULL ) {
 		for ( j = 0; j < xmmodel->size; j ++ ) {
+			xmmodel->dparms[j] = dlist[j];
 			xmmodel->bparms[j] = xmmodel->dparms[j];
 			xmmodel->scale[j] = 1.0;
 		}
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}
-/*	if ( ( length = g_key_file_get_integer(gkf, groupname, "numdparms", &gerror) ) != 0  || gerror == NULL ) {
-		xmmodel->dparms = g_new0 ( double, xmmodel->size );
-		xmmodel->bparms = g_new0 ( double, xmmodel->size );
-		xmmodel->scale = g_new0 ( double, xmmodel->size );
-		for ( j = 0; j < xmmodel->size; j ++ ) {
-			xmmodel->dparms[j] = j;
-			xmmodel->bparms[j] = xmmodel->dparms[j];
-			xmmodel->scale[j] = 1.0;
+		g_free(dlist);
+	} else if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "dparmvals", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num dparm %d", xmmodel->num_parts, length);
 		}
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}*/
-	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "lbound", &length, &gerror) ) != NULL ) {
-		xmmodel->lbound = dlist;
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->dparms[kk] = dlist[jj];
+				xmmodel->bparms[kk] = xmmodel->dparms[kk];
+			}
+		}
+		g_free(dlist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( dval = g_key_file_get_double(gkf, groupname, "vallbound", &gerror) ) != 0 || gerror == NULL ) {
-		xmmodel->lbound = g_new0 ( double, xmmodel->size );
+	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "lbound", &length, NULL) ) != NULL ) {
+		if (length != xmmodel->size) {
+			g_error ("parts size %d != num lbound %d", xmmodel->size, length);
+		}
+		for ( j = 0; j < xmmodel->size; j ++ ) {
+			xmmodel->lbound[j] = dlist[j];
+		}
+		g_free(dlist);
+	} else if ( ( dval = g_key_file_get_double(gkf, groupname, "vallbound", NULL) ) != 0 ) {
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->lbound[j] = dval;
 		}
+	} else if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "lboundvals", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num lbound %d", xmmodel->num_parts, length);
+		}
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->lbound[kk] = dlist[jj];
+			}
+		}
+		g_free(dlist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "hbound", &length, &gerror) ) != NULL ) {
-		xmmodel->hbound = dlist;
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}
-	if ( ( dval = g_key_file_get_double(gkf, groupname, "valhbound", &gerror) ) != 0  || gerror == NULL ) {
-		xmmodel->hbound = g_new0 ( double, xmmodel->size );
+	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "hbound", &length, NULL) ) != NULL ) {
+		if (length != xmmodel->size) {
+			g_error ("parts size %d != num hbound %d", xmmodel->size, length);
+		}
+		for ( j = 0; j < xmmodel->size; j ++ ) {
+			xmmodel->hbound[j] = dlist[j];
+		}
+		g_free(dlist);
+	} else if ( ( dval = g_key_file_get_double(gkf, groupname, "valhbound", NULL) ) != 0 ) {
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->hbound[j] = dval;
 		}
+	} else if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "hboundvals", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num hbound %d", xmmodel->num_parts, length);
+		}
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->hbound[kk] = dlist[jj];
+			}
+		}
+		g_free(dlist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "limited", &length, &gerror) ) != NULL ) {
+	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "limited", &length, NULL) ) != NULL ) {
+		if (length != xmmodel->size) {
+			g_error ("parts size %d != num limit %d", xmmodel->size, length);
+		}
 		for ( j = 0; j < xmmodel->size; j++) {
 			xmmodel->limited[j] = ilist[j];
 		}
+	} else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "limitvals", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num limit %d", xmmodel->num_parts, length);
+		}
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->limited[kk] = ilist[jj];
+			}
+		}
+		g_free(ilist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-
-	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "scale", &length, &gerror) ) != NULL ) {
+	if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "scale", &length, NULL) ) != NULL ) {
+		if (length != xmmodel->size) {
+			g_error ("parts size %d != num scale %d", xmmodel->size, length);
+		}
 		for ( j = 0; j < xmmodel->size; j ++ ) {
 			xmmodel->scale[j] = dlist[j];
 		}
+		g_free(dlist);
+	} else if ( ( dlist = g_key_file_get_double_list(gkf, groupname, "scalevals", &length, &gerror) ) != NULL ) {
+		if (length != xmmodel->num_parts) {
+			g_error ("parts number %d != num scale %d", xmmodel->num_parts, length);
+		}
+		for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
+				kk = xmmodel->part[jj].index[k];
+				xmmodel->scale[kk] = dlist[jj];
+			}
+		}
+		g_free(dlist);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
@@ -1393,6 +1550,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "keys", &length, &gerror) ) != NULL ) {
 		xmmodel->keys = ilist;
 		xmmodel->num_keys = length;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
@@ -1401,30 +1559,35 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->mapping = ilist;
 		xmmodel->num_values = length;
 		xmmodel->array = g_new0 ( double, length );
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "delimiters", &gerror) ) != NULL ) {
 		xmmodel->delimiters = str;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "command", &gerror) ) != NULL ) {
 		xmmodel->command = str;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "prime_keys", &length, &gerror) ) != NULL ) {
 		xmmodel->prime_keys = ilist;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "prime_mapping", &length, &gerror) ) != NULL ) {
 		xmmodel->prime_mapping = ilist;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
@@ -1432,24 +1595,28 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_prime_values", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->num_prime_values = ii;
 		xmmodel->prime_array = g_new0 ( double, ii );
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "num_threads", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->num_threads = ii;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "prime_delimiters", &gerror) ) != NULL ) {
 		xmmodel->prime_delimiters = str;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( str = g_key_file_get_string(gkf, groupname, "prime_command", &gerror) ) != NULL ) {
 		xmmodel->prime_command = str;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
@@ -1475,25 +1642,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		} else if ( !g_strcmp0 ( xmmodel->convert, "r" ) ) {
 			xmmodel->converter = xm_model_convert_parms_to_r;
 		}
-	} else {
-		g_debug ("%s", gerror->message );
-		g_clear_error (&gerror);
-	}
-	if ( ( strlist = g_key_file_get_string_list(gkf, groupname, "parts", &length, &gerror) ) != NULL ) {
-		xmmodel->num_parts = length / 2;
-		xmmodel->part = g_new ( XmModelPart, xmmodel->num_parts );
-		kk = 0;
-		for ( j = 0, jj = 0; j < length; j += 2, jj++ ) {
-			xmmodel->part[jj].name = g_strdup(strlist[j]);
-			xmmodel->part[jj].num_parms = g_strtod (strlist[j + 1], NULL);
-/*			fprintf(stderr, "%d %s %s %f\n", jj, xmmodel->part[jj].name, strlist[j + 1], xmmodel->part[jj].num_parms);*/
-			xmmodel->part[jj].index = g_new( int, xmmodel->part[jj].num_parms );
-			for ( k = 0; k < xmmodel->part[jj].num_parms; k++ ) {
-				xmmodel->part[jj].index[k] = kk;
-				xmmodel->lookup[kk] = jj;
-				kk++;
-			}
-		}
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
@@ -1505,12 +1654,14 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->type = XmModelIntprt;
 		}
 		g_free(str);
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
 	if ( ( ii = g_key_file_get_integer(gkf, groupname, "timeoutsec", &gerror) ) != 0  || gerror == NULL ) {
 		xmmodel->timeoutsec = ii;
+		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
@@ -2399,7 +2550,7 @@ void xm_model_save(XmModel*xmmodel, gchar*filename)
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "ini" ) ) {
 		if ( ( file_contents = xm_model_ini_contents(xmmodel) ) == NULL ) {
-			g_error("Can't get octave contents");
+			g_error("Can't get ini contents");
 		}
 	} else if ( !g_strcmp0 ( xmmodel->convert, "r" ) ) {
 		if ( ( file_contents = xm_model_r_contents(xmmodel) ) == NULL ) {
