@@ -770,14 +770,17 @@ int xm_model_run_command(XmModel *xmmodel)
 			if (ik < 0 || ik > result_length - 1) {
 				g_debug ( "Couldn't parse command result: %s", standard_output);
 				parsing_failed = 1;
-			} else if (g_str_has_suffix (result[ik], "nan")) {
-				g_debug ( "result[%d] contains nan", xmmodel->keys[i]);
-				parsing_failed = 1;
-			} else if (result[ik] != NULL ) {
-				xmmodel->array[i] = g_strtod(result[ik], NULL);
-			} else {
+			} else if (result[ik] == NULL) {
 				g_debug ( "result[%d] doesn't exist", xmmodel->keys[i]);
 				parsing_failed = 1;
+			} else if (!g_ascii_isdigit(result[ik][0]) && result[ik][0] != '-' && result[ik][0] != '.' && result[ik][0] != '+') {
+				g_debug ( "result[%d] starts with not a digit, point, plus or minus: %c", xmmodel->keys[i], result[ik][0]);
+				parsing_failed = 1;
+			} else if ((result[ik][0] == '-' || result[ik][0] == '.' || result[ik][0] == '+') && !g_ascii_isdigit(result[ik][1])) {
+				g_debug ( "result[%d] starts with point, plus or minus and no second digit: %c, %c", xmmodel->keys[i], result[ik][0], result[ik][1]);
+				parsing_failed = 1;
+			} else {
+				xmmodel->array[i] = g_strtod(result[ik], NULL);
 			}
 		}
 	} else {
