@@ -1,11 +1,7 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.17)
 project(deepmethod C)
 
 set(CMAKE_C_STANDARD 11)
-
-## Required for FindIntltool module
-#set(GETTEXT_PACKAGE ${PROJECT_NAME})
-#set(GETTEXT_PO_DIR ${CMAKE_SOURCE_DIR}/po)
 
 include_directories(.)
 include_directories(libdeep)
@@ -16,7 +12,7 @@ FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(GLIB2 REQUIRED glib-2.0>=2.36.0)
 INCLUDE_DIRECTORIES(${GLIB2_INCLUDE_DIRS})
 
-ADD_COMPILE_DEFINITIONS(DEEPMETHOD_LOCALEDIR=${CMAKE_INSTALL_PREFIX}/share/locale)
+ADD_COMPILE_DEFINITIONS(DEEPMETHOD_LOCALEDIR=\"${CMAKE_INSTALL_PREFIX}/share/locale\")
 
 add_executable(deepmethod
         libdeep/dpdeep.c
