@@ -89,6 +89,8 @@ void dp_deep_info_save(FILE*fp, DpDeepInfo *hdeepinfo);
 
 void dp_deep_generate_step(DpDeepInfo*hdeepinfo);
 
+void dp_deep_generate_dd_step(DpDeepInfo*hdeepinfo);
+
 void dp_deep_generate_ca_step(DpDeepInfo*hdeepinfo);
 
 void dp_deep_generate_ac_step(DpDeepInfo*hdeepinfo);

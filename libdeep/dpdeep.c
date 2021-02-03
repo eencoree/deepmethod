@@ -568,6 +568,19 @@ void dp_deep_generate_step(DpDeepInfo*hdeepinfo)
     }
 }
 
+void dp_deep_generate_dd_step(DpDeepInfo*hdeepinfo)
+{
+	int individ_id;
+	gboolean immediate_stop = FALSE;
+	gboolean wait_finish = TRUE;
+	DpPopulation*population = hdeepinfo->population;
+	DpPopulation*trial = hdeepinfo->trial;
+	GError *gerror = NULL;
+	for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
+		dp_deep_generate_dd_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
+    }
+}
+
 void dp_deep_generate_ca_step(DpDeepInfo*hdeepinfo)
 {
 	int individ_id;
