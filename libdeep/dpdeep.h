@@ -101,6 +101,8 @@ void dp_de_select_step(DpDeepInfo*hdeepinfo);
 
 void dp_deep_generate_func (gpointer data, gpointer user_data);
 
+void dp_deep_generate_dd_func (gpointer data, gpointer user_data);
+
 void dp_deep_generate_ca_func (gpointer data, gpointer user_data);
 
 void dp_deep_generate_ac_func (gpointer data, gpointer user_data);

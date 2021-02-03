@@ -335,6 +335,48 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
 	my_trial->grads = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
 
+    my_trial->cost = G_MAXDOUBLE;
+}
+
+void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
+{
+	int r1, r2, r3, r4;
+	int start_index, end_index;
+	DpIndivid*my_tabu;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
+	int my_id = GPOINTER_TO_INT(data) - 1;
+	DpPopulation*trial = hdeepinfo->trial;
+	DpIndivid*my_trial = trial->individ[my_id];
+	DpPopulation*population = hdeepinfo->population;
+	DpIndivid*my_individ = population->individ[my_id];
+	DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+	int ignore_cost = hdeepinfo->hevalctrl->eval_target->ignore_cost;
+	GRand*hrand = hdeepinfo->hevalctrl->hrand;
+	r1 = ( ignore_cost == 0 ) ? population->imin : -1;
+	do {
+		r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+	} while ( r2 == my_id || r2 == r1 );
+	do {
+		r3 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+	} while ( r3 == my_id || r3 == r1 || r3 == r2 );
+	do {
+		r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+	} while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
+	r1 = population->imin;
+	my_tabu = population->individ[r1];
+	start_index = g_rand_int_range (hrand, 0, population->ind_size);
+	end_index = population->ind_size;
+	dp_individ_copy_values(my_trial, my_individ);
+	my_trial->age = 0;
+	my_trial->r1 = r1;
+	my_trial->r2 = r2;
+	my_trial->r3 = r3;
+	my_trial->r4 = r4;
+	my_trial->moves = 0;
+	my_trial->failures = 0;
+	my_trial->grads = 0;
+	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+
     //delete duple
     int ind = g_rand_int_range(hrand, 0, population->size);
     while(ind == my_id || ind == my_trial->r1 || ind == my_trial->r2 ||\
@@ -347,7 +389,7 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
 
     my_trial->cost = G_MAXDOUBLE;
 }
-
+	
 void dp_deep_generate_ca_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;

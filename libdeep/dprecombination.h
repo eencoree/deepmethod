@@ -29,8 +29,8 @@
 extern "C"
 {
 #endif
-#include "dpindivid.h"
-#include "dppopulation.h"
+//#include "dpindivid.h"
+//#include "dppopulation.h"
 #include <glib.h>
 
 typedef enum DpRecombinationStrategy {
