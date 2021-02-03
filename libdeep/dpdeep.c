@@ -199,7 +199,8 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	my_trial->failures = 0;
 	my_trial->grads = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
-	dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu, my_id, my_tabu->cost);
+
+    dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu, my_id, my_tabu->cost);
 	if ( ignore_cost == 0 && my_id == population->imin ) {
 		if ( my_trial->cost >= my_individ->cost ) {
 			dp_individ_copy_values(my_trial, my_individ);
@@ -245,6 +246,56 @@ void dp_deep_step(DpDeepInfo*hdeepinfo)
 	hdeepinfo->trial = population;
 }
 
+typedef struct duple{
+    int el;
+    int ind;
+} duple;
+
+void cycle(int mean, int begin, int end, duple tmp[], int unique[], int *unique_counter){
+    for(int i = begin; i < end; i++){
+        for (int j = 0; j < *unique_counter; j++){
+            if(tmp[i].el == unique[j])
+                    tmp[i].ind = 3;
+        }
+        if(tmp[i].ind != 3){
+            tmp[i].ind = mean;
+            unique[*unique_counter] = tmp[i].el;
+            (*unique_counter)++;
+        }
+    }
+}
+
+int compare(const duple *i, const duple *j){
+    return i->ind > j->ind;
+}
+
+void delete_dupl(double* ind1, double* ind2, int N){
+    int ind1_t[N], ind2_t[N];
+    duple tmp[2 * N];
+    int unique[2 * N];
+    int unique_counter = 0;
+    int d = 500, h = 999;
+
+    for(int i = 0; i < N; i++){
+        ind1_t[i] = (int)(ind1[i] * h / d);
+        ind2_t[i] = (int)(ind2[i] * h / d);
+    }
+
+    for(int i = 0; i < N; i++){
+        tmp[i].el = ind1_t[i];
+        tmp[i + N].el = ind2_t[i];
+    }
+
+    cycle(1, 0, N, tmp, unique, &unique_counter);
+    cycle(2, N, 2 * N, tmp, unique, &unique_counter);
+    qsort(tmp, 2 * N, sizeof (duple),\
+          (int(*)(const void *, const void *)) compare);
+
+
+    for(int i = 0; i < N; i++)
+        ind1[i] = (double)((double)(tmp[i].el) * d / h);
+}
+
 void dp_deep_generate_func (gpointer data, gpointer user_data)
 {
 	int r1, r2, r3, r4;
@@ -283,7 +334,18 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
 	my_trial->failures = 0;
 	my_trial->grads = 0;
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
-	my_trial->cost = G_MAXDOUBLE;
+
+    //delete duple
+    int ind = g_rand_int_range(hrand, 0, population->size);
+    while(ind == my_id || ind == my_trial->r1 || ind == my_trial->r2 ||\
+            ind == my_trial->r3 || ind == my_trial->r4){
+        ind = g_rand_int_range(hrand, 0, population->size);
+    }
+
+    delete_dupl(my_trial->x, population->individ[ind]->x, my_trial->size);
+    //end del duple
+
+    my_trial->cost = G_MAXDOUBLE;
 }
 
 void dp_deep_generate_ca_func (gpointer data, gpointer user_data)

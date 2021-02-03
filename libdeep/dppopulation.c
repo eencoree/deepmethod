@@ -389,10 +389,10 @@ void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 
 void dp_population_mpi_gather(DpPopulation*pop, int mpi_id, int mpi_nnodes)
 {
-	int dest;
+#ifdef MPIZE
+    int dest;
 	int source = 0;
 	int ind_index, dest_index, ind_per_node, ind_per_last_node, number_of_comm_lines, comm_index;
-#ifdef MPIZE
 	MPI_Status *status;       /* status array of the MPI_Waitall function */
 	MPI_Request *request;           /* handle array for receiving messages */
 	ind_per_node = (int)ceil(pop->size / mpi_nnodes);

@@ -199,13 +199,14 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->queue_intprts = src->queue_intprts;
 	xmmodel->type = src->type;
 	xmmodel->timeoutsec = src->timeoutsec;
-	xmmodel->has_params = g_new0(int, 4);
+    xmmodel->has_params = g_new0(int, 5);
 	xmmodel->has_params[0] = src->has_params[0];
 	xmmodel->has_params[1] = src->has_params[1];
 	xmmodel->has_params[2] = src->has_params[2];
 	xmmodel->has_params[3] = src->has_params[3];
-	xmmodel->index_type = g_new0(int*, 4);
-	xmmodel->type_index = g_new0(int*, 4);
+    xmmodel->has_params[4] = src->has_params[4];
+    xmmodel->index_type = g_new0(int*, 5);
+    xmmodel->type_index = g_new0(int*, 5);
 	xmmodel->index_type[0] = g_new0(int, xmmodel->has_params[0]);
 	xmmodel->type_index[0] = g_new0(int, xmmodel->has_params[0]);
 	xmmodel->index_type[1] = g_new0(int, xmmodel->has_params[1]);
@@ -214,7 +215,9 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->type_index[2] = g_new0(int, xmmodel->has_params[2]);
 	xmmodel->index_type[3] = g_new0(int, xmmodel->has_params[3]);
 	xmmodel->type_index[3] = g_new0(int, xmmodel->has_params[3]);
-	for ( j = 0; j < xmmodel->has_params[0]; j++ ) {
+    xmmodel->index_type[4] = g_new0(int, xmmodel->has_params[4]);
+    xmmodel->type_index[4] = g_new0(int, xmmodel->has_params[4]);
+    for ( j = 0; j < xmmodel->has_params[0]; j++ ) {
 		xmmodel->type_index[0][j] = src->type_index[0][j];
 	}
 	for ( j = 0; j < xmmodel->has_params[1]; j++ ) {
@@ -225,7 +228,10 @@ gpointer xm_model_copy_values(gpointer psrc)
 	}
 	for ( j = 0; j < xmmodel->has_params[3]; j++ ) {
 		xmmodel->type_index[3][j] = src->type_index[3][j];
-	}
+    }
+    for ( j = 0; j < xmmodel->has_params[4]; j++ ) {
+        xmmodel->type_index[4][j] = src->type_index[4][j];
+    }
 	return xmmodel;
 }
 
@@ -265,7 +271,9 @@ gchar*param2str(XmModel*xmmodel, int i)
 			str = g_strdup_printf("%d", xmmodel->parms[i]);
 		} else if (xmmodel->param_type[i] == 3) {
 			str = g_strdup_printf("%d", xmmodel->parms[i]);
-		}
+        } else if (xmmodel->param_type[i] == 4) {
+            str = g_strdup_printf("%d", xmmodel->parms[i]);
+        }
 	}
 	return str;
 }
@@ -1017,7 +1025,7 @@ void xm_model_convert_param_type(XmModel *xmmodel)
 {
 	double z, beta;
 	int alpha;
-	int t1, t2, t3, i, j;
+    int t1, t2, t3, i, j;
 /* rounded */
 	if (xmmodel->has_params[1] > 0) {
 		for ( t1 = 0; t1 < xmmodel->has_params[1]; t1++ ) {
@@ -1028,6 +1036,16 @@ void xm_model_convert_param_type(XmModel *xmmodel)
 			xmmodel->parms[i] = ( beta > 0.5 ) ? alpha - 1 : alpha;
 		}
 	}
+/*rounded 2 */
+    int t4, h = 500, d = 999;
+    double x_d;
+    if (xmmodel->has_params[4] > 0){
+        for ( t4 = 0; t4 < xmmodel->has_params[4]; t4++ ) {
+            i = xmmodel->type_index[4][t4];
+            x_d = xmmodel->dparms[i];
+            xmmodel->parms[i] = (int)(((1 + x_d) * d) / h);
+        }
+    }
 /* index converted */
 	if (xmmodel->has_params[2] > 0) {
 		for ( t2 = 0; t2 < xmmodel->has_params[2]; t2++ ) {
@@ -1040,6 +1058,7 @@ void xm_model_convert_param_type(XmModel *xmmodel)
 			xmmodel->parms[i] = xmmodel->type_index[2][j];
 		}
 	}
+
 /* fixed */
 	if (xmmodel->has_params[3] > 0) {
 		for ( t3 = 0; t3 < xmmodel->has_params[3]; t3++ ) {
@@ -1125,12 +1144,12 @@ gchar*xm_model_read(gchar*filename, gsize*size, GError**err)
 	gchar*data = NULL;
 	GError *gerror = NULL;
 	g_return_val_if_fail (err == NULL || *err == NULL, NULL);
-	gfile = g_file_new_for_commandline_arg(filename);
+    gfile = g_file_new_for_commandline_arg(filename);
 	if ( !g_file_load_contents(gfile, (GCancellable*)NULL, &data, size, &etag, &gerror) ) {
 		g_propagate_error (err, gerror);
 		return NULL;
 	}
-	g_object_unref(gfile);
+    g_object_unref(gfile);
 	return data;
 }
 
@@ -1300,7 +1319,7 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
-	if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "subsubset", &length, &gerror) ) != NULL ) {
+    if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "subsubset", &length, &gerror) ) != NULL ) {
 		xmmodel->subsubset = ilist;
 		if (gerror != NULL) g_clear_error (&gerror);
 	} else {
@@ -1679,7 +1698,7 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 	gchar*data = NULL;
 	gsize size;
 	GError *gerror = NULL;
-	int t0, t1, t2, t3, j, k;
+    int t0, t1, t2, t3, t4, j, k;
 	g_return_val_if_fail (err == NULL || *err == NULL, 1);
 	if ( ( data = xm_model_read(filename, &size, &gerror) ) == NULL ) {
 		g_propagate_error (err, gerror);
@@ -1692,7 +1711,7 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 	}
 	g_free(data);
 	if (!xmmodel->has_params) {
-		xmmodel->has_params = g_new0(int, 4);
+        xmmodel->has_params = g_new0(int, 5);
 		for ( j = 0; j < xmmodel->size; j++ ) {
 			if (xmmodel->tweak[j] == 1) {
 				xmmodel->has_params[xmmodel->param_type[j]]++;
@@ -1701,8 +1720,8 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 				xmmodel->param_type[j] = 3;
 			}
 		}
-		xmmodel->index_type = g_new0(int*, 4);
-		xmmodel->type_index = g_new0(int*, 4);
+        xmmodel->index_type = g_new0(int*, 5);
+        xmmodel->type_index = g_new0(int*, 5);
 		xmmodel->index_type[0] = g_new0(int, xmmodel->has_params[0]);
 		xmmodel->type_index[0] = g_new0(int, xmmodel->has_params[0]);
 		xmmodel->index_type[1] = g_new0(int, xmmodel->has_params[1]);
@@ -1711,10 +1730,14 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 		xmmodel->type_index[2] = g_new0(int, xmmodel->has_params[2]);
 		xmmodel->index_type[3] = g_new0(int, xmmodel->has_params[3]);
 		xmmodel->type_index[3] = g_new0(int, xmmodel->has_params[3]);
+        xmmodel->index_type[4] = g_new0(int, xmmodel->has_params[4]);
+        xmmodel->type_index[4] = g_new0(int, xmmodel->has_params[4]);
+
 		t0 = 0;
 		t1 = 0;
 		t2 = 0;
 		t3 = 0;
+        t4 = 0;
 		for ( j = 0; j < xmmodel->size; j++ ) {
 			if (xmmodel->param_type[j] == 0 && xmmodel->tweak[j] == 1) {
 				xmmodel->type_index[0][t0] = j;
@@ -1732,19 +1755,25 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 				xmmodel->type_index[3][t3] = j;
 				t3++;
 			}
+            if (xmmodel->param_type[j] == 4) {
+                xmmodel->type_index[4][t4] = j;
+                t4++;
+            }
 		}
 	} else {
-		xmmodel->index_type = g_new0(int*, 4);
-		xmmodel->type_index = g_new0(int*, 4);
+        xmmodel->index_type = g_new0(int*, 5);
+        xmmodel->type_index = g_new0(int*, 5);
 		xmmodel->index_type[0] = g_new0(int, xmmodel->has_params[0]);
 		xmmodel->type_index[0] = g_new0(int, xmmodel->has_params[0]);
 		xmmodel->index_type[1] = g_new0(int, xmmodel->has_params[1]);
 		xmmodel->type_index[1] = g_new0(int, xmmodel->has_params[1]);
 		xmmodel->index_type[2] = g_new0(int, xmmodel->has_params[2]);
 		xmmodel->type_index[2] = g_new0(int, xmmodel->has_params[2]);
-		xmmodel->index_type[3] = g_new0(int, xmmodel->has_params[3]);
-		xmmodel->type_index[3] = g_new0(int, xmmodel->has_params[3]);
-		j = 0;
+        xmmodel->index_type[3] = g_new0(int, xmmodel->has_params[3]);
+        xmmodel->type_index[3] = g_new0(int, xmmodel->has_params[3]);
+        xmmodel->index_type[4] = g_new0(int, xmmodel->has_params[4]);
+        xmmodel->type_index[4] = g_new0(int, xmmodel->has_params[4]);
+        j = 0;
 		for ( t0 = 0; t0 < xmmodel->has_params[0]; t0++ ) {
 			xmmodel->type_index[0][t0] = j;
 			xmmodel->param_type[j] = 0;
@@ -1769,6 +1798,12 @@ int xm_model_init(gchar*filename, gchar*groupname, XmModel*xmmodel, GError **err
 			xmmodel->tweak[j] = 0;
 			j++;
 		}
+        for ( t4 = 0; t4 < xmmodel->has_params[4]; t4++ ) {
+            xmmodel->type_index[4][t4] = j;
+            xmmodel->param_type[j] = 4;
+            xmmodel->tweak[j] = 1;
+            j++;
+        }
 		k = 0;
 		for ( j = 0; j < xmmodel->size; j++) {
 			if ( xmmodel->tweak[j] == 1 ) {

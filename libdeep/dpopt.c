@@ -306,7 +306,7 @@ DpLoopExitCode dp_opt_init_stop(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
-DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data)
+DpLoopExitCode dp_opt_check_stop(DpLoop*hloop, gpointer user_data) // don't use
 {
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
@@ -371,7 +371,7 @@ DpLoopExitCode dp_opt_init_cancel(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
-DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data)
+DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data) // не понятно преобразование типов
 {
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
@@ -674,7 +674,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 	int last_method, kounter;
 	char *base;
 	gchar **base_tokens;
-	int n_base_tokens, n_extra_tokens, len_log, len_par;
+	int n_base_tokens, n_extra_tokens;
 	base = (char *)calloc(4 * MAX_RECORD, sizeof(char *));
 	int monitor = hopt->monitor;
 	FILE*fp;
@@ -687,30 +687,14 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 		return ret_val;
 	}
     base = fgets(base, 16 * MAX_RECORD, fp);
-    base_tokens = g_strsplit_set(base, ": ", -1);
-	len_log = strlen(base_tokens[0]);
+    base_tokens = g_strsplit(base, ":", -1);
     n_base_tokens = g_strv_length(base_tokens) - 1;
-	n_extra_tokens = 0;
-	len_par = 0;
-	for ( i = 0; i < n_base_tokens; i++) {
-		if (g_str_has_prefix (base_tokens[i], "target")) {
-			n_extra_tokens++;
-		}
-		if (g_str_has_prefix (base_tokens[i], "p[")) {
-			len_par++;
-		}
-	}
-	if (heval->size != len_par) {
-		g_error("Number of parameters %d != number of p %d", heval->size, len_par);
-	}
+    n_extra_tokens = n_base_tokens - ( heval->size + 8 );
     g_strfreev(base_tokens);
     free(base);
     targets = g_new(double, n_extra_tokens);
 	do {
-		for ( i = 0; i < len_log; i++) {
-			fscanf(fp, "%*c");
-		}
-		fscanf(fp, " wtime:%lf tau:%d freeze:%d score:%lf", &(hloop->w_time), &(hloop->tau_counter), &(hopt->stop_counter), &(hopt->cost));
+		fscanf(fp, "wtime:%lf tau:%d freeze:%d score:%lf", &(hloop->w_time), &(hloop->tau_counter), &(hopt->stop_counter), &(hopt->cost));
 		fscanf(fp, " fmean:%lf fmax:%lf", &fmean, &fmax);
 		fscanf(fp, " L:%d", &last_method);
 		fscanf(fp, " kounter:%d", &kounter);

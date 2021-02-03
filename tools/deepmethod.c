@@ -121,7 +121,7 @@ static GOptionEntry entries[] =
 int main(int argc, char **argv)
 {
 	XmModel*xmmodel;
-	DpOpt *hopt;
+    DpOpt *hopt;
 	DpSettings*dpsettings = dp_settings_new();
 	DpEvaluation*heval;
 	DpTarget*htarget;
@@ -238,10 +238,11 @@ int main(int argc, char **argv)
 			if ( hopt->hloop->stop_flag != DP_LOOP_EXIT_ERROR ) {
 				xm_retranslate_precond(htarget, xmmodel);
 				xm_model_save(xmmodel, output_file);
+
 			} else {
 				g_error(_("Loop finished with an unknown error.\nOutput not produced."));
 			}
-		}
+        }
 #ifdef MPIZE
 	}
 	MPI_Finalize();
