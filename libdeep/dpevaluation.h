@@ -44,7 +44,7 @@ typedef enum DpEvaluationStrategy {
 	rand_trans_flag
 } DpEvaluationStrategy;
 
-typedef struct DpEvaluationPoint {
+typedef struct DpEvaluationPoint { // точка эволюции
 	double *param;
 	int index;
 	double upper;
@@ -57,14 +57,14 @@ typedef struct DpEvaluationPoint {
 	double scale;
 } DpEvaluationPoint;
 
-typedef struct DpEvaluation {
+typedef struct DpEvaluation { // структура для эволюции дипа
 	int size;
 	DpEvaluationPoint**points;
 } DpEvaluation;
 
-typedef struct DpEvaluationCtrl {
+typedef struct DpEvaluationCtrl { //
 	DpEvaluationStrategy eval_strategy;
-	GThreadPool*gthreadpool;
+    GThreadPool*gthreadpool; // пул потоков
 	gboolean exclusive;
 	int eval_max_threads;
 	int kount;

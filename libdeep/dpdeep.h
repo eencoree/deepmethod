@@ -37,14 +37,14 @@ extern "C"
 #include "dprecombination.h"
 #include "dpevaluation.h"
 
-typedef enum DpSelector {
+typedef enum DpSelector { // выбор состояния
 	DpSelectorGenerated = (1 << 0),
 	DpSelectorEvaluated  = (1 << 1),
 	DpSelectorSelected  = (1 << 2),
 	DpSelectorNone = (1 << 3)
 } DpSelector;
 
-typedef struct DpDeepInfo {
+typedef struct DpDeepInfo { // информация из .ini файла
 	int debug;
 	int population_size;
 	int es_lambda;
@@ -68,8 +68,10 @@ typedef struct DpDeepInfo {
 } DpDeepInfo;
 
 DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, GKeyFile*gkf, gchar*groupname);
+// инициализация переменных дипа
 
 DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname);
+// входит в dp_deep_info_init
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo);
 

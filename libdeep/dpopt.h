@@ -48,11 +48,11 @@ typedef enum DpOptType {
 } DpOptType;
 
 typedef enum DpOptStopType {
-	H_OPT_PROPORTIONAL_STOP,
-	H_OPT_ABSOLUTE_STOP,
-	H_OPT_ABSOLUTE_SCORE,
-	H_OPT_ABSOLUTE_TIME,
-	H_OPT_ABSOLUTE_ITER
+    H_OPT_PROPORTIONAL_STOP, //
+    H_OPT_ABSOLUTE_STOP, //
+    H_OPT_ABSOLUTE_SCORE, //
+    H_OPT_ABSOLUTE_TIME, //
+    H_OPT_ABSOLUTE_ITER //
 } DpOptStopType;
 
 typedef enum DpCancel {

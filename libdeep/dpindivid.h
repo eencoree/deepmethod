@@ -34,7 +34,7 @@ extern "C"
 #include <stdlib.h>
 #include <glib.h>
 
-typedef struct DpIndivid {
+typedef struct DpIndivid { // структура данных для индивида
 	int size;
 	double cost;
 	int cost_ind;
@@ -42,24 +42,24 @@ typedef struct DpIndivid {
 	int pareto_front;
 	int dom_count;
 	double crdist;
-	GArray *dominated;
-	double *x;
-	double *y;
-	double *z;
+    GArray *dominated; // GArray хранит и данные и длину массива
+    double *x; // параматры безусловные - не ограничены
+    double *y; // только если градиент
+    double *z; // параметры, которые лежат внутри границ(ограничений)
 	double *targets;
 	int ntargets;
 	double *precond;
 	int nprecond;
 	int invalid;
-	int r1;
-	int r2;
-	int r3;
-	int r4;
+    int r1; // случайные индексы для дипа, при мутации
+    int r2; //
+    int r3; //
+    int r4; //
 	int moves;
 	int failures;
 	int grads;
 	gpointer user_data;
-	GMutex m;
+    GMutex m; // переменная для потокобезопасности
 	int status;
 } DpIndivid;
 

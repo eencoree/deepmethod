@@ -42,14 +42,14 @@ typedef void (*DpFuncUpdateModel)(gpointer user_data, double*buffer, int index, 
 
 typedef GString* (*DpFuncParamsToString)(void *user_data, double*x);
 
-typedef enum DpTargetFuncType {
-	DpTargetFuncPrime = (1 << 0),
-	DpTargetFuncPrecond  = (1 << 1),
-	DpTargetFuncTarget = (1 << 2),
-	DpTargetFuncPenalty = (1 << 3),
-	DpTargetFuncConstrEq = (1 << 4),
-	DpTargetFuncConstrNeq = (1 << 5),
-	DpTargetFuncNone = (1 << 6)
+typedef enum DpTargetFuncType { //
+    DpTargetFuncPrime = (1 << 0), // первая производная, вычисление в другой программе
+    DpTargetFuncPrecond  = (1 << 1), // для модификации параметров
+    DpTargetFuncTarget = (1 << 2), // функция цели
+    DpTargetFuncPenalty = (1 << 3), // штрафная функция в методе оптимизации, нестрого ограничение ,которое меняет функцию цели
+    DpTargetFuncConstrEq = (1 << 4), // функции ограничений в виде равенств
+    DpTargetFuncConstrNeq = (1 << 5), // <= обязано
+    DpTargetFuncNone = (1 << 6) //
 } DpTargetFuncType;
 
 typedef struct DpTargetFunc {

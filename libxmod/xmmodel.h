@@ -29,7 +29,7 @@
 extern "C"
 {
 #endif
-
+#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -57,7 +57,7 @@ typedef struct XmModelPart {
 	int checked_num_conn;
 } XmModelPart;
 
-typedef struct XmModel {
+typedef struct XmModel { //
 	XmModelType type;
 	int debug;
 	int size;

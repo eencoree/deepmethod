@@ -29,7 +29,8 @@
 extern "C"
 {
 #endif
-
+#include "dpindivid.h"
+#include "dppopulation.h"
 #include <glib.h>
 
 typedef enum DpRecombinationStrategy {
@@ -73,7 +74,7 @@ typedef struct DpRecombinationControl {
 	int adjust;
 	int toggle;
 } DpRecombinationControl;
-
+// те, которые используют input_1 - best-ы, методы без self & rand
 void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
 
 void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
