@@ -251,11 +251,11 @@ typedef struct duple{
     int ind;
 } duple;
 
-void cycle(int mean, int begin, int end, duple tmp[], int unique[], int *unique_counter){
+void cycle(int mean, int begin, int end, duple* tmp, int* unique, int *unique_counter){
     for(int i = begin; i < end; i++){
         for (int j = 0; j < *unique_counter; j++){
             if(tmp[i].el == unique[j])
-                    tmp[i].ind = 3;
+                tmp[i].ind = 3;
         }
         if(tmp[i].ind != 3){
             tmp[i].ind = mean;
@@ -284,16 +284,40 @@ void delete_dupl(double* ind1, double* ind2, int N){
     for(int i = 0; i < N; i++){
         tmp[i].el = ind1_t[i];
         tmp[i + N].el = ind2_t[i];
+        tmp[i].ind = tmp[i + N].ind = 0;
     }
 
     cycle(1, 0, N, tmp, unique, &unique_counter);
     cycle(2, N, 2 * N, tmp, unique, &unique_counter);
+
     qsort(tmp, 2 * N, sizeof (duple),\
           (int(*)(const void *, const void *)) compare);
 
-
     for(int i = 0; i < N; i++)
         ind1[i] = (double)((double)(tmp[i].el) * d / h);
+}
+
+void main_dedupl(DpIndivid* my_trial, DpPopulation* population, DpDeepInfo* hdeepinfo, int ind){
+    DpEvaluationPoint** dedupl_ind = hdeepinfo->hevalctrl->eval->points;
+    double tmp1[my_trial->size], tmp2[my_trial->size];
+    int N = 0;
+    for(int i = 0; i < my_trial->size; i++){
+        if(dedupl_ind[i]->dedupl == 0){
+            tmp1[N] = my_trial->x[i];
+            tmp2[N] = population->individ[ind]->x[i];
+            N++;
+        }
+    }
+
+    delete_dupl(tmp1, tmp2, N);
+    int counter = 0;
+
+    for(int i = 0; i < my_trial->size; i++){
+        if(dedupl_ind[i]->dedupl == 0){
+            my_trial->x[i] = tmp1[counter];
+            counter++;
+        }
+    }
 }
 
 void dp_deep_generate_func (gpointer data, gpointer user_data)
@@ -378,13 +402,15 @@ void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
 	dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
 
     //delete duple
+
     int ind = g_rand_int_range(hrand, 0, population->size);
     while(ind == my_id || ind == my_trial->r1 || ind == my_trial->r2 ||\
-            ind == my_trial->r3 || ind == my_trial->r4){
+          ind == my_trial->r3 || ind == my_trial->r4){
         ind = g_rand_int_range(hrand, 0, population->size);
     }
 
-    delete_dupl(my_trial->x, population->individ[ind]->x, my_trial->size);
+    main_dedupl(my_trial, population, hdeepinfo, ind);
+
     //end del duple
 
     my_trial->cost = G_MAXDOUBLE;

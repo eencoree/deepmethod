@@ -69,3 +69,5 @@ Makefile.in
 # Debug files
 *.dSYM/
 
+# Qt user files
+Nir.pro.user

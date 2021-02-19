@@ -104,6 +104,7 @@ XmModel*xm_model_new()
 	xmmodel->param_type = NULL;
 	xmmodel->has_params = NULL;
 	xmmodel->mask = NULL;
+    xmmodel->dedupl = NULL;
 	return xmmodel;
 }
 
@@ -139,7 +140,8 @@ gpointer xm_model_copy_values(gpointer psrc)
 	xmmodel->limited = g_new0 ( int, xmmodel->size );
 	xmmodel->mask = g_new0 ( int, xmmodel->size );
 	xmmodel->param_type = g_new0 ( int, xmmodel->size );
-	xmmodel->dparms = g_new0 ( double, xmmodel->size );
+    xmmodel->dedupl = g_new0 ( int, xmmodel->size );
+    xmmodel->dparms = g_new0 ( double, xmmodel->size );
 	xmmodel->bparms = g_new0 ( double, xmmodel->size );
 	xmmodel->lbound = g_new0 ( double, xmmodel->size );
 	xmmodel->hbound = g_new0 ( double, xmmodel->size );
@@ -157,6 +159,7 @@ gpointer xm_model_copy_values(gpointer psrc)
 		xmmodel->hbound[j] = src->hbound[j];
 		xmmodel->scale[j] = src->scale[j];
 		xmmodel->param_type[j] = src->param_type[j];
+        xmmodel->dedupl[j] = src->dedupl[j];
 	}
 	xmmodel->command = g_strdup(src->command);
 	if ( src->prime_command != NULL) {
@@ -1241,7 +1244,8 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		xmmodel->iparms = g_new0 ( int, xmmodel->size );
 		xmmodel->param_type = g_new0 ( int, xmmodel->size );
 		xmmodel->limited = g_new0 ( int, xmmodel->size );
-		xmmodel->dparms = g_new0 ( double, xmmodel->size );
+        xmmodel->dedupl = g_new0 ( int, xmmodel->size );
+        xmmodel->dparms = g_new0 ( double, xmmodel->size );
 		xmmodel->bparms = g_new0 ( double, xmmodel->size );
 		xmmodel->scale = g_new0 ( double, xmmodel->size );
 		xmmodel->mask = g_new0 ( int, xmmodel->size );
@@ -1260,13 +1264,15 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 			xmmodel->iparms[j] = xmmodel->parms[j];
 			xmmodel->limited[j] = 1;
 			xmmodel->param_type[j] = 0;
-		}
+            xmmodel->dedupl[j] = 0;
+        }
 		g_free(ilist);
 	} else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "valparms", &length, NULL) ) != NULL ) {
 		k = 0;
 		for ( j = 0; j < xmmodel->size; j++ ) {
 			xmmodel->limited[j] = 1;
-			xmmodel->param_type[j] = 0;
+            xmmodel->dedupl[j] = 0;
+            xmmodel->param_type[j] = 0;
 			xmmodel->parms[j] = ilist[k];
 			xmmodel->iparms[j] = ilist[k];
 			xmmodel->dparms[j] = j;
@@ -1688,6 +1694,40 @@ int xm_model_load(gchar*data, gsize size, gchar*groupname, XmModel *xmmodel, GEr
 		g_debug ("%s", gerror->message );
 		g_clear_error (&gerror);
 	}
+
+    if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "dedupled", &length, NULL) ) != NULL ) {
+        if (length != xmmodel->size) {
+            g_error ("parts size %d != num to deduplicate %d", xmmodel->size, length);
+        }
+        for ( j = 0; j < xmmodel->size; j++) {
+            xmmodel->dedupl[j] = ilist[j];
+        }
+    } else if ( ( ilist = g_key_file_get_integer_list(gkf, groupname, "deduplvals", &length, &gerror) ) != NULL ) {
+        if (length != xmmodel->num_parts) { // корректно обработать ошибку
+            g_error ("parts number %d != num to deduplicate %d", xmmodel->num_parts, length);
+        }
+
+        for ( jj = 0; jj < xmmodel->num_parts; jj++ ) {
+            if (ilist[jj] > xmmodel->part[jj].num_parms){
+                g_error ("num to deduplicate %d > part size %d", ilist[jj], xmmodel->part[jj].num_parms);
+            }
+            for ( k = 0; k < ilist[jj]; k++ ) {
+                kk = xmmodel->part[jj].index[k];
+                xmmodel->dedupl[kk] = 1;
+            }
+
+            for ( k = ilist[jj]; k < xmmodel->part[jj].num_parms; k++ ) {
+                kk = xmmodel->part[jj].index[k];
+                xmmodel->dedupl[kk] = 0;
+            }
+        }
+        g_free(ilist);
+        if (gerror != NULL) g_clear_error (&gerror);
+    } else {
+        g_debug ("%s", gerror->message );
+        g_clear_error (&gerror);
+    }
+
 	g_key_file_free(gkf);
 	return retval;
 }
