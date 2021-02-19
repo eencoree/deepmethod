@@ -50,6 +50,7 @@ typedef struct DpEvaluationPoint { // точка эволюции
 	double upper;
 	double lower;
 	int limited;
+    int dedupl;
 	double *grad;
 	double alpha;
 	double beta;
