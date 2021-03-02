@@ -74,6 +74,7 @@ typedef struct XmModel { //
 	int *tweak_index;
 	int index_size;
 	int *tweak;
+    int *dedupl;
 	double *dparms;
 	double *bparms;
 	double *lbound;
