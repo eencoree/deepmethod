@@ -706,7 +706,7 @@ DpLoopExitCode dp_read_log(DpLoop*hloop, gpointer user_data)
 		return ret_val;
 	}
     base = fgets(base, 16 * MAX_RECORD, fp);
-    base_tokens = g_strsplit(base, ": ", -1);
+    base_tokens = g_strsplit_set(base, ": ", -1);
 	len_log = strlen(base_tokens[0]);
     n_base_tokens = g_strv_length(base_tokens) - 1;
 	n_extra_tokens = 0;
