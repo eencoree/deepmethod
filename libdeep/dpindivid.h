@@ -34,6 +34,8 @@ extern "C"
 #include <stdlib.h>
 #include <glib.h>
 
+#define TRIANGULAR 3
+
 typedef struct DpIndivid { // структура данных для индивида
 	int size;
 	double cost;
@@ -51,6 +53,10 @@ typedef struct DpIndivid { // структура данных для индив�
 	double *precond;
 	int nprecond;
 	int invalid;
+    //coefs for triangular rec
+    double p[TRIANGULAR];
+    double F[TRIANGULAR];
+    //
     int r1; // случайные индексы для дипа, при мутации
     int r2; //
     int r3; //

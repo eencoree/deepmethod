@@ -31,7 +31,7 @@
 DpIndivid*dp_individ_new(int size, int targets_size, int precond_size)
 {
 	int i;
-	DpIndivid*individ;
+    DpIndivid*individ;
 	individ = (DpIndivid*)malloc(sizeof(DpIndivid));
 	individ->size = size;
 	individ->cost = 0;
@@ -60,7 +60,8 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size)
 	individ->crdist = 0;
 	g_mutex_init( &(individ->m) );
 	individ->status = 0;
-	individ->cost_ind = 0;
+    individ->cost_ind = 0;
+
 	return individ;
 }
 
@@ -103,6 +104,11 @@ void dp_individ_copy_values(DpIndivid*individ, DpIndivid*trial)
 	}
 	if (individ->user_data == NULL) individ->user_data = trial->user_data;
 	individ->cost_ind = trial->cost_ind;
+
+    for ( i = 0; i < TRIANGULAR; i++ ) {
+        individ->p[i] = trial->p[i];
+        individ->F[i] = trial->F[i];
+    }
 }
 
 void dp_individ_save(FILE*fp, DpIndivid*individ)
@@ -136,6 +142,12 @@ void dp_individ_save(FILE*fp, DpIndivid*individ)
 	for ( i = 0; i < individ->nprecond; i++ ) {
 	  fprintf(fp, "%13.9f ", individ->precond[i]);
 	}
+    for ( i = 0; i < TRIANGULAR; i++ ) {
+      fprintf(fp, "%13.9f ", &(individ->p[i]));
+    }
+    for ( i = 0; i < TRIANGULAR; i++ ) {
+      fprintf(fp, "%13.9f ", &(individ->F[i]));
+    }
 	fprintf(fp, "\n");
 }
 
@@ -166,6 +178,12 @@ void dp_individ_load(FILE*fp, DpIndivid*individ)
 	for ( i = 0; i < individ->nprecond; i++ ) {
 	  fscanf(fp, "%lf", &(individ->precond[i]));
 	}
+    for ( i = 0; i < TRIANGULAR; i++ ) {
+      fscanf(fp, "%lf", &(individ->p[i]));
+    }
+    for ( i = 0; i < TRIANGULAR; i++ ) {
+      fscanf(fp, "%lf", &(individ->F[i]));
+    }
 }
 
 void dp_individ_pack(DpIndivid*individ, double**buffer2send, int*bufferDim)
