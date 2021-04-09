@@ -54,7 +54,8 @@ typedef enum DpRecombinationStrategy {
 	DE_3_bin_self_D,
 	DE_3_exp_self_D,
 	DE_3_bin_self_T,
-	DE_3_exp_self_T,
+    DE_3_exp_self_T,
+    DE_3_triangular,
 	MaxStrategy
 } DpRecombinationStrategy;
 
@@ -75,6 +76,9 @@ typedef struct DpRecombinationControl {
 	int toggle;
 } DpRecombinationControl;
 // те, которые используют input_1 - best-ы, методы без self & rand
+
+void ind_triand_init(DpPopulation *population, DpRecombinationControl *control, GRand *hrand);
+
 void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
 
 void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);

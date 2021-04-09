@@ -376,7 +376,7 @@ DpLoopExitCode dp_opt_init_cancel(DpLoop*hloop, gpointer user_data)
 	return ret_val;
 }
 
-DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data) // не понятно преобразование типов
+DpLoopExitCode dp_opt_check_cancel(DpLoop*hloop, gpointer user_data)
 {
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpLoopExitCode ret_val = DP_LOOP_EXIT_NOEXIT;
