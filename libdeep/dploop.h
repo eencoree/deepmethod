@@ -22,6 +22,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
  
+// Implementation of eternal cycle
+// Not related wth mathematical part of DEEP
+
 #ifndef _DP_LOOP_H
 #define _DP_LOOP_H
 

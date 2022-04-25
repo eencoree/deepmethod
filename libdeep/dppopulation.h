@@ -22,6 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+// Implimentation of population as a set of individs
 
 #ifndef _DP_POPULATION_H
 #define _DP_POPULATION_H
@@ -38,24 +39,24 @@ extern "C"
 typedef struct DpPopulation {
 	int size;
 	int iter;
-	int imin;
-	int target_index;
-	double dmin;
+    int imin;  // i - individ
+    int target_index;
+    double dmin; // target func data
 	double fmean;
 	double fmax;
 	int ifmax;
 	int iage;
 	int aage;
-	int ind_size;
-	double *mean;
-	double *variance;
+    int ind_size;   // individ size
+    double *mean;   // M[param]
+    double *variance;  // D[param]
 	DpIndivid**individ;
-	int *ages_descending;
-	int *cost_ascending;
-	int nfronts;
-	GArray*fronts;
-	int slice_a;
-	int slice_b;
+    int *ages_descending;   // Sorted data of individ ages
+    int *cost_ascending;    // Sorted data of target func values
+    int nfronts;    // Pareto front number (?)
+    GArray*fronts;  // Pareto front array
+    int slice_a;    // Slice left border
+    int slice_b;    // Slice right border
 } DpPopulation;
 
 DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size);
@@ -70,7 +71,7 @@ int dp_individ_failures_descending(void *p1, void *p2, void *user_data);
 
 int dp_individ_cost_ascending(void *p1, void *p2, void *user_data);
 
-void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes);
+void dp_population_mpi_distribute(DpPopulation*pop, int mpi_id, int mpi_nnodes);    // mpi - message passing interface
 
 void dp_population_mpi_gather(DpPopulation*pop, int mpi_id, int mpi_nnodes);
 
@@ -78,7 +79,7 @@ void dp_population_save(FILE*fp, DpPopulation*pop);
 
 void dp_population_load(FILE*fp, DpPopulation*pop);
 
-void dp_population_cr2cost(DpPopulation*pop);
+void dp_population_cr2cost(DpPopulation*pop);   // For sophisticated target func, cr - crowd radius (?)
 
 DpPopulation*dp_population_union(DpPopulation*population, DpPopulation*trial);
 

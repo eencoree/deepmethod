@@ -33,6 +33,7 @@ DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname)
     DpDeepInfo*hdeepinfo;
     hdeepinfo = (DpDeepInfo*)malloc(sizeof(DpDeepInfo));
     GError *gerror = NULL;
+    hdeepinfo->archive = dp_archive_new(hdeepinfo->population_size); // initializing archvie 2NP size
     gchar*str,**strlist;
     int retval = 0;
     hdeepinfo->population_size = 5;
@@ -131,6 +132,7 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
     hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, gkf, groupname);
     hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->array_size, hdeepinfo->hevalctrl->eval_target->precond_size);
     hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->noglobal_eps);
+    hdeepinfo->archive = dp_archive_init(hdeepinfo->archive); // initializing archvie 2NP size
     hdeepinfo->recombination_control = dp_recombination_control_init(hdeepinfo->hevalctrl->hrand, hdeepinfo->population, gkf, groupname);
     hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
 
@@ -333,6 +335,7 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
     int my_id = GPOINTER_TO_INT(data) - 1;
     DpPopulation*trial = hdeepinfo->trial;
     DpIndivid*my_trial = trial->individ[my_id];
+    DpArchive* archive = hdeepinfo->archive;
     DpPopulation*population = hdeepinfo->population;
     DpIndivid*my_individ = population->individ[my_id];
     DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
@@ -593,9 +596,13 @@ void dp_deep_generate_step(DpDeepInfo*hdeepinfo)
     DpPopulation*population = hdeepinfo->population;
     DpPopulation*trial = hdeepinfo->trial;
     GError *gerror = NULL;
+
     for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
         dp_deep_generate_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
     }
+
+    // for individ in population:
+        // fill archive
 }
 
 void dp_deep_generate_dd_step(DpDeepInfo*hdeepinfo)

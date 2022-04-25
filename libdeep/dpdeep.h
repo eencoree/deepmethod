@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+// Control deep during execution
+
 #ifndef _DP_DEEP_H
 #define _DP_DEEP_H
 
@@ -36,6 +38,7 @@ extern "C"
 #include "dppopulation.h"
 #include "dprecombination.h"
 #include "dpevaluation.h"
+#include "dparchive.h"
 
 typedef enum DpSelector { // выбор состояния
 	DpSelectorGenerated = (1 << 0),
@@ -62,9 +65,10 @@ typedef struct DpDeepInfo { // информация из .ini файла
 	DpPopulation*popunion;
 	DpRecombinationControl *recombination_control;
 	DpEvaluationCtrl *hevalctrl;
-	GThreadPool*gthreadpool;
+    GThreadPool*gthreadpool;
 	gint max_threads;
 	gboolean exclusive;
+    DpArchive* archive;
 } DpDeepInfo;
 
 DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, GKeyFile*gkf, gchar*groupname);
@@ -81,7 +85,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data);
 
 void dp_deep_step(DpDeepInfo*hdeepinfo);
 
-void dp_deep_post(DpDeepInfo*hdeepinfo);
+void dp_deep_post(DpDeepInfo*hdeepinfo);    // Selection of the best individ after DEEP step
 
 void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo);
 

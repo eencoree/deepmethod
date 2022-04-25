@@ -74,11 +74,12 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
     int L;
     int flag;
     double u, phi, alpha;
-    DpIndivid* tmp[3] = {input_1, input_2, input_3};
+    DpIndivid* tmp[3] = {input_1, input_2, input_3};    
 
     switch (control->strategy) {
     case Simple:
         i = start_index;
+
         for ( L = 0; L < end_index; L++ ) {
             if ( g_rand_double(hrand) < control->p[i] || L == 0 ) {
                 individ->x[i] = input_1->x[i] + control->f[i] * input_2->x[i];
@@ -90,8 +91,9 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
         }
         input_1->moves++;
         input_2->moves++;
+
         break;
-    case DE_3_bin:
+    case DE_3_bin:  // !
         i = start_index;
         for ( L = 0; L < end_index; L++ ) {
             if ( g_rand_double(hrand) < control->p[i] || L == 0 ) {
@@ -106,7 +108,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
         input_2->grads++;
         input_3->grads++;
         break;
-    case DE_3_exp:
+    case DE_3_exp:  // !
         i = start_index;
         for ( L = 0; L < end_index; L++ ) {
             individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
@@ -121,7 +123,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
         input_2->grads++;
         input_3->grads++;
         break;
-    case DE_3_bin_rand:
+    case DE_3_bin_rand: // !
         i = start_index;
         for ( L = 0; L < end_index; L++ ) {
             if ( g_rand_double(hrand) < control->p[i] || L == 0 ) {
@@ -136,7 +138,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
         input_2->grads++;
         input_3->grads++;
         break;
-    case DE_3_exp_rand:
+    case DE_3_exp_rand: // !
         i = start_index;
         for ( L = 0; L < end_index; L++ ) {
             individ->x[i] = input_4->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
@@ -187,6 +189,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
             u = g_rand_double(hrand);
             if ( u < control->p[i] ) {
                 individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+
             } else if ( u < 1 - control->p[i] ) {
                 phi = input_1->cost + input_2->cost + input_3->cost;
                 individ->x[i] = ( input_2->cost - input_1->cost ) * ( input_1->x[i] - input_2->x[i] );
@@ -511,7 +514,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
         input_3->grads++;
         break;
 
-    case DE_3_triangular:
+    case DE_3_triangular:   // !
         for(int i = 0; i < TRIANGULAR - 1; i++){
             for(int j = i + 1; j < TRIANGULAR; j++){
                 if(tmp[i]->cost > tmp[j]->cost){

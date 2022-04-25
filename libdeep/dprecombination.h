@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+// Recombination process implementation
+
 #ifndef _DP_RECOMBINATION_H
 #define _DP_RECOMBINATION_H
 
@@ -64,16 +66,16 @@ typedef struct DpRecombinationControl {
 	int size;
 	int pop_size;
 	double gamma;
-	double *f;
-	double *p;
-	double *c;
-	double *v;
+    double *f;  // Array of params
+    double *p;  //
+    double *c;  //
+    double *v;  //
 	double f_inf;
 	double f_supp;
 	double p_inf;
 	double p_supp;
-	int adjust;
-	int toggle;
+    int adjust;  // Adaptaion flag
+    int toggle; //Adaptation of params on even steps
 } DpRecombinationControl;
 // те, которые используют input_1 - best-ы, методы без self & rand
 

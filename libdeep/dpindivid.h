@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+// Implementation of DE individ
+
 #ifndef _DP_INDIVID_H
 #define _DP_INDIVID_H
 
@@ -71,6 +73,7 @@ typedef struct DpIndivid { // структура данных для индив�
 
 DpIndivid*dp_individ_new(int size, int targets_size, int precond_size);
 
+// Print individ info into console
 void dp_individ_dump(DpIndivid*individ);
 
 void dp_individ_unpack(DpIndivid*individ, double*buffer2recv, int bufferDim);

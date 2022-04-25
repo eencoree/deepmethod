@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+// Target func evaluation #1
+
 #ifndef _DP_EVALUATION_H
 #define _DP_EVALUATION_H
 
@@ -45,13 +47,13 @@ typedef enum DpEvaluationStrategy {
 } DpEvaluationStrategy;
 
 typedef struct DpEvaluationPoint { // точка эволюции
-	double *param;
+    double *param;  // Target func parameters
 	int index;
 	double upper;
 	double lower;
 	int limited;
     int dedupl;
-	double *grad;
+    double *grad;   // Params for gradient method func
 	double alpha;
 	double beta;
 	double gamma;
