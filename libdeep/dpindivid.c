@@ -61,7 +61,7 @@ DpIndivid*dp_individ_new(int size, int targets_size, int precond_size)
 	g_mutex_init( &(individ->m) );
 	individ->status = 0;
     individ->cost_ind = 0;
-
+    individ->useWriteVector = FALSE;
 	return individ;
 }
 

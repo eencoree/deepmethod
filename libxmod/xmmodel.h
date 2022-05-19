@@ -22,6 +22,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+
+// Here you can find model-related data
+// COnverts extern param into proccessable model
+
 #ifndef _XM_MODEL_H
 #define _XM_MODEL_H
 

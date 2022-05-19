@@ -38,7 +38,7 @@ extern "C"
 #include "dppopulation.h"
 #include "dprecombination.h"
 #include "dpevaluation.h"
-#include "dparchive.h"
+// #include "dparchive.h"
 
 typedef enum DpSelector { // выбор состояния
 	DpSelectorGenerated = (1 << 0),

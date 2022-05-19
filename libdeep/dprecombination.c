@@ -30,6 +30,7 @@
 #include "dpindivid.h"
 #include "dppopulation.h"
 #include "dprecombination.h"
+#include "dparchive.h" //???
 
 void dp_triangular_rec(double*x,  double*x_1,  double*x_2,  double*x_3, double*F, double*p, int end_index){
     //всегда преобразуем F по тангенсу и используем уже преобразованный
@@ -68,13 +69,42 @@ void ind_triand_init(DpPopulation *population, DpRecombinationControl *control, 
     }
 }
 
+//Transfer archive vector for writing and trial vector for reading
 void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index)
+//void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,
+//                              DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4,
+//                              int start_index, int end_index,
+//                              DifferenceVector* vectorWrite, DifferenceVector* vectorRead)
 {
     int i;
     int L;
     int flag;
     double u, phi, alpha;
     DpIndivid* tmp[3] = {input_1, input_2, input_3};    
+
+    DifferenceVector *vectorWrite, *vectorRead;  // ЗАГЛУШКИ
+    DifferenceVector *archiveVector;
+
+    for (int i = 0; i < input_1->size; i++){
+        vectorWrite->value[i] = input_2->x[i] - input_3->x[i];
+    }
+    vectorWrite->generation = 0;
+    // предусмотреть количество использований
+    int rand = g_rand_double(hrand);
+    if (rand > 0.5){
+        archiveVector = vectorWrite;
+        individ->useWriteVector = TRUE;
+    }
+    else{
+        archiveVector = vectorRead;
+    }
+    // use g_rand_double(hrand) for generating random number [0, 1]!!!
+    // if rand > 0.5
+    //  arch_vector = arch_vector_write
+    //  individ.used_write = True;
+    // else
+    //  arch_vector = arch_vector_read
+    //  individ.use_write = False;
 
     switch (control->strategy) {
     case Simple:
@@ -94,10 +124,12 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
 
         break;
     case DE_3_bin:  // !
+
         i = start_index;
         for ( L = 0; L < end_index; L++ ) {
             if ( g_rand_double(hrand) < control->p[i] || L == 0 ) {
-                individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+                // individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+                individ->x[i] = input_1->x[i] + control->f[i] * archiveVector->value[i];
             }
             i++;
             if ( i > end_index - 1 ) {

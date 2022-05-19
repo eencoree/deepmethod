@@ -48,7 +48,7 @@ libdeep_openmpi_la_CFLAGS = \
 	$(libdeep_la_CFLAGS) \
 	$(MPI_CFLAGS)
 
-libdeepinclude_HEADERS = \ 
+libdeepinclude_HEADERS = \
 	dpdeep.h \
 	dpevaluation.h \
 	dpindivid.h \

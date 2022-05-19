@@ -69,6 +69,8 @@ typedef struct DpIndivid { // структура данных для индив�
 	gpointer user_data;
     GMutex m; // переменная для потокобезопасности
 	int status;
+    gboolean useWriteVector;
+
 } DpIndivid;
 
 DpIndivid*dp_individ_new(int size, int targets_size, int precond_size);

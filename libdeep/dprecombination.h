@@ -34,6 +34,7 @@ extern "C"
 //#include "dpindivid.h"
 //#include "dppopulation.h"
 #include <glib.h>
+#include "dparchive.h"
 
 typedef enum DpRecombinationStrategy {
 	Simple,
@@ -82,6 +83,8 @@ typedef struct DpRecombinationControl {
 void ind_triand_init(DpPopulation *population, DpRecombinationControl *control, GRand *hrand);
 
 void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
+// Use this when include problem is fixed
+// void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index, DifferenceVector* vectorWrite, DifferenceVector* vectorRead);
 
 void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
 

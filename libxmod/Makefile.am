@@ -7,13 +7,13 @@ libxmod_la_SOURCES = \
 	xmmodel.h
 
 libxmod_la_LIBADD = \
-	$(DEEP_LIBS)
+	$(DEEP_LIBS) -lm
 
 AM_CPPFLAGS = \
 	$(DEEP_CFLAGS) \
 	-DG_LOG_DOMAIN=\"XmModel\"
 
-libxmodinclude_HEADERS = \ 
+libxmodinclude_HEADERS = \
 	xmmodel.h
 
 EXTRA_DIST = \
