@@ -30,7 +30,7 @@
 #include "dpindivid.h"
 #include "dppopulation.h"
 #include "dprecombination.h"
-#include "dparchive.h" //???
+//#include "dparchive.h" //???
 
 void dp_triangular_rec(double*x,  double*x_1,  double*x_2,  double*x_3, double*F, double*p, int end_index){
     //всегда преобразуем F по тангенсу и используем уже преобразованный
@@ -70,11 +70,11 @@ void ind_triand_init(DpPopulation *population, DpRecombinationControl *control, 
 }
 
 //Transfer archive vector for writing and trial vector for reading
-void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index)
-//void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,
-//                              DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4,
-//                              int start_index, int end_index,
-//                              DifferenceVector* vectorWrite, DifferenceVector* vectorRead)
+//void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index)
+void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,
+                              DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4,
+                              int start_index, int end_index,
+                              DifferenceVector* vectorWrite, DifferenceVector* vectorRead)
 {
     int i;
     int L;
@@ -82,7 +82,7 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
     double u, phi, alpha;
     DpIndivid* tmp[3] = {input_1, input_2, input_3};    
 
-    DifferenceVector *vectorWrite, *vectorRead;  // ЗАГЛУШКИ
+    // DifferenceVector *vectorWrite, *vectorRead;  // ЗАГЛУШКИ
     DifferenceVector *archiveVector;
 
     for (int i = 0; i < input_1->size; i++){

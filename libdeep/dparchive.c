@@ -1,4 +1,3 @@
-#pragma once
 #include "dparchive.h"
 
 #include <time.h>
@@ -9,7 +8,7 @@ DpArchive* dp_archive_new(int size, int individSize){
     archive->difference_vectors = (DifferenceVector**)malloc(sizeof(DifferenceVector) * 2 * size);
     for (int i = 0; i < size * 2; i++){
         archive->difference_vectors[i] = (DifferenceVector*)malloc(sizeof(DifferenceVector));
-        archive->difference_vectors[i]->value = (double*)malloc(individSize);
+        archive->difference_vectors[i]->value = (double*)malloc(sizeof(double) * individSize);
     }
     archive->last_index = size;
     archive->max_size = size * 2;
@@ -23,7 +22,7 @@ DpArchive* dp_archive_init(DpPopulation* population){
     for (int i = 0; i < population->size * 2; i++){
         int i1, i2;
         i1 = i < population->size ? i : i - population->size;
-        i2 = i1 == population->size ? i1 + 1 : 0;
+        i2 = i1 == population->size - 1 ? 0 : i1 + 1;
         for (int j = 0; j < population->individ[0]->size; j++){
             newArchive->difference_vectors[i]->value[j] = population->individ[i1]->x[j] - population->individ[i2]->x[j];
         }
