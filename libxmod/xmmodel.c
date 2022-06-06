@@ -771,9 +771,9 @@ int xm_model_run_command(XmModel *xmmodel)
 	if ( g_spawn_failed == 0 && standard_output != NULL && strlen(standard_output) > 0 && result != NULL ) {
 		int result_length = g_strv_length(result);
 		if ( xmmodel->debug == 1 ) {
-			g_printf("result_length = %d;\n", result_length);
+            g_printf("result_length = %d;\n", result_length);
 			for ( j = 0; j < result_length; j++ ) {
-				g_printf("result[%d] = %s;\n", j, result[j]);
+                g_printf("result[%d] = %s;\n", j, result[j]);
 			}
 		}
 		for ( i = 0; i < xmmodel->num_keys; i++ ) {

@@ -17,6 +17,8 @@ libdeep_la_SOURCES = \
 	dppopulation.h \
 	dpmutation.c \
 	dpmutation.h \
+	dparchive.c \
+	dparchive.h \
 	dprecombination.c \
 	dprecombination.h \
 	dpevaluation.c \
@@ -35,7 +37,8 @@ libdeep_la_SOURCES = \
 	dposda.h
 
 libdeep_la_LIBADD = \
-	$(DEEP_LIBS)
+	$(DEEP_LIBS) \
+	-lm
 
 AM_CPPFLAGS = \
 	$(DEEP_CFLAGS) \

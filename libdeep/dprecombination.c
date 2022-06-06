@@ -90,7 +90,8 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
     }
     vectorWrite->generation = 0;
     // предусмотреть количество использований
-    int rand = g_rand_double(hrand);
+    double rand = g_rand_double(hrand);
+
     if (rand > 0.5){
         archiveVector = vectorWrite;
         individ->useWriteVector = TRUE;
