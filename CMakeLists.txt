@@ -3,51 +3,53 @@ project(deepmethod C)
 
 set(CMAKE_C_STANDARD 11)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+
 ## Required for FindIntltool module
 #set(GETTEXT_PACKAGE ${PROJECT_NAME})
 #set(GETTEXT_PO_DIR ${CMAKE_SOURCE_DIR}/po)
 
-include_directories(.)
-include_directories(libdeep)
-include_directories(libxmod)
-include_directories(tools)
+find_package(PkgConfig)
+pkg_check_modules(GLIB2 REQUIRED glib-2.0>=2.36.0)
+include_directories(${GLIB2_INCLUDE_DIRS})
 
-FIND_PACKAGE(PkgConfig)
-PKG_CHECK_MODULES(GLIB2 REQUIRED glib-2.0>=2.36.0)
-INCLUDE_DIRECTORIES(${GLIB2_INCLUDE_DIRS})
+add_compile_definitions(DEEPMETHOD_LOCALEDIR=\"${CMAKE_INSTALL_PREFIX}/share/locale\")
 
-ADD_COMPILE_DEFINITIONS(DEEPMETHOD_LOCALEDIR=\"${CMAKE_INSTALL_PREFIX}/share/locale\")
+option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+
+#add the Deep library
+add_subdirectory(libdeep)
+#add the XMod library
+add_subdirectory(libxmod)
 
 add_executable(deepmethod
-        libdeep/dpdeep.c
-        libdeep/dpdeep.h
-        libdeep/dpevaluation.c
-        libdeep/dpevaluation.h
-        libdeep/dpindivid.c
-        libdeep/dpindivid.h
-        libdeep/dploop.c
-        libdeep/dploop.h
-        libdeep/dpmutation.c
-        libdeep/dpmutation.h
-        libdeep/dpopt.c
-        libdeep/dpopt.h
-        libdeep/dposda.c
-        libdeep/dposda.h
-        libdeep/dppopulation.c
-        libdeep/dppopulation.h
-        libdeep/dprecombination.c
-        libdeep/dprecombination.h
-        libdeep/dpsettings.c
-        libdeep/dpsettings.h
-        libdeep/dptarget.c
-        libdeep/dptarget.h
-        libxmod/xmmodel.c
-        libxmod/xmmodel.h
+	config.h
         tools/deepmethod.c
-        tools/deepmethod.h
         tools/xmtranslate.c
-        tools/xmtranslate.h
-        config.h)
+)
 
-TARGET_LINK_LIBRARIES(deepmethod  ${GLIB2_LIBRARIES} m gio-2.0 gobject-2.0)
-LINK_DIRECTORIES(${GLIB2_LIBRARY_DIRS})
+target_link_libraries(deepmethod  PUBLIC 
+        ${GLIB2_LIBRARIES}
+        m
+        gio-2.0
+        gobject-2.0
+        deep
+        xmod
+)
+
+target_include_directories(deepmethod PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools"
+)
+
+link_directories(${GLIB2_LIBRARY_DIRS})
+
+install(TARGETS deepmethod DESTINATION bin)
+install(FILES
+        "config.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/deepmethod.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/xmtranslate.h"
+        DESTINATION include
+)
