@@ -17,6 +17,8 @@ libdeep_la_SOURCES = \
 	dppopulation.h \
 	dpmutation.c \
 	dpmutation.h \
+	dparchive.c \
+	dparchive.h \
 	dprecombination.c \
 	dprecombination.h \
 	dpevaluation.c \
@@ -35,7 +37,8 @@ libdeep_la_SOURCES = \
 	dposda.h
 
 libdeep_la_LIBADD = \
-	$(DEEP_LIBS)
+	$(DEEP_LIBS) \
+	-lm
 
 AM_CPPFLAGS = \
 	$(DEEP_CFLAGS) \
@@ -48,7 +51,7 @@ libdeep_openmpi_la_CFLAGS = \
 	$(libdeep_la_CFLAGS) \
 	$(MPI_CFLAGS)
 
-libdeepinclude_HEADERS = \ 
+libdeepinclude_HEADERS = \
 	dpdeep.h \
 	dpevaluation.h \
 	dpindivid.h \

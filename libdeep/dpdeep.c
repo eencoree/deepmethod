@@ -131,6 +131,15 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
     hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, gkf, groupname);
     hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->array_size, hdeepinfo->hevalctrl->eval_target->precond_size);
     hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->noglobal_eps);
+    hdeepinfo->archive = dp_archive_init(hdeepinfo->population); // initializing archvie 2NP size
+
+//    for (int i = 0; i < 100; i++){
+//        for (int j = 0; j < 3; j++){
+//            printf("%g ", hdeepinfo->archive->difference_vectors[i].value[j]);
+//        }
+//        printf("\n");
+//    }
+
     hdeepinfo->recombination_control = dp_recombination_control_init(hdeepinfo->hevalctrl->hrand, hdeepinfo->population, gkf, groupname);
     hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
 
@@ -202,7 +211,14 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
     my_trial->moves = 0;
     my_trial->failures = 0;
     my_trial->grads = 0;
-    dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+
+    //dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+    DifferenceVector* vectorRead = hdeepinfo->archive->difference_vectors[my_id];
+    DifferenceVector* vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
+
+    dp_individ_recombination(recombination_control, hrand, my_trial,
+                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
+                             start_index, end_index, vectorWrite, vectorRead);
 
     dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu, my_id, my_tabu->cost);
     if ( ignore_cost == 0 && my_id == population->imin ) {
@@ -333,6 +349,7 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
     int my_id = GPOINTER_TO_INT(data) - 1;
     DpPopulation*trial = hdeepinfo->trial;
     DpIndivid*my_trial = trial->individ[my_id];
+    DpArchive* archive = hdeepinfo->archive;
     DpPopulation*population = hdeepinfo->population;
     DpIndivid*my_individ = population->individ[my_id];
     DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
@@ -348,8 +365,8 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
     do {
         r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
     } while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
-    r1 = population->imin;
-    my_tabu = population->individ[r1];
+    r1 = population->imin; // best individ
+    // my_tabu = population->individ[r1];
     start_index = g_rand_int_range (hrand, 0, population->ind_size);
     end_index = population->ind_size;
     dp_individ_copy_values(my_trial, my_individ);
@@ -361,7 +378,14 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
     my_trial->moves = 0;
     my_trial->failures = 0;
     my_trial->grads = 0;
-    dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+
+    DifferenceVector* vectorRead = hdeepinfo->archive->difference_vectors[my_id];
+    DifferenceVector* vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
+
+//    dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+    dp_individ_recombination(recombination_control, hrand, my_trial,
+                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
+                             start_index, end_index, vectorWrite, vectorRead);
 
     my_trial->cost = G_MAXDOUBLE;
 }
@@ -403,7 +427,14 @@ void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
     my_trial->moves = 0;
     my_trial->failures = 0;
     my_trial->grads = 0;
-    dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+
+    // dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
+    DifferenceVector* vectorRead = hdeepinfo->archive->difference_vectors[my_id];
+    DifferenceVector* vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
+
+    dp_individ_recombination(recombination_control, hrand, my_trial,
+                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
+                             start_index, end_index, vectorWrite, vectorRead);
 
     //delete duple
 
@@ -582,6 +613,12 @@ void dp_de_select_func (gpointer data, gpointer user_data)
         population->individ[my_id] = my_trial;
         trial->individ[my_id] = my_individ;
         my_individ->age++;
+        if (my_trial->useWriteVector)
+            hdeepinfo->archive->difference_vectors[my_id] = hdeepinfo->archive->difference_vectors[my_id + hdeepinfo->population_size];
+    }
+    else{
+        if (my_trial->useWriteVector)
+            hdeepinfo->archive->difference_vectors[my_id] = hdeepinfo->archive->difference_vectors[my_id + hdeepinfo->population_size];
     }
 }
 
@@ -592,10 +629,13 @@ void dp_deep_generate_step(DpDeepInfo*hdeepinfo)
     gboolean wait_finish = TRUE;
     DpPopulation*population = hdeepinfo->population;
     DpPopulation*trial = hdeepinfo->trial;
-    GError *gerror = NULL;
+    GError *gerror = NULL;   
+
     for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
         dp_deep_generate_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
     }
+
+
 }
 
 void dp_deep_generate_dd_step(DpDeepInfo*hdeepinfo)

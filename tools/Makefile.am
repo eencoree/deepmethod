@@ -24,7 +24,7 @@ deepmethod_LDFLAGS = \
 deepmethod_LDADD = \
 	$(DEEP_LIBS) \
 	$(top_builddir)/libdeep/libdeep.la \
-	$(top_builddir)/libxmod/libxmod.la
+	$(top_builddir)/libxmod/libxmod.la -lm
 
 AM_CPPFLAGS = \
 	$(DEEP_CFLAGS) \

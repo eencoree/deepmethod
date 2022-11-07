@@ -100,7 +100,7 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 {
 	DpDeepInfo*hdeepinfo;
 	DpOsdaInfo*hosdainfo;
-	gpointer method_info;
+    gpointer method_info; // Make 3 separeate fields for each opt_type instacnce (if not init - init, else continue processing)
 	int i, tau_flag, incr;
 	DpOptType opt_type;
 	incr = (order == 0) ? 2 : 1;
@@ -494,7 +494,7 @@ DpLoopExitCode dp_opt_deep_generate_ca(DpLoop*hloop, gpointer user_data)
 	if ( hdeepinfo->selector == DpSelectorGenerated ) {
         return ret_val;
     }
-	g_debug("dp_opt_deep_generate_ca tau:%d selector:%d kounter:%d delay:%d stop_counter:%d", hloop->tau_counter, hdeepinfo->selector, hdeepinfo->hevalctrl->kounter, hopt->delay, hopt->stop_counter);
+    g_debug("dp_opt_deep_generate_ca tau:%d selector:%d counter:%d delay:%d stop_counter:%d", hloop->tau_counter, hdeepinfo->selector, hdeepinfo->hevalctrl->kounter, hopt->delay, hopt->stop_counter);
 	b1 = (hdeepinfo->ca_flag == 0) ? hdeepinfo->es_lambda : (int)(population->size / hdeepinfo->es_lambda + 0.5);
 	k = 0;
 	for (i = 0; i < hdeepinfo->es_lambda; i++) {

@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
  
+// implemantation of optmal steepest descent algorithm
+
 #ifndef _DP_OSDA_H
 #define _DP_OSDA_H
 

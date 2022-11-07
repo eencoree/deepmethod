@@ -10,7 +10,9 @@ DEFINES += DEEPMETHOD_LOCALEDIR=0
 INCLUDEPATH += libdeep
 INCLUDEPATH += libxmod
 INCLUDEPATH += tools
+
 SOURCES += \
+    libdeep/dparchive.c \
     libdeep/dpdeep.c \
     libdeep/dpevaluation.c \
     libdeep/dpindivid.c \
@@ -58,6 +60,7 @@ DISTFILES += \
 
 HEADERS += \
     config.h \
+    libdeep/dparchive.h \
     libdeep/dpdeep.h \
     libdeep/dpevaluation.h \
     libdeep/dpindivid.h \

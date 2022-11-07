@@ -22,6 +22,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
+// Recombination process implementation
+
 #ifndef _DP_RECOMBINATION_H
 #define _DP_RECOMBINATION_H
 
@@ -32,6 +34,7 @@ extern "C"
 //#include "dpindivid.h"
 //#include "dppopulation.h"
 #include <glib.h>
+#include "dparchive.h"
 
 typedef enum DpRecombinationStrategy {
 	Simple,
@@ -64,22 +67,24 @@ typedef struct DpRecombinationControl {
 	int size;
 	int pop_size;
 	double gamma;
-	double *f;
-	double *p;
-	double *c;
-	double *v;
+    double *f;  // Array of params
+    double *p;  //
+    double *c;  //
+    double *v;  //
 	double f_inf;
 	double f_supp;
 	double p_inf;
 	double p_supp;
-	int adjust;
-	int toggle;
+    int adjust;  // Adaptaion flag
+    int toggle; //Adaptation of params on even steps
 } DpRecombinationControl;
 // те, которые используют input_1 - best-ы, методы без self & rand
 
 void ind_triand_init(DpPopulation *population, DpRecombinationControl *control, GRand *hrand);
 
-void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
+// void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
+// Use this when include problem is fixed
+void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index, DifferenceVector* vectorWrite, DifferenceVector* vectorRead);
 
 void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
 
@@ -94,6 +99,8 @@ void dp_recombination_control_update(DpRecombinationControl*rc, GRand*hrand, DpP
 void dp_recombination_control_save(FILE*fp, DpRecombinationControl*rc);
 
 void dp_recombination_control_load(FILE*fp, DpRecombinationControl*rc);
+
+// #include "dparchive.h"
 
 #ifdef __cplusplus
 }
