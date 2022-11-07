@@ -30,7 +30,6 @@
 #include "dpindivid.h"
 #include "dppopulation.h"
 #include "dprecombination.h"
-//#include "dparchive.h" //???
 
 void dp_triangular_rec(double*x,  double*x_1,  double*x_2,  double*x_3, double*F, double*p, int end_index){
     //всегда преобразуем F по тангенсу и используем уже преобразованный
@@ -82,31 +81,24 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
     double u, phi, alpha;
     DpIndivid* tmp[3] = {input_1, input_2, input_3};    
 
-    // DifferenceVector *vectorWrite, *vectorRead;  // ЗАГЛУШКИ
     DifferenceVector *archiveVector;
 
-    for (int i = 0; i < input_1->size; i++){
-        vectorWrite->value[i] = input_2->x[i] - input_3->x[i];
-    }
-    vectorWrite->generation = 0;
+	if (control->use_archive_prob > 0) {
+	    for (int i = 0; i < input_1->size; i++) {
+    	    vectorWrite->value[i] = input_2->x[i] - input_3->x[i];
+		}
+    	vectorWrite->generation = 0;
     // предусмотреть количество использований
-    double rand = g_rand_double(hrand);
+    	double rand = g_rand_double(hrand);
 
-    if (rand > 0.5){
-        archiveVector = vectorWrite;
-        individ->useWriteVector = TRUE;
-    }
-    else{
-        archiveVector = vectorRead;
-    }
-    // use g_rand_double(hrand) for generating random number [0, 1]!!!
-    // if rand > 0.5
-    //  arch_vector = arch_vector_write
-    //  individ.used_write = True;
-    // else
-    //  arch_vector = arch_vector_read
-    //  individ.use_write = False;
-
+    	if (rand > control->use_archive_prob) { /* setting this probability to 0 will switch the archive off */
+        	archiveVector = vectorWrite;
+        	individ->useWriteVector = TRUE;
+    	} else {
+        	archiveVector = vectorRead;
+    	}
+	}
+	
     switch (control->strategy) {
     case Simple:
         i = start_index;
@@ -122,14 +114,28 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
         }
         input_1->moves++;
         input_2->moves++;
-
         break;
     case DE_3_bin:  // !
 
         i = start_index;
         for ( L = 0; L < end_index; L++ ) {
             if ( g_rand_double(hrand) < control->p[i] || L == 0 ) {
-                // individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+                individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
+            }
+            i++;
+            if ( i > end_index - 1 ) {
+                i = 0;
+            }
+        }
+        input_1->moves++;
+        input_2->grads++;
+        input_3->grads++;
+		break;
+    case DE_3_bin_A:  // !
+
+        i = start_index;
+        for ( L = 0; L < end_index; L++ ) {
+            if ( g_rand_double(hrand) < control->p[i] || L == 0 ) {
                 individ->x[i] = input_1->x[i] + control->f[i] * archiveVector->value[i];
             }
             i++;
@@ -141,7 +147,8 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
         input_2->grads++;
         input_3->grads++;
         break;
-    case DE_3_exp:  // !
+
+	case DE_3_exp:  // !
         i = start_index;
         for ( L = 0; L < end_index; L++ ) {
             individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] );
@@ -665,6 +672,8 @@ DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*
             rc->strategy = DE_3_exp_T;
         } else if ( !g_strcmp0(str, "de_3_bin_T") ) {
             rc->strategy = DE_3_bin_T;
+        } else if ( !g_strcmp0(str, "de_3_bin_A") ) {
+            rc->strategy = DE_3_bin_A;
         } else if ( !g_strcmp0(str, "de_3_bin_rand") ) {
             rc->strategy = DE_3_bin_rand;
         } else if ( !g_strcmp0(str, "de_3_exp_rand") ) {
@@ -730,6 +739,14 @@ DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*
             rc->p[i] = prob;
             rc->v[i] = pop->variance[i];
         }
+    }
+	rc->use_archive_prob = 0;
+    if ( ( str = g_key_file_get_string(gkf, groupname, "use_archive_prob", &gerror) ) != NULL ) {
+        rc->use_archive_prob = g_strtod( str , NULL);
+        g_free(str);
+    } else {
+        g_debug ("%s", gerror->message );
+        g_clear_error (&gerror);
     }
     return rc;
 }

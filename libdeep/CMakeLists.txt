@@ -10,6 +10,7 @@ add_library(deep
     dprecombination.c
     dpsettings.c
     dptarget.c
+	dparchive.c
 )
 
 target_include_directories(deep
@@ -40,5 +41,6 @@ install(FILES
     dprecombination.h
     dpsettings.h
     dptarget.h
+	dparchive.h
     DESTINATION include
 )

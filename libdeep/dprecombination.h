@@ -22,7 +22,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor Boston, MA 02110-1301,  USA
  */
 
-// Recombination process implementation
+/*  Recombination-mutation functions for DEEP
+ * 
+ *
+*/
 
 #ifndef _DP_RECOMBINATION_H
 #define _DP_RECOMBINATION_H
@@ -31,8 +34,7 @@
 extern "C"
 {
 #endif
-//#include "dpindivid.h"
-//#include "dppopulation.h"
+
 #include <glib.h>
 #include "dparchive.h"
 
@@ -41,6 +43,7 @@ typedef enum DpRecombinationStrategy {
 	DE_3_bin,
 	DE_3_exp,
 	DE_3_bin_T,
+	DE_3_bin_A,
 	DE_3_exp_T,
 	DE_3_bin_rand,
 	DE_3_exp_rand,
@@ -76,14 +79,15 @@ typedef struct DpRecombinationControl {
 	double p_inf;
 	double p_supp;
     int adjust;  // Adaptaion flag
-    int toggle; //Adaptation of params on even steps
+    int toggle; // Adaptation of params on even steps
+	double use_archive_prob; // setting this probability to 0 will switch archive off
 } DpRecombinationControl;
 // те, которые используют input_1 - best-ы, методы без self & rand
 
 void ind_triand_init(DpPopulation *population, DpRecombinationControl *control, GRand *hrand);
 
 // void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
-// Use this when include problem is fixed
+
 void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index, DifferenceVector* vectorWrite, DifferenceVector* vectorRead);
 
 void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);

@@ -131,17 +131,12 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
     hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, gkf, groupname);
     hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->array_size, hdeepinfo->hevalctrl->eval_target->precond_size);
     hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->noglobal_eps);
-    hdeepinfo->archive = dp_archive_init(hdeepinfo->population); // initializing archvie 2NP size
-
-//    for (int i = 0; i < 100; i++){
-//        for (int j = 0; j < 3; j++){
-//            printf("%g ", hdeepinfo->archive->difference_vectors[i].value[j]);
-//        }
-//        printf("\n");
-//    }
-
     hdeepinfo->recombination_control = dp_recombination_control_init(hdeepinfo->hevalctrl->hrand, hdeepinfo->population, gkf, groupname);
-    hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
+	hdeepinfo->archive = NULL;
+	if (hdeepinfo->recombination_control->use_archive_prob > 0) {
+	    hdeepinfo->archive = dp_archive_init(hdeepinfo->population); // initializing archvie 2NP size
+	}
+	hdeepinfo->popunion = dp_population_union(hdeepinfo->population, hdeepinfo->trial);
 
     // Init ind for trifngular
     ind_triand_init(hdeepinfo->population, hdeepinfo->recombination_control, hdeepinfo->hevalctrl->hrand);
@@ -439,8 +434,8 @@ void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
     //delete duple
 
     int ind = g_rand_int_range(hrand, 0, population->size);
-    while(ind == my_id || ind == my_trial->r1 || ind == my_trial->r2 ||\
-          ind == my_trial->r3 || ind == my_trial->r4){
+    while(ind == my_id || ind == my_trial->r1 || ind == my_trial->r2 || \
+          ind == my_trial->r3 || ind == my_trial->r4) {
         ind = g_rand_int_range(hrand, 0, population->size);
     }
 
