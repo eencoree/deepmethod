@@ -98,8 +98,8 @@ void dp_opt_add_func(DpOpt *hopt, DpLoopFunc func, int tau_flag, DpOptType opt_t
 
 void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf, gchar*groupname, int world_id, DpEvaluation*heval, DpTarget*htarget, GError**err)
 {
-	DpDeepInfo*hdeepinfo;
-	DpOsdaInfo*hosdainfo;
+	DpDeepInfo*hdeepinfo = NULL;
+	DpOsdaInfo*hosdainfo = NULL;
     gpointer method_info; // Make 3 separeate fields for each opt_type instacnce (if not init - init, else continue processing)
 	int i, tau_flag, incr;
 	DpOptType opt_type;
@@ -198,27 +198,37 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 			dp_opt_add_func(hopt, dp_opt_mpi_gather, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "deep") ) {
 			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			if (!hdeepinfo) {
+				hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			}
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "gdeep") ) {
 			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			if (!hdeepinfo) {
+				hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			}
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep_generate, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "gdddeep") ) {
 			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			if (!hdeepinfo) {
+				hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			}
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep_generate_dd, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "gcadeep") ) {
 			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			if (!hdeepinfo) {
+				hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			}
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep_generate_ca, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "gacdeep") ) {
 			opt_type = H_OPT_DEEP;
-			hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			if (!hdeepinfo) {
+				hdeepinfo = dp_deep_info_init(heval, htarget, world_id, gkf, groupname);
+			}
 			method_info = (gpointer) hdeepinfo;
 			dp_opt_add_func(hopt, dp_opt_deep_generate_ac, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "edeep") ) {
@@ -235,7 +245,11 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 			dp_opt_add_func(hopt, dp_opt_de_select, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "osda") ) {
 			opt_type = H_OPT_OSDA;
-/*			hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);*/
+/*			
+			 if (!hosdainfo) {
+				hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);
+			}
+*/
 			method_info = (gpointer) hosdainfo;
 			dp_opt_add_func(hopt, dp_opt_osda, tau_flag, opt_type, order, method_info);
 		}
