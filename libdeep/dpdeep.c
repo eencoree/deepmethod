@@ -208,8 +208,13 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
     my_trial->grads = 0;
 
     //dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
-    DifferenceVector* vectorRead = hdeepinfo->archive->difference_vectors[my_id];
-    DifferenceVector* vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
+    DifferenceVector* vectorRead;
+    DifferenceVector* vectorWrite;
+	
+	if (recombination_control->use_archive_prob > 0) {
+		vectorRead = hdeepinfo->archive->difference_vectors[my_id];
+    	vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
+	}
 
     dp_individ_recombination(recombination_control, hrand, my_trial,
                              population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
@@ -374,9 +379,13 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
     my_trial->failures = 0;
     my_trial->grads = 0;
 
-    DifferenceVector* vectorRead = hdeepinfo->archive->difference_vectors[my_id];
-    DifferenceVector* vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
-
+    DifferenceVector* vectorRead;
+    DifferenceVector* vectorWrite;
+	
+	if (recombination_control->use_archive_prob > 0) {
+		vectorRead = hdeepinfo->archive->difference_vectors[my_id];
+    	vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
+	}
 //    dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
     dp_individ_recombination(recombination_control, hrand, my_trial,
                              population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
@@ -424,9 +433,14 @@ void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
     my_trial->grads = 0;
 
     // dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
-    DifferenceVector* vectorRead = hdeepinfo->archive->difference_vectors[my_id];
-    DifferenceVector* vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
-
+    DifferenceVector* vectorRead;
+    DifferenceVector* vectorWrite;
+	
+	if (recombination_control->use_archive_prob > 0) {
+		vectorRead = hdeepinfo->archive->difference_vectors[my_id];
+    	vectorWrite = hdeepinfo->archive->difference_vectors[hdeepinfo->population_size + my_id];
+	}
+	
     dp_individ_recombination(recombination_control, hrand, my_trial,
                              population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
                              start_index, end_index, vectorWrite, vectorRead);
