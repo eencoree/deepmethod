@@ -33,12 +33,13 @@
 #include "dpindivid.h"
 #include "dppopulation.h"
 
-DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size)
+DpPopulation*dp_population_new(int size, int initial_size, int ind_size, int targets_size, int precond_size)
 {
 	int i;
 	DpPopulation*pop;
 	pop = (DpPopulation*)malloc(sizeof(DpPopulation));
 	pop->size = size;
+	pop->cur_size = initial_size;
 	pop->individ = (DpIndivid**)calloc(size, sizeof(DpIndivid*));
 	pop->mean = (double*)calloc(ind_size, sizeof(double));
 	pop->variance = (double*)calloc(ind_size, sizeof(double));
@@ -59,7 +60,7 @@ DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int pre
 	pop->fronts = NULL;
 	pop->target_index = 0;
 	pop->slice_a = 0;
-	pop->slice_b = size;
+	pop->slice_b = initial_size;
 #ifdef MPIZE
 /* MPI initialization steps */
 	int world_id = 0, world_count = 1;
@@ -169,8 +170,8 @@ void dp_population_update(DpPopulation*pop, int start_index, int end_index)
 	double fmin, fmean, fmax;
 	int amax, imax, imin, ifmax;
 
-	g_qsort_with_data(pop->ages_descending, pop->size, sizeof(pop->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, pop);
-	g_qsort_with_data(pop->cost_ascending, pop->size, sizeof(pop->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, pop);
+	g_qsort_with_data(pop->ages_descending, pop->cur_size, sizeof(pop->ages_descending[0]), (GCompareDataFunc)dp_individ_ages_descending, pop);
+	g_qsort_with_data(pop->cost_ascending, pop->cur_size, sizeof(pop->cost_ascending[0]), (GCompareDataFunc)dp_individ_cost_ascending, pop);
 
 	kounter = 0;
 	fmean = 0;

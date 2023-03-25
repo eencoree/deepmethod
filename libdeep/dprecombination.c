@@ -71,7 +71,7 @@ void ind_triand_init(DpPopulation *population, DpRecombinationControl *control, 
 //Transfer archive vector for writing and trial vector for reading
 //void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index)
 void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,
-                              DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4,
+                              DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, DpIndivid*input_5,
                               int start_index, int end_index,
                               DifferenceVector* vectorWrite, DifferenceVector* vectorRead)
 {
@@ -130,6 +130,24 @@ void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIn
         input_1->moves++;
         input_2->grads++;
         input_3->grads++;
+		break;
+    case DE_4_bin:
+
+        i = start_index;
+        for ( L = 0; L < end_index; L++ ) {
+            if ( g_rand_double(hrand) < control->p[i] || L == 0 ) {
+                individ->x[i] = input_1->x[i] + control->f[i] * ( input_2->x[i] - input_3->x[i] ) + control->f[i] * ( input_4->x[i] - input_5->x[i] );
+            }
+            i++;
+            if ( i > end_index - 1 ) {
+                i = 0;
+            }
+        }
+        input_1->moves++;
+        input_2->grads++;
+        input_3->grads++;
+        input_4->grads++;
+        input_5->grads++;
 		break;
     case DE_3_bin_A:  // !
 
@@ -715,7 +733,7 @@ DpRecombinationControl*dp_recombination_control_init(GRand*hrand,  DpPopulation*
         g_clear_error (&gerror);
     }
     rc->size = pop->ind_size;
-    rc->pop_size = pop->size;
+    rc->pop_size = pop->cur_size;
     rc->toggle = g_rand_double(hrand) > 0.5 ? 1:0;
     rc->p_inf = G_MINDOUBLE;
     rc->p_supp = 1.0;

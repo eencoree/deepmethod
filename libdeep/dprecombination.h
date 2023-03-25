@@ -41,6 +41,7 @@ extern "C"
 typedef enum DpRecombinationStrategy {
 	Simple,
 	DE_3_bin,
+    DE_4_bin,
 	DE_3_exp,
 	DE_3_bin_T,
 	DE_3_bin_A,
@@ -88,7 +89,7 @@ void ind_triand_init(DpPopulation *population, DpRecombinationControl *control, 
 
 // void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
 
-void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index, DifferenceVector* vectorWrite, DifferenceVector* vectorRead);
+void dp_individ_recombination(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, DpIndivid*input_5, int start_index, int end_index, DifferenceVector* vectorWrite, DifferenceVector* vectorRead);
 
 void dp_individ_recombination_ca(DpRecombinationControl *control, GRand*hrand, DpIndivid*individ,  DpIndivid*input_1,  DpIndivid*input_2,  DpIndivid*input_3,  DpIndivid*input_4, int start_index, int end_index);
 

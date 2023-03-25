@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "dpdeep.h": "c",
+        "dprecombination.h": "c",
+        "dpopt.h": "c",
+        "limits": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}

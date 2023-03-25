@@ -28,14 +28,24 @@
 #include <math.h>
 #include "dpdeep.h"
 
-DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname)
+
+DpDeepInfo *dp_deep_info_new(GKeyFile*gkf, gchar*groupname)
 {
     DpDeepInfo*hdeepinfo;
     hdeepinfo = (DpDeepInfo*)malloc(sizeof(DpDeepInfo));
     GError *gerror = NULL;
     gchar*str,**strlist;
     int retval = 0;
+    hdeepinfo->fmin = 0;
     hdeepinfo->population_size = 5;
+    hdeepinfo->population_max_size = 10;
+    hdeepinfo->lower_bound = 5;
+    hdeepinfo->lb = 0;
+    hdeepinfo->w = 0;
+    hdeepinfo->b = 0;
+    hdeepinfo->st = 0;
+    hdeepinfo->R = 4;
+    hdeepinfo->s = 0.05;
     hdeepinfo->es_lambda = 2;
     hdeepinfo->es_cutoff = 2;
     hdeepinfo->es_kind = 0;
@@ -46,6 +56,62 @@ DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname)
     hdeepinfo->ca_flag = 0;
     if ( ( str = g_key_file_get_string(gkf, groupname, "population_size", &gerror) ) != NULL ) {
         hdeepinfo->population_size = g_strtod( str , NULL);
+        g_free(str);
+    } else {
+        g_debug ("%s", gerror->message );
+        g_clear_error (&gerror);
+    }
+    if ( ( str = g_key_file_get_string(gkf, groupname, "max_size", &gerror) ) != NULL ) {
+        hdeepinfo->population_max_size = g_strtod( str , NULL);
+        g_free(str);
+    } else {
+        g_debug ("%s", gerror->message );
+        g_clear_error (&gerror);
+    }
+    if (( str = g_key_file_get_string(gkf, groupname, "lower_bound", &gerror)) != NULL){
+        hdeepinfo->lower_bound = g_strtod(str, NULL);
+        g_free(str);
+    } else{
+        g_debug("%s", gerror->message);
+        g_clear_error(&gerror);
+    }
+    if (( str = g_key_file_get_string(gkf, groupname, "lb_parameter", &gerror)) != NULL){
+        hdeepinfo->lb = g_strtod(str, NULL);
+        g_free(str);
+    } else{
+        g_debug("%s", gerror->message);
+        g_clear_error(&gerror);
+    }
+    if (( str = g_key_file_get_string(gkf, groupname, "B_parameter", &gerror)) != NULL){
+        hdeepinfo->b = g_strtod(str, NULL);
+        g_free(str);
+    } else{
+        g_debug("%s", gerror->message);
+        g_clear_error(&gerror);
+    }
+    if (( str = g_key_file_get_string(gkf, groupname, "W_parameter", &gerror)) != NULL){
+        hdeepinfo->w = g_strtod(str, NULL);
+        g_free(str);
+    } else{
+        g_debug("%s", gerror->message);
+        g_clear_error(&gerror);
+    }
+    if (( str = g_key_file_get_string(gkf, groupname, "St_parameter", &gerror)) != NULL){
+        hdeepinfo->st = g_strtod(str, NULL);
+        g_free(str);
+    } else{
+        g_debug("%s", gerror->message);
+        g_clear_error(&gerror);
+    }
+    if ( ( str = g_key_file_get_string(gkf, groupname, "operation_number", &gerror) ) != NULL ) {
+        hdeepinfo->R = g_strtod( str , NULL);
+        g_free(str);
+    } else {
+        g_debug ("%s", gerror->message );
+        g_clear_error (&gerror);
+    }
+    if ( ( str = g_key_file_get_string(gkf, groupname, "selection", &gerror) ) != NULL ) {
+        hdeepinfo->s = g_strtod( str , NULL);
         g_free(str);
     } else {
         g_debug ("%s", gerror->message );
@@ -129,8 +195,9 @@ DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid,
     DpDeepInfo*hdeepinfo = dp_deep_info_new(gkf, groupname);
     DpRecombinationStrategy strategy;
     hdeepinfo->hevalctrl = dp_evaluation_init(heval, htarget, worldid, gkf, groupname);
-    hdeepinfo->trial = dp_population_new(hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->array_size, hdeepinfo->hevalctrl->eval_target->precond_size);
-    hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->noglobal_eps);
+    hdeepinfo->trial = dp_population_new(hdeepinfo->population_max_size, hdeepinfo->population_size, hdeepinfo->hevalctrl->eval->size, hdeepinfo->hevalctrl->eval_target->array_size, hdeepinfo->hevalctrl->eval_target->precond_size);
+    hdeepinfo->population = dp_evaluation_population_init(hdeepinfo->hevalctrl, hdeepinfo->population_size, hdeepinfo->population_max_size, hdeepinfo->noglobal_eps);
+    hdeepinfo->fmin = hdeepinfo->population->dmin;
     hdeepinfo->recombination_control = dp_recombination_control_init(hdeepinfo->hevalctrl->hrand, hdeepinfo->population, gkf, groupname);
 	hdeepinfo->archive = NULL;
 	if (hdeepinfo->recombination_control->use_archive_prob > 0) {
@@ -171,7 +238,7 @@ void dp_deep_info_load(FILE*fp, DpDeepInfo *hdeepinfo)
 
 void dp_deep_step_func (gpointer data, gpointer user_data)
 {
-    int r1, r2, r3, r4;
+    int r1, r2, r3, r4, r5;
     int start_index, end_index;
     DpIndivid*my_tabu;
     DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
@@ -193,6 +260,9 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
     do {
         r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
     } while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
+    do {
+        r5 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+    } while ( r5 == my_id || r5 == r1 || r5 == r2 || r5 == r3 || r5 == r4);
     r1 = population->imin;
     my_tabu = population->individ[r1];
     start_index = g_rand_int_range (hrand, 0, population->ind_size);
@@ -203,6 +273,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
     my_trial->r2 = r2;
     my_trial->r3 = r3;
     my_trial->r4 = r4;
+    my_trial->r5 = r5;
     my_trial->moves = 0;
     my_trial->failures = 0;
     my_trial->grads = 0;
@@ -217,7 +288,7 @@ void dp_deep_step_func (gpointer data, gpointer user_data)
 	}
 
     dp_individ_recombination(recombination_control, hrand, my_trial,
-                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
+                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], population->individ[r5],
                              start_index, end_index, vectorWrite, vectorRead);
 
     dp_evaluation_individ_evaluate(hdeepinfo->hevalctrl, my_trial, my_tabu, my_id, my_tabu->cost);
@@ -342,7 +413,7 @@ void main_dedupl(DpIndivid* my_trial, DpPopulation* population, DpDeepInfo* hdee
 
 void dp_deep_generate_func (gpointer data, gpointer user_data)
 {
-    int r1, r2, r3, r4;
+    int r1, r2, r3, r4, r5;
     int start_index, end_index;
     DpIndivid*my_tabu;
     DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
@@ -365,6 +436,9 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
     do {
         r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
     } while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
+    do {
+        r5 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+    } while ( r5 == my_id || r5 == r1 || r5 == r2 || r5 == r3 || r5 == r4);
     r1 = population->imin; // best individ
     // my_tabu = population->individ[r1];
     start_index = g_rand_int_range (hrand, 0, population->ind_size);
@@ -375,6 +449,7 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
     my_trial->r2 = r2;
     my_trial->r3 = r3;
     my_trial->r4 = r4;
+    my_trial->r5 = r5;
     my_trial->moves = 0;
     my_trial->failures = 0;
     my_trial->grads = 0;
@@ -388,7 +463,7 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
 	}
 //    dp_individ_recombination(recombination_control, hrand, my_trial, population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], start_index, end_index);
     dp_individ_recombination(recombination_control, hrand, my_trial,
-                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
+                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], population->individ[r5],
                              start_index, end_index, vectorWrite, vectorRead);
 
     my_trial->cost = G_MAXDOUBLE;
@@ -396,7 +471,7 @@ void dp_deep_generate_func (gpointer data, gpointer user_data)
 
 void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
 {
-    int r1, r2, r3, r4;
+    int r1, r2, r3, r4, r5;
     int start_index, end_index;
     DpIndivid*my_tabu;
     DpDeepInfo*hdeepinfo = (DpDeepInfo*)user_data;
@@ -418,6 +493,9 @@ void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
     do {
         r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
     } while ( r4 == my_id || r4 == r1 || r4 == r2 || r4 == r3 );
+    do {
+        r5 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+    } while ( r5 == my_id || r5 == r1 || r5 == r2 || r5 == r3 || r5 == r4);
     r1 = population->imin;
     my_tabu = population->individ[r1];
     start_index = g_rand_int_range (hrand, 0, population->ind_size);
@@ -428,6 +506,7 @@ void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
     my_trial->r2 = r2;
     my_trial->r3 = r3;
     my_trial->r4 = r4;
+    my_trial->r5 = r5;
     my_trial->moves = 0;
     my_trial->failures = 0;
     my_trial->grads = 0;
@@ -442,7 +521,7 @@ void dp_deep_generate_dd_func (gpointer data, gpointer user_data)
 	}
 	
     dp_individ_recombination(recombination_control, hrand, my_trial,
-                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4],
+                             population->individ[r1], population->individ[r2], population->individ[r3], population->individ[r4], population->individ[r5],
                              start_index, end_index, vectorWrite, vectorRead);
 
     //delete duple
@@ -799,3 +878,146 @@ void dp_deep_update_step(DpDeepInfo*hdeepinfo)
     dp_recombination_control_update(hdeepinfo->recombination_control, hdeepinfo->hevalctrl->hrand, hdeepinfo->population, 0, hdeepinfo->population->size);
 }
 
+int cmpfunc(const void * a, const void * b) {
+        return (*(int*)a - *(int*)b);
+    }
+
+void change_pointers(DpPopulation*population, const int reduce_number){
+    int *last_indices;
+    int len = population->cur_size;
+    int i = 0;
+    int k;
+    int j = reduce_number - 1;
+    DpIndivid* tmp;
+
+    last_indices = &population->cost_ascending[len - reduce_number];
+    qsort(last_indices, reduce_number, sizeof(int), cmpfunc);
+
+    // Перемещение последних reduce_number индексов в конец списка individ
+    for (k = 0; k < reduce_number; k++){
+        if (last_indices[i] >= len - reduce_number)
+            break;
+
+        if (last_indices[j] != len - i - 1){
+            tmp = population->individ[len - i - 1];
+            population->individ[len - i -  1] = population->individ[last_indices[i]];
+            population->individ[last_indices[i]] = tmp;
+            i++;
+        }
+        else j--;
+    }
+}
+
+int* generate_rand_ind(DpDeepInfo* hdeepinfo, int min){
+    int r2, r3, r4, r5;
+    int* rand_ind = (int*)malloc(4*sizeof(int));
+    GRand*hrand = hdeepinfo->hevalctrl->hrand;
+    do {
+        r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+    } while ( r2 == min );
+    do {
+        r3 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+    } while ( r3 == min || r3 == r2 );
+    do {
+        r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+    } while ( r4 == min || r4 == r2 || r4 == r3 );
+    do {
+        r5 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+    } while ( r5 == min || r5 == r2 || r5 == r3 || r5 == r4);
+    rand_ind[0] = r2;
+    rand_ind[1] = r3;
+    rand_ind[2] = r4;
+    rand_ind[3] = r5;
+    return rand_ind;
+}
+
+void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo, DpLoop*hloop){
+   
+    if (hdeepinfo->population->dmin < hdeepinfo->fmin){
+        hdeepinfo->b = 1;
+        hdeepinfo->fmin = hdeepinfo->population->dmin;
+    }
+    else{
+        hdeepinfo->w = 1;
+        hdeepinfo->st += 1;
+    }
+    if (hdeepinfo->population->cur_size <= hdeepinfo->lower_bound){
+        hdeepinfo->lb += 1;
+    }
+    if (hdeepinfo->w == 1 && hdeepinfo->st <= hdeepinfo->R){
+        dp_deep_redstrat(hdeepinfo);
+        hdeepinfo->w = 0;
+    }
+    if (hdeepinfo->b == 1){
+        dp_deep_augstrat_1(hdeepinfo);
+        hdeepinfo->b = 0;
+        hdeepinfo->st = 0;
+    }
+    if (hdeepinfo->st > hdeepinfo->R && hdeepinfo->lb > hdeepinfo->R){
+        dp_deep_augstrat_2(hdeepinfo);
+        hdeepinfo->st = 0;
+        hdeepinfo->lb = 0;
+    }
+}
+
+// стратегии изменения размера популяции
+void dp_deep_redstrat(DpDeepInfo*hdeepinfo){
+    const int reduce_number = (int)floor(hdeepinfo->population->cur_size * hdeepinfo->s);
+    // перестановка индексов - худших в конец
+    change_pointers(hdeepinfo->population, reduce_number);
+    for (int i = 0; i < hdeepinfo->population->cur_size; i++) {
+        hdeepinfo->trial->individ[i]->user_data = hdeepinfo->population->individ[i]->user_data;
+    }
+    hdeepinfo->population_size -= reduce_number;
+    hdeepinfo->population->cur_size -= reduce_number;
+    hdeepinfo->population->slice_b -= reduce_number;
+    dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->cur_size);
+}
+
+void dp_deep_augstrat_1(DpDeepInfo*hdeepinfo){
+    GRand*hrand = hdeepinfo->hevalctrl->hrand;
+    DpPopulation*population = hdeepinfo->population;
+    DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+    DifferenceVector* vectorRead;
+    DifferenceVector* vectorWrite;
+    int start_index = g_rand_int_range (hrand, 0, hdeepinfo->population->ind_size);
+    int end_index = population->ind_size;
+    int* indices = generate_rand_ind(hdeepinfo, population->imin);
+    DpRecombinationStrategy prev_strat = recombination_control->strategy;
+    recombination_control->strategy = DE_4_bin;
+    dp_individ_recombination(recombination_control, hrand, population->individ[population->cur_size],
+                             population->individ[population->imin], population->individ[indices[0]], population->individ[indices[1]], population->individ[indices[2]], population->individ[indices[3]],
+                             start_index, end_index, vectorWrite, vectorRead);
+    hdeepinfo->population_size += 1;
+    population->cur_size += 1;
+    population->slice_b += 1;
+    recombination_control->strategy = prev_strat;
+    dp_population_update(population, 0, population->cur_size);
+    free(indices);
+}
+
+void dp_deep_augstrat_2(DpDeepInfo*hdeepinfo){
+    const int add_size = (int)floor(hdeepinfo->population->cur_size * hdeepinfo->s);
+    GRand*hrand = hdeepinfo->hevalctrl->hrand;
+    DpPopulation*population = hdeepinfo->population;
+    DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+    DifferenceVector* vectorRead;
+    DifferenceVector* vectorWrite;
+    int start_index = g_rand_int_range (hrand, 0, hdeepinfo->population->ind_size);
+    int end_index = population->ind_size;
+    int* indices = generate_rand_ind(hdeepinfo, population->imin);
+    DpRecombinationStrategy prev_strat = recombination_control->strategy;
+    recombination_control->strategy = DE_3_bin;
+    // откуда взять случайные индексы индивидов?
+    for (int i = 0; i < add_size; i++){
+        dp_individ_recombination(recombination_control, hrand, population->individ[population->cur_size+i],
+                                population->individ[population->imin], population->individ[2], population->individ[3], population->individ[4], population->individ[5],
+                                start_index, end_index, vectorWrite, vectorRead);
+    }
+    hdeepinfo->population_size += add_size;
+    population->cur_size += add_size;
+    population->slice_b += add_size;
+    recombination_control->strategy = prev_strat;
+    dp_population_update(population, 0, population->cur_size);
+    free(indices);
+}

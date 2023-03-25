@@ -437,11 +437,11 @@ void dp_evaluation_individ_transform_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*
 	}
 }
 
-DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps)
+DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, int size, int max_size, double noglobal_eps)
 {
 	DpPopulation*pop;
 	int i;
-	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->array_size, hevalctrl->eval_target->precond_size);
+	pop = dp_population_new(max_size, size, hevalctrl->eval->size, hevalctrl->eval_target->array_size, hevalctrl->eval_target->precond_size);
 	dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 	pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 	dp_evaluation_individ_evaluate(hevalctrl, pop->individ[0], pop->individ[0], 0, 0);
@@ -467,26 +467,24 @@ void dp_evaluation_population_init_func (gpointer data, gpointer user_data)
 	g_mutex_unlock( &(individ->m) );
 }
 
-DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps)
+DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, int max_size, double noglobal_eps)
 {
 	DpPopulation*pop;
 	int i, istart = 0;
-/*	gboolean immediate_stop = FALSE;*/
 	gboolean immediate_stop = TRUE;
-/*	gboolean wait_finish = TRUE;*/
 	gboolean wait_finish = FALSE;
 	GError *gerror = NULL;
 	GMainContext *gcontext = g_main_context_default();
 	gulong microseconds = G_USEC_PER_SEC / 1000;
 	int notdone, currstatus;
-	pop = dp_population_new(size, hevalctrl->eval->size, hevalctrl->eval_target->array_size, hevalctrl->eval_target->precond_size);
+	pop = dp_population_new(max_size, size, hevalctrl->eval->size, hevalctrl->eval_target->array_size, hevalctrl->eval_target->precond_size);
 	if ( noglobal_eps == 0 ) {
 		dp_evaluation_individ_set(hevalctrl, pop->individ[0]);
 		pop->individ[0]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		istart = 1;
 		pop->individ[0]->cost = G_MAXDOUBLE;
 	}
-	for ( i = istart; i < size; i++) {
+	for ( i = istart; i < max_size; i++) {
 		dp_evaluation_individ_scramble(hevalctrl, pop->individ[i], noglobal_eps);
 		pop->individ[i]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		pop->individ[i]->cost = G_MAXDOUBLE;
@@ -535,7 +533,7 @@ DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size,
 #ifdef MPIZE
 	dp_population_mpi_gather(pop, world_id, world_count);
 #endif
-	dp_population_update(pop, 0, pop->size);
+	dp_population_update(pop, 0, pop->cur_size);
 	return pop;
 }
 

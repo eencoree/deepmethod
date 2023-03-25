@@ -38,6 +38,7 @@ extern "C"
 #include "dppopulation.h"
 #include "dprecombination.h"
 #include "dpevaluation.h"
+#include "dploop.h"
 // #include "dparchive.h"
 
 typedef enum DpSelector { // выбор состояния
@@ -50,6 +51,15 @@ typedef enum DpSelector { // выбор состояния
 typedef struct DpDeepInfo { // информация из .ini файла
 	int debug;
 	int population_size;
+	double fmin; // значение функции на оптимуме предыдущего шага
+	int population_max_size;
+    int lower_bound;
+	int lb; //счетчики
+	int b;  //
+	int st; //
+	int w;  //
+    int R;  //допустимое количество операций
+    int s;  //часть популяции, которую мы отбираем для увеличения/уменьшения популяции
 	int es_lambda;
 	int es_cutoff;
 	int es_kind;
@@ -74,7 +84,7 @@ typedef struct DpDeepInfo { // информация из .ini файла
 DpDeepInfo *dp_deep_info_init(DpEvaluation*heval, DpTarget*htarget, int worldid, GKeyFile*gkf, gchar*groupname);
 // инициализация переменных дипа
 
-DpDeepInfo *dp_deep_info_new (GKeyFile*gkf, gchar*groupname);
+DpDeepInfo *dp_deep_info_new(GKeyFile*gkf, gchar*groupname);
 // входит в dp_deep_info_init
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo);
@@ -120,6 +130,18 @@ void dp_deep_select_func (gpointer data, gpointer user_data);
 void dp_de_select_func (gpointer data, gpointer user_data);
 
 void dp_deep_info_load(FILE*fp, DpDeepInfo *hdeepinfo);
+
+void change_pointers(DpPopulation*population, const int reduce_number);
+
+void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo, DpLoop*hloop);
+
+void dp_deep_redstrat(DpDeepInfo*hdeepinfo);
+
+void dp_deep_augstrat_1(DpDeepInfo*hdeepinfo);
+
+void dp_deep_augstrat_2(DpDeepInfo*hdeepinfo);
+
+int* generate_rand_ind(DpDeepInfo* hdeepinfo, int min);
 
 #ifdef __cplusplus
 }

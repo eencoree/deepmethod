@@ -245,16 +245,17 @@ void dp_opt_add_from_func_list(gchar**list, DpOpt *hopt, int order, GKeyFile*gkf
 			dp_opt_add_func(hopt, dp_opt_de_select, tau_flag, opt_type, order, method_info);
 		} else if ( !g_strcmp0(list[i], "osda") ) {
 			opt_type = H_OPT_OSDA;
-/*			
-			 if (!hosdainfo) {
-				hosdainfo = dp_osda_info_init(heval, htarget, world_id, dpsettings->seed, dpsettings->gamma_init, dpsettings->roundoff_error, dpsettings->eval_strategy, dpsettings->number_of_trials, dpsettings->step_parameter, dpsettings->step_decrement, dpsettings->derivative_step);
-			}
-*/
 			method_info = (gpointer) hosdainfo;
 			dp_opt_add_func(hopt, dp_opt_osda, tau_flag, opt_type, order, method_info);
+		} else if (!g_strcmp0(list[i], "pdeep"))
+		{
+			opt_type = H_OPT_NONE;
+			method_info = NULL;
+			dp_opt_add_func(hopt, dp_opt_popsize, tau_flag, opt_type, order, method_info);
 		}
 	}
 }
+
 
 void dp_opt_run(DpOpt *hopt)
 {
@@ -276,19 +277,6 @@ void dp_opt_monitor(DpOpt *hopt, int monitor, GError**gerror)
 	func->user_data = (void*)hopt;
 	func->func = (DpLoopFunc)dp_read_log;
 	funcs = g_list_append (funcs, (void*)func);
-/*
-	func = (DpLoopRunFunc *)malloc(sizeof(DpLoopRunFunc));
-	func->tau_flag = 1;
-	func->user_data = (void*)hopt;
-	func->func = (DpLoopFunc)dp_opt_post;
-	funcs = g_list_prepend (funcs, (void*)func);
-
-	func = (DpLoopRunFunc *)malloc(sizeof(DpLoopRunFunc));
-	func->tau_flag = 1;
-	func->user_data = (void*)hopt;
-	func->func = (DpLoopFunc)dp_opt_post_evaluate;
-	funcs = g_list_prepend (funcs, (void*)func);
-*/
 	func = (DpLoopRunFunc *)malloc(sizeof(DpLoopRunFunc));
 	func->tau_flag = 1;
 	func->user_data = (void*)hopt;
@@ -300,6 +288,15 @@ void dp_opt_monitor(DpOpt *hopt, int monitor, GError**gerror)
 	hopt->hloop = hloop;
 	hopt->monitor = monitor;
 	dp_loop_run (hloop);
+}
+
+DpLoopExitCode dp_opt_popsize(DpLoop*hloop, gpointer user_data)
+{
+	DpOpt*hopt = (DpOpt*)user_data;
+	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
+	DpLoopExitCode exit_code = DP_LOOP_EXIT_NOEXIT;
+	dp_deep_pop_size_change(hdeepinfo, hloop);
+	return exit_code;
 }
 
 DpLoopExitCode dp_opt_init_stop(DpLoop*hloop, gpointer user_data)

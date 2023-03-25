@@ -112,7 +112,7 @@ void dp_evaluation_individ_set_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*indivi
 
 void dp_evaluation_individ_transform_grad(DpEvaluationCtrl*hevalctrl, DpIndivid*individ, int index);
 
-DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps);
+DpPopulation*dp_evaluation_population_init(DpEvaluationCtrl*hevalctrl, int size, int max_size, double noglobal_eps);
 
 DpEvaluationCtrl*dp_evaluation_ctrl_init(int worldid, GKeyFile*gkf, gchar*groupname);
 
@@ -120,7 +120,7 @@ DpIndivid*dp_evaluation_individ_init(DpEvaluationCtrl*hevalctrl);
 
 void dp_evaluation_population_init_func (gpointer data, gpointer user_data);
 
-DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, int size, double noglobal_eps);
+DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, int size, int max_size, double noglobal_eps);
 
 int dp_evaluation_cr_compare(gconstpointer a, gconstpointer b, gpointer user_data);
 

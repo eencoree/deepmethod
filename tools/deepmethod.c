@@ -120,7 +120,6 @@ static GOptionEntry entries[] =
 
 int main(int argc, char **argv)
 {
-     printf("You are using MODIFIED version\n");
 	XmModel*xmmodel;
     DpOpt *hopt;
 	DpSettings*dpsettings = dp_settings_new();

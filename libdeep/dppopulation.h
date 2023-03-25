@@ -38,6 +38,7 @@ extern "C"
 
 typedef struct DpPopulation {
 	int size;
+    int cur_size;
 	int iter;
     int imin;  // i - individ
     int target_index;
@@ -59,7 +60,7 @@ typedef struct DpPopulation {
     int slice_b;    // Slice right border
 } DpPopulation;
 
-DpPopulation*dp_population_new(int size, int ind_size, int targets_size, int precond_size);
+DpPopulation*dp_population_new(int size, int initial_size, int ind_size, int targets_size, int precond_size);
 
 void dp_population_delete(DpPopulation*pop);
 

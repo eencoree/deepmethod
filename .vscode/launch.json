@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "(gdb) Запустить",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/encore/bin/deepmethod",
+            "args": ["--default-name=deep_rastr.ini"],
+            "stopAtEntry": false,
+            "cwd": "/home/encore/deepmethod/examples/test_functions_python",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Включить автоматическое форматирование для gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description":  "Задать для варианта приложения дизассемблирования значение Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Build"
+        }
+
+    ]
+}

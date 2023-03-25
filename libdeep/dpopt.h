@@ -115,6 +115,8 @@ void dp_opt_run(DpOpt *hopt);
 
 void dp_opt_monitor(DpOpt *hopt, int monitor, GError**gerror);
 
+DpLoopExitCode dp_opt_popsize(DpLoop*hloop, gpointer user_data);
+
 DpLoopExitCode dp_write_log(DpLoop*hloop, gpointer user_data);
 
 DpLoopExitCode dp_print_log(DpLoop*hloop, gpointer user_data);
