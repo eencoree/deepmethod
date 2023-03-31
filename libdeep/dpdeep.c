@@ -953,7 +953,7 @@ void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo, DpLoop*hloop){
         hdeepinfo->b = 0;
         hdeepinfo->st = 0;
     }
-    if (hdeepinfo->st > hdeepinfo->R && hdeepinfo->lb > hdeepinfo->R){
+    if (hdeepinfo->st > hdeepinfo->R || hdeepinfo->lb > hdeepinfo->R){
         dp_deep_augstrat_2(hdeepinfo);
         hdeepinfo->st = 0;
         hdeepinfo->lb = 0;
