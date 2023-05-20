@@ -944,20 +944,20 @@ void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo, DpLoop*hloop){
     if (hdeepinfo->population->cur_size <= hdeepinfo->lower_bound){
         hdeepinfo->lb += 1;
     }
-    if (hdeepinfo->w == 1 && hdeepinfo->st <= hdeepinfo->R){
+    if ((hdeepinfo->w == 1) && (hdeepinfo->st <= hdeepinfo->R)){
         dp_deep_redstrat(hdeepinfo);
         hdeepinfo->w = 0;
     }
-    if (hdeepinfo->b == 1){
+    if ((hdeepinfo->b == 1) && (hdeepinfo->population->cur_size != hdeepinfo->population_max_size)){
         dp_deep_augstrat_1(hdeepinfo);
         hdeepinfo->b = 0;
         hdeepinfo->st = 0;
     }
-    if (hdeepinfo->st > hdeepinfo->R || hdeepinfo->lb > hdeepinfo->R){
+    if (((hdeepinfo->st > hdeepinfo->R) || (hdeepinfo->lb > hdeepinfo->R)) && (hdeepinfo->population->cur_size != hdeepinfo->population_max_size)){
         dp_deep_augstrat_2(hdeepinfo);
         hdeepinfo->st = 0;
         hdeepinfo->lb = 0;
-    }
+    } 
 }
 
 // стратегии изменения размера популяции
@@ -1008,10 +1008,9 @@ void dp_deep_augstrat_2(DpDeepInfo*hdeepinfo){
     int* indices = generate_rand_ind(hdeepinfo, population->imin);
     DpRecombinationStrategy prev_strat = recombination_control->strategy;
     recombination_control->strategy = DE_3_bin;
-    // откуда взять случайные индексы индивидов?
     for (int i = 0; i < add_size; i++){
         dp_individ_recombination(recombination_control, hrand, population->individ[population->cur_size+i],
-                                population->individ[population->imin], population->individ[2], population->individ[3], population->individ[4], population->individ[5],
+                                population->individ[population->imin], population->individ[indices[0]], population->individ[indices[1]], population->individ[indices[2]], population->individ[indices[3]],
                                 start_index, end_index, vectorWrite, vectorRead);
     }
     hdeepinfo->population_size += add_size;
