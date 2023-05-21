@@ -38,7 +38,6 @@ extern "C"
 #include "dppopulation.h"
 #include "dprecombination.h"
 #include "dpevaluation.h"
-#include "dploop.h"
 // #include "dparchive.h"
 
 typedef enum DpSelector { // выбор состояния
@@ -133,7 +132,7 @@ void dp_deep_info_load(FILE*fp, DpDeepInfo *hdeepinfo);
 
 void change_pointers(DpPopulation*population, const int reduce_number);
 
-void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo, DpLoop*hloop);
+void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo);
 
 void dp_deep_redstrat(DpDeepInfo*hdeepinfo);
 

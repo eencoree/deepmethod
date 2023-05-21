@@ -931,7 +931,7 @@ int* generate_rand_ind(DpDeepInfo* hdeepinfo, int min){
     return rand_ind;
 }
 
-void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo, DpLoop*hloop){
+void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo){
    
     if (hdeepinfo->population->dmin < hdeepinfo->fmin){
         hdeepinfo->b = 1;
