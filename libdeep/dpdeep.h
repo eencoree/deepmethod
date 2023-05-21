@@ -38,7 +38,6 @@ extern "C"
 #include "dppopulation.h"
 #include "dprecombination.h"
 #include "dpevaluation.h"
-#include "dploop.h"
 // #include "dparchive.h"
 
 typedef enum DpSelector { // выбор состояния
