@@ -331,7 +331,7 @@ void dp_deep_step(DpDeepInfo*hdeepinfo)
             dp_deep_step_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
         }
     }
-    dp_population_update(trial, 0, trial->size);
+    dp_population_update(trial, 0, trial->cur_size);
     trial->iter = population->iter + 1;
     hdeepinfo->population = trial;
     hdeepinfo->trial = population;
@@ -815,7 +815,7 @@ void dp_deep_select_step(DpDeepInfo*hdeepinfo)
     for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
         dp_deep_select_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
     }
-    dp_population_update(trial, 0, trial->size);
+    dp_population_update(trial, 0, trial->cur_size);
     trial->iter = population->iter + 1;
     for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
         int r4 = trial->individ[individ_id]->r4;
@@ -838,7 +838,7 @@ void dp_de_select_step(DpDeepInfo*hdeepinfo)
     for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
         dp_de_select_func (GINT_TO_POINTER(individ_id + 1), (gpointer) hdeepinfo);
     }
-    dp_population_update(trial, 0, trial->size);
+    dp_population_update(trial, 0, trial->cur_size);
     trial->iter = population->iter + 1;
     for ( individ_id = 0; individ_id < population->size; individ_id++ ) {
         int r4 = trial->individ[individ_id]->r4;
@@ -874,7 +874,7 @@ void dp_deep_post_evaluate(DpDeepInfo*hdeepinfo)
 
 void dp_deep_update_step(DpDeepInfo*hdeepinfo)
 {
-    dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
+    dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->cur_size);
     dp_recombination_control_update(hdeepinfo->recombination_control, hdeepinfo->hevalctrl->hrand, hdeepinfo->population, 0, hdeepinfo->population->size);
 }
 
@@ -913,16 +913,16 @@ int* generate_rand_ind(DpDeepInfo* hdeepinfo, int min){
     int* rand_ind = (int*)malloc(4*sizeof(int));
     GRand*hrand = hdeepinfo->hevalctrl->hrand;
     do {
-        r2 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+        r2 = g_rand_int_range (hrand, 0, hdeepinfo->population->cur_size);
     } while ( r2 == min );
     do {
-        r3 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+        r3 = g_rand_int_range (hrand, 0, hdeepinfo->population->cur_size);
     } while ( r3 == min || r3 == r2 );
     do {
-        r4 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+        r4 = g_rand_int_range (hrand, 0, hdeepinfo->population->cur_size);
     } while ( r4 == min || r4 == r2 || r4 == r3 );
     do {
-        r5 = g_rand_int_range (hrand, 0, hdeepinfo->population_size);
+        r5 = g_rand_int_range (hrand, 0, hdeepinfo->population->cur_size);
     } while ( r5 == min || r5 == r2 || r5 == r3 || r5 == r4);
     rand_ind[0] = r2;
     rand_ind[1] = r3;
@@ -932,7 +932,8 @@ int* generate_rand_ind(DpDeepInfo* hdeepinfo, int min){
 }
 
 void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo){
-   
+    FILE *f = fopen("/home/encore/deepmethod/examples/test_functions_python/sizes.txt", "a");
+    fprintf(f, "%d\n", hdeepinfo->population->cur_size);
     if (hdeepinfo->population->dmin < hdeepinfo->fmin){
         hdeepinfo->b = 1;
         hdeepinfo->fmin = hdeepinfo->population->dmin;
@@ -944,34 +945,44 @@ void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo){
     if (hdeepinfo->population->cur_size <= hdeepinfo->lower_bound){
         hdeepinfo->lb += 1;
     }
-    if ((hdeepinfo->w == 1) && (hdeepinfo->st <= hdeepinfo->R)){
-        dp_deep_redstrat(hdeepinfo);
-        hdeepinfo->w = 0;
-    }
     if ((hdeepinfo->b == 1) && (hdeepinfo->population->cur_size != hdeepinfo->population_max_size)){
         dp_deep_augstrat_1(hdeepinfo);
         hdeepinfo->b = 0;
         hdeepinfo->st = 0;
+        fprintf(f, "%d\n", hdeepinfo->population->cur_size);
     }
-    if (((hdeepinfo->st > hdeepinfo->R) || (hdeepinfo->lb > hdeepinfo->R)) && (hdeepinfo->population->cur_size != hdeepinfo->population_max_size)){
+    else if ((hdeepinfo->st > hdeepinfo->R) || (hdeepinfo->lb > hdeepinfo->R)){
         dp_deep_augstrat_2(hdeepinfo);
         hdeepinfo->st = 0;
         hdeepinfo->lb = 0;
-    } 
+        fprintf(f, "%d\n", hdeepinfo->population->cur_size);
+    }
+    else if ((hdeepinfo->w == 1) && (hdeepinfo->st <= hdeepinfo->R)){
+        dp_deep_redstrat(hdeepinfo);
+        hdeepinfo->w = 0;
+        fprintf(f, "%d\n", hdeepinfo->population->cur_size);
+    }
+
+    fclose(f);
 }
 
 // стратегии изменения размера популяции
 void dp_deep_redstrat(DpDeepInfo*hdeepinfo){
-    const int reduce_number = (int)floor(hdeepinfo->population->cur_size * hdeepinfo->s);
-    // перестановка индексов - худших в конец
-    change_pointers(hdeepinfo->population, reduce_number);
-    for (int i = 0; i < hdeepinfo->population->cur_size; i++) {
-        hdeepinfo->trial->individ[i]->user_data = hdeepinfo->population->individ[i]->user_data;
+    const int reduce_number = (int)floor(hdeepinfo->population->cur_size * hdeepinfo->s / 3);
+    if (hdeepinfo->population_size - reduce_number >= 5){
+        // перестановка индексов - худших в конец
+        change_pointers(hdeepinfo->population, reduce_number);
+        for (int i = 0; i < hdeepinfo->population->cur_size; i++) {
+            hdeepinfo->trial->individ[i]->user_data = hdeepinfo->population->individ[i]->user_data;
+        }
+        hdeepinfo->population_size -= reduce_number;
+        hdeepinfo->population->cur_size -= reduce_number;
+        hdeepinfo->population->slice_b -= reduce_number;
+        dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->cur_size);
+
+        hdeepinfo->trial->cur_size -= reduce_number;
+        hdeepinfo->trial->slice_b -= reduce_number;
     }
-    hdeepinfo->population_size -= reduce_number;
-    hdeepinfo->population->cur_size -= reduce_number;
-    hdeepinfo->population->slice_b -= reduce_number;
-    dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->cur_size);
 }
 
 void dp_deep_augstrat_1(DpDeepInfo*hdeepinfo){
@@ -993,30 +1004,38 @@ void dp_deep_augstrat_1(DpDeepInfo*hdeepinfo){
     population->slice_b += 1;
     recombination_control->strategy = prev_strat;
     dp_population_update(population, 0, population->cur_size);
+    
+    hdeepinfo->trial->cur_size += 1;
+    hdeepinfo->trial->slice_b += 1;
     free(indices);
 }
 
 void dp_deep_augstrat_2(DpDeepInfo*hdeepinfo){
     const int add_size = (int)floor(hdeepinfo->population->cur_size * hdeepinfo->s);
-    GRand*hrand = hdeepinfo->hevalctrl->hrand;
-    DpPopulation*population = hdeepinfo->population;
-    DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
-    DifferenceVector* vectorRead;
-    DifferenceVector* vectorWrite;
-    int start_index = g_rand_int_range (hrand, 0, hdeepinfo->population->ind_size);
-    int end_index = population->ind_size;
-    int* indices = generate_rand_ind(hdeepinfo, population->imin);
-    DpRecombinationStrategy prev_strat = recombination_control->strategy;
-    recombination_control->strategy = DE_3_bin;
-    for (int i = 0; i < add_size; i++){
-        dp_individ_recombination(recombination_control, hrand, population->individ[population->cur_size+i],
-                                population->individ[population->imin], population->individ[indices[0]], population->individ[indices[1]], population->individ[indices[2]], population->individ[indices[3]],
-                                start_index, end_index, vectorWrite, vectorRead);
+    if (hdeepinfo->population_size + add_size <= hdeepinfo->population_max_size){
+        GRand*hrand = hdeepinfo->hevalctrl->hrand;
+        DpPopulation*population = hdeepinfo->population;
+        DpRecombinationControl *recombination_control = hdeepinfo->recombination_control;
+        DifferenceVector* vectorRead;
+        DifferenceVector* vectorWrite;
+        int start_index = g_rand_int_range (hrand, 0, hdeepinfo->population->ind_size);
+        int end_index = population->ind_size;
+        int* indices = generate_rand_ind(hdeepinfo, population->imin);
+        DpRecombinationStrategy prev_strat = recombination_control->strategy;
+        recombination_control->strategy = DE_3_bin;
+        for (int i = 0; i < add_size; i++){
+            dp_individ_recombination(recombination_control, hrand, population->individ[population->cur_size+i],
+                                    population->individ[population->imin], population->individ[indices[0]], population->individ[indices[1]], population->individ[indices[2]], population->individ[indices[3]],
+                                    start_index, end_index, vectorWrite, vectorRead);
+        }
+        hdeepinfo->population_size += add_size;
+        population->cur_size += add_size;
+        population->slice_b += add_size;
+        recombination_control->strategy = prev_strat;
+        dp_population_update(population, 0, population->cur_size);
+
+        hdeepinfo->trial->cur_size += add_size;
+        hdeepinfo->trial->slice_b += add_size;
+        free(indices);
     }
-    hdeepinfo->population_size += add_size;
-    population->cur_size += add_size;
-    population->slice_b += add_size;
-    recombination_control->strategy = prev_strat;
-    dp_population_update(population, 0, population->cur_size);
-    free(indices);
 }

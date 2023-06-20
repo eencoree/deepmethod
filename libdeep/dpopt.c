@@ -295,7 +295,7 @@ DpLoopExitCode dp_opt_popsize(DpLoop*hloop, gpointer user_data)
 	DpOpt*hopt = (DpOpt*)user_data;
 	DpDeepInfo*hdeepinfo = (DpDeepInfo*)(hopt->method_info);
 	DpLoopExitCode exit_code = DP_LOOP_EXIT_NOEXIT;
-	dp_deep_pop_size_change(hdeepinfo, hloop);
+	dp_deep_pop_size_change(hdeepinfo);
 	return exit_code;
 }
 
@@ -1018,7 +1018,7 @@ DpLoopExitCode dp_opt_substitute(DpLoop*hloop, gpointer user_data)
 				}
 	        }
 			g_thread_pool_free (hevalctrl->gthreadpool, immediate_stop, wait_finish);
-			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->size);
+			dp_population_update(hdeepinfo->population, 0, hdeepinfo->population->cur_size);
 		break;
 	}
 	hloop->stop_flag = ( stop_flag == 1 ) ? DP_LOOP_EXIT_SUCCESS : DP_LOOP_EXIT_NOEXIT;
@@ -1221,7 +1221,7 @@ DpLoopExitCode dp_select_pareto_front(DpLoop*hloop, gpointer user_data)
             }
             trial->iter = population->iter;
             population->iter++;
-            dp_population_update(population, 0, population->size);
+            dp_population_update(population, 0, population->cur_size);
             dp_deep_accept_step(hdeepinfo, &(hopt->cost));
             hdeepinfo->selector = DpSelectorSelected;
 		break;

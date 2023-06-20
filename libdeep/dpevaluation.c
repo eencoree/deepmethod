@@ -450,7 +450,7 @@ DpPopulation*dp_evaluation_population_init_serial(DpEvaluationCtrl*hevalctrl, in
 		pop->individ[i]->user_data = dp_target_eval_get_user_data(hevalctrl->eval_target);
 		dp_evaluation_individ_evaluate(hevalctrl, pop->individ[i], pop->individ[i], i, 0);
 	}
-	dp_population_update(pop, 0, pop->size);
+	dp_population_update(pop, 0, pop->cur_size);
 	return pop;
 }
 
