@@ -958,8 +958,7 @@ void dp_deep_pop_size_change(DpDeepInfo*hdeepinfo){
         dp_deep_redstrat(hdeepinfo);
         hdeepinfo->w = 0;
     }
-
-    fclose(f);
+    
 }
 
 // стратегии изменения размера популяции
